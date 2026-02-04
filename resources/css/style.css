@@ -31,30 +31,69 @@
     transform: translate(-50%, -50%);
     will-change: left, top;
     z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        top 0.6s ease-in-out,
+        transform 0.2s ease;
+}
+
+.task:hover {
+    transform: translate(-50%, -50%) scale(1.5);
+    z-index: 50;
+    box-shadow: 0 0 15px currentColor;
 }
 
 .task-concurrent-1 {
-    background-color: #3b82f6;
+    background-color: #6366f1;
+    border-radius: 50%;
 }
 
 .task-concurrent-2 {
     background-color: #10b981;
+    border-radius: 3px;
 }
 
 .task-concurrent-3 {
     background-color: #f59e0b;
+    border-radius: 8px;
 }
 
 .task-concurrent-4 {
-    background-color: #ef4444;
+    background-color: #ea580c;
+    border-radius: 2px;
 }
 
 .task-concurrent-5 {
+    background-color: #f43f5e;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.task-concurrent-6 {
     background-color: #8b5cf6;
+    clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%);
+}
+
+.task-concurrent-7 {
+    background-color: #d946ef;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+.task-concurrent-8 {
+    background-color: #06b6d4;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.task-concurrent-9 {
+    background-color: #84cc16;
+    border-radius: 10px 0 10px 0;
 }
 
 .task-concurrent-10 {
-    background-color: #111827;
+    background-color: #0f172a;
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+    width: 22px;
+    height: 22px;
 }
 
 .task.completed {

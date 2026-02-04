@@ -17,8 +17,8 @@
   - [x] Connect backend timers to frontend header indicators.
 
 ### 🟢 Low Priority
-- [ ] **UI/UX Refinement**:
+- [x] **UI/UX Refinement**:
   - [x] **Task Overlapping Prevention**: Implement a horizontal jitter/offset algorithm.
-  - [ ] **Visual Overhaul**: Enhance task shapes and color palettes.
+  - [x] **Visual Overhaul**: Enhance task shapes and color palettes.
 - [ ] **Graceful Shutdown**:
   - [ ] Add signal handling (`SIGTERM`) for safe worker exit.

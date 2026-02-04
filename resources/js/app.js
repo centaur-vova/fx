@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el.textContent = mc;
 
         const top = 20 + Math.random() * 60;
-        const jitterX = (Math.random() - 0.5) * 6;
+        const jitterX = (Math.random() - 0.5) * 12;
 
         el.style.top = `${top}%`;
         el.style.left = `${COORDS.queued + jitterX}%`;
