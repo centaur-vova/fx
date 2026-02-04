@@ -17,10 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Event-driven broadcasting compatible with standard WebSocket clients.
 
 ## - 2026-02-05
+
 ### Added
 - Horizontal jitter algorithm for task markers to prevent overlapping in the pipeline zones.
 
-## - 2026-02-05
 ### Added
 - Real-time system metrics broadcasting (CPU load, Memory usage, Active connections).
 - Server-side periodic timer for health monitoring.
+
+### Refactored
+- Decoupled `server.php` by extracting event logic into `App\Server\EventHandler`.
+- Encapsulated worker lifecycle and coroutine pool management into `TaskService::startWorker`.
+- Reorganized Manual Dependency Injection flow for better maintainability and boot order.
+- Implemented PHP 8.1 first-class callable syntax for all server event handlers.

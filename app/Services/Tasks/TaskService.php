@@ -81,6 +81,28 @@ class TaskService
         }
     }
 
+    public function startWorker($server, $workerId): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            Co::create(function () {
+                while (true) {
+                    $task = $this->mainQueue->pop();
+
+                    // Если канал закрыт, выходим из цикла
+                    if ($this->mainQueue->errCode === SWOOLE_CHANNEL_CLOSED) {
+                        break;
+                    }
+
+                    if ($task) {
+                        Co::create(function () use ($task) {
+                            $this->processTask($task['id'], $task['mc']);
+                        });
+                    }
+                }
+            });
+        }
+    }
+
     private function generateTaskId(): string
     {
         return 'task-' . bin2hex(random_bytes(4)) . '-' . time();

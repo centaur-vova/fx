@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use App\Controllers\TaskController;
 use App\Router;
+use App\Server\EventHandler;
 use App\Services\Tasks\Semaphores\SwooleChannelSemaphore;
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
@@ -16,17 +18,18 @@ use Swoole\WebSocket\Server;
 
 $server = new Server("0.0.0.0", 9501);
 
-$connectionPool = new ConnectionPool();
-
-$wsHub = new MessageHub($server, $connectionPool);
-
-$broadcaster = new WsEventBroadcaster($wsHub);
-
-$semaphore = new SwooleChannelSemaphore();
-$mainQueue = new Co\Channel(10000);
+// Infrastructure
 $logger = new StdoutLogger();
+$connectionPool = new ConnectionPool();
+$mainQueue = new Co\Channel(10000);
+$semaphore = new SwooleChannelSemaphore();
 $strategy = new DemoDelayStrategy();
 
+// WebSocket
+$wsHub = new MessageHub($server, $connectionPool);
+$broadcaster = new WsEventBroadcaster($wsHub);
+
+// TaskService
 $taskService = new TaskService(
     $semaphore,
     $broadcaster,
@@ -35,59 +38,21 @@ $taskService = new TaskService(
     $logger
 );
 
-$taskController = new App\Controllers\TaskController($taskService, $wsHub);
+// API/Controllers
+$taskController = new TaskController($taskService, $wsHub);
 
+// Router
 $router = new Router($taskController);
 
-$server->on('request', function ($request, $response) use ($router) {
-    $router->handle($request, $response);
-});
+// EventHandler
+$eventHandler = new EventHandler($router, $wsHub, $connectionPool);
 
-$server->on('open', function (Server $server, $request) use ($connectionPool) {
-    $connectionPool->add($request->fd);
-});
+$server->on('request', $eventHandler->onRequest(...));
+$server->on('open', $eventHandler->onOpen(...));
+$server->on('message', $eventHandler->onMessage(...));
+$server->on('close', $eventHandler->onClose(...));
 
-$server->on('close', function (Server $server, $fd) use ($connectionPool) {
-    $connectionPool->remove($fd);
-});
-
-$server->on('message', function (Server $server, $frame) use ($wsHub) {
-    $data = json_decode($frame->data, true);
-    $fd = $frame->fd;
-
-    if (isset($data['event'])) {
-        switch ($data['event']) {
-            case 'pusher:ping':
-                $server->push($fd, json_encode(['event' => 'pusher:pong']));
-                break;
-            case 'pusher:subscribe':
-                $server->push($fd, json_encode([
-                    'event' => 'pusher_internal:subscription_succeeded',
-                    'channel' => $data['data']['channel'],
-                ]));
-                break;
-        }
-    }
-});
-
-$server->on('WorkerStart', function ($server, $workerId) use ($taskService, $mainQueue) {
-    for ($i = 0; $i < 10; $i++) {
-        \Swoole\Coroutine::create(function () use ($mainQueue, $taskService) {
-            while (true) {
-                $task = $mainQueue->pop();
-
-                if (!$task) {
-                    continue;
-                }
-
-                \Swoole\Coroutine::create(function () use ($taskService, $task) {
-                    $taskService->processTask($task['id'], $task['mc']);
-                });
-            }
-        });
-    }
-});
-
+$server->on('WorkerStart', $taskService->startWorker(...));
 
 Timer::tick(1000, function () use ($wsHub) {
     $load = sys_getloadavg();

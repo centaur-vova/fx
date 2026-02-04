@@ -7,7 +7,7 @@
 
 ### 🟡 Medium Priority
 - [ ] **Architectural Refactoring**:
-  - [ ] Decouple `server.php` by moving event handlers into dedicated classes.
+  - [x] Decouple `server.php` by moving event handlers into dedicated classes.
   - [ ] Implement a simple Dependency Injection (DI) container for cleaner bootstrap.
 - [ ] **Environment Configuration**:
   - [ ] Integrate `vlucas/phpdotenv` to manage application environment.
