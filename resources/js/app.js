@@ -26,11 +26,22 @@ document.addEventListener("DOMContentLoaded", () => {
         state.ws = new WebSocket(`ws://${window.location.hostname}:9501`);
         state.ws.onmessage = (e) => {
             const msg = JSON.parse(e.data);
-            if (msg.event === "task.status.changed") handleUpdate(msg.data);
+            if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
+            if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
         };
     };
 
-    const handleUpdate = (data) => {
+    const handleUpdateMetrics = (data) => {
+        const memEl = document.getElementById("memory-usage");
+        const connEl = document.getElementById("connection-count");
+        const cpuEl = document.getElementById("cpu-load");
+
+        if (memEl) memEl.textContent = data.memory;
+        if (connEl) connEl.textContent = data.connections;
+        if (cpuEl) cpuEl.textContent = data.cpu;
+    }
+
+    const handleUpdateTasks = (data) => {
         const { taskId, status, progress, message } = data;
         addLog(taskId, status, message);
 

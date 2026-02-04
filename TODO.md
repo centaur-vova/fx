@@ -12,9 +12,9 @@
 - [ ] **Environment Configuration**:
   - [ ] Integrate `vlucas/phpdotenv` to manage application environment.
   - [ ] Move hardcoded server settings (Host, Port, Worker count) from `server.php` to `.env`.
-- [ ] **System Metrics Implementation**:
-  - [ ] Implement real-time broadcasting of server stats (**MEM**, **CONN**, **CPU**).
-  - [ ] Connect backend timers to frontend header indicators.
+- [x] **System Metrics Implementation**:
+  - [x] Implement real-time broadcasting of server stats (**MEM**, **CONN**, **CPU**).
+  - [x] Connect backend timers to frontend header indicators.
 
 ### 🟢 Low Priority
 - [ ] **UI/UX Refinement**:

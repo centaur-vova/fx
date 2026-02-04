@@ -11,6 +11,7 @@ use App\Services\Tasks\TaskService;
 use App\Support\StdoutLogger;
 use App\WebSocket\{ConnectionPool, MessageHub, WsEventBroadcaster};
 use Swoole\Coroutine as Co;
+use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
 $server = new Server("0.0.0.0", 9501);
@@ -85,6 +86,21 @@ $server->on('WorkerStart', function ($server, $workerId) use ($taskService, $mai
             }
         });
     }
+});
+
+
+Timer::tick(1000, function () use ($wsHub) {
+    $load = sys_getloadavg();
+    $cpu = $load ? round($load[0] * 10, 1) : 0;
+
+    $wsHub->broadcast([
+        'event' => 'metrics.update',
+        'data' => [
+            'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+            'connections' => $wsHub->count(),
+            'cpu' => $cpu . '%'
+        ]
+    ]);
 });
 
 echo "========================================\n";

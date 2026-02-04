@@ -19,3 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ## - 2026-02-05
 ### Added
 - Horizontal jitter algorithm for task markers to prevent overlapping in the pipeline zones.
+
+## - 2026-02-05
+### Added
+- Real-time system metrics broadcasting (CPU load, Memory usage, Active connections).
+- Server-side periodic timer for health monitoring.
