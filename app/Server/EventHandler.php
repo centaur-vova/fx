@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Server;
 
 use App\Router;
-use App\WebSocket\MessageHub;
 use App\WebSocket\ConnectionPool;
+use App\WebSocket\MessageHub;
+use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
 class EventHandler
@@ -12,7 +15,7 @@ class EventHandler
     public function __construct(
         private Router $router,
         private MessageHub $wsHub,
-        private ConnectionPool $connectionPool
+        private ConnectionPool $connectionPool,
     ) {
     }
 
@@ -47,5 +50,24 @@ class EventHandler
     public function onClose(Server $server, $fd): void
     {
         $this->connectionPool->remove($fd);
+    }
+
+    public function registerMetricsTimer(int $updateIntervalMs): void
+    {
+        $hub = $this->wsHub;
+
+        Timer::tick($updateIntervalMs, function () use ($hub) {
+            $load = sys_getloadavg();
+            $cpu = $load ? round($load[0] * 10, 1) : 0;
+
+            $hub->broadcast([
+                'event' => 'metrics.update',
+                'data' => [
+                    'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                    'connections' => $this->wsHub->count(),
+                    'cpu' => $cpu . '%',
+                ],
+            ]);
+        });
     }
 }

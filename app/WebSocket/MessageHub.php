@@ -18,7 +18,7 @@ class MessageHub
     {
         $json = json_encode($payload);
         foreach ($this->connectionPool as $fd => $conn) {
-            if ($this->server->isEstablished($fd)) {
+            if ($this->server->isEstablished($fd) && $this->server->getWorkerId($fd) === $this->server->worker_id) {
                 $this->server->push($fd, $json);
             }
         }

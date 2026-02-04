@@ -9,9 +9,9 @@
 - [ ] **Architectural Refactoring**:
   - [x] Decouple `server.php` by moving event handlers into dedicated classes.
   - [ ] Implement a simple Dependency Injection (DI) container for cleaner bootstrap.
-- [ ] **Environment Configuration**:
-  - [ ] Integrate `vlucas/phpdotenv` to manage application environment.
-  - [ ] Move hardcoded server settings (Host, Port, Worker count) from `server.php` to `.env`.
+- [x] **Environment Configuration**:
+  - [x] Integrate `vlucas/phpdotenv` to manage application environment.
+  - [x] Move hardcoded server settings (Host, Port, Worker count) from `server.php` to `.env`.
 - [x] **System Metrics Implementation**:
   - [x] Implement real-time broadcasting of server stats (**MEM**, **CONN**, **CPU**).
   - [x] Connect backend timers to frontend header indicators.

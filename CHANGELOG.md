@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Horizontal jitter algorithm for task markers to prevent overlapping in the pipeline zones.
 - Real-time system metrics broadcasting (CPU load, Memory usage, Active connections).
 - Server-side periodic timer for health monitoring.
+- Integration with `vlucas/phpdotenv` for centralized environment management.
+- Dedicated `Config` service for type-safe access to application settings.
+- Periodic metrics broadcasting (CPU, Memory, Connections) via Swoole Timer.
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).
@@ -32,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Encapsulated worker lifecycle and coroutine pool management into `TaskService::startWorker`.
 - Reorganized Manual Dependency Injection flow for better maintainability and boot order.
 - Implemented PHP 8.1 first-class callable syntax for all server event handlers.
+- Decoupled `server.php` logic into `App\Server\EventHandler` class.
+- Encapsulated worker lifecycle and task processing into `TaskService::startWorker`.
+- Implemented PHP 8.1 first-class callable syntax for all server event handlers.
+- Reorganized manual dependency injection flow for stable boot order.
 
 ### Improved
 - Refined task distribution algorithm (jitter) for better pipeline clarity.

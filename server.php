@@ -16,12 +16,23 @@ use Swoole\Coroutine as Co;
 use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
-$server = new Server("0.0.0.0", 9501);
+// Config
+$config = new App\Config(__DIR__);
+
+// Server
+$server = new Server(
+    $config->get('SERVER_HOST', '0.0.0.0'),
+    $config->getInt('SERVER_PORT', 9501)
+);
+
+$server->set([
+    'worker_num' => $config->getInt('SERVER_WORKER_NUM', 4),
+]);
 
 // Infrastructure
 $logger = new StdoutLogger();
 $connectionPool = new ConnectionPool();
-$mainQueue = new Co\Channel(10000);
+$mainQueue = new Co\Channel($config->getInt('QUEUE_CAPACITY', 10000));
 $semaphore = new SwooleChannelSemaphore();
 $strategy = new DemoDelayStrategy();
 
@@ -47,25 +58,25 @@ $router = new Router($taskController);
 // EventHandler
 $eventHandler = new EventHandler($router, $wsHub, $connectionPool);
 
+// WS
 $server->on('request', $eventHandler->onRequest(...));
 $server->on('open', $eventHandler->onOpen(...));
 $server->on('message', $eventHandler->onMessage(...));
 $server->on('close', $eventHandler->onClose(...));
 
-$server->on('WorkerStart', $taskService->startWorker(...));
+// Workers
+$server->on('WorkerStart', function ($server, $workerId) use ($config, $taskService, $eventHandler) {
+    Co::create(function () use ($taskService, $server, $workerId) {
+        $taskService->startWorker($server, $workerId);
+    });
+    Co::create(function () use ($taskService, $server, $workerId) {
+        $taskService->startWorker($server, $workerId);
+    });
 
-Timer::tick(1000, function () use ($wsHub) {
-    $load = sys_getloadavg();
-    $cpu = $load ? round($load[0] * 10, 1) : 0;
-
-    $wsHub->broadcast([
-        'event' => 'metrics.update',
-        'data' => [
-            'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
-            'connections' => $wsHub->count(),
-            'cpu' => $cpu . '%'
-        ]
-    ]);
+    Timer::after(100, function () use ($eventHandler, $config) {
+        $eventHandler->registerMetricsTimer($config->getInt('METRICS_UPDATE_INTERVAL_MS', 1000));
+        echo ">>> [System] Metrics Engine Started on Worker #0\n";
+    });
 });
 
 echo "========================================\n";
