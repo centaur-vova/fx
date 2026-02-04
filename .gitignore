@@ -1,0 +1,51 @@
+# === Core & Dependencies ===
+/vendor
+.php-cs-fixer.cache
+.phpunit.result.cache
+
+# === Environment & Secrets ===
+.env
+.env.backup
+.env.production
+# Keep .env.example in Git!
+
+# === Swoole & Runtime ===
+# If you use Swoole Tracker or generate logs/pids
+*.pid
+*.port
+/storage/*.pid
+/storage/logs/*.log
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*.php
+
+# === IDE & OS Garbage ===
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# === Build & Assets ===
+/public/dist
+/public/storage
+/public/hot
+/public/mix-manifest.json
+/node_modules
+/npm-debug.log
+/yarn-error.log
+/dist
+
+# === Testing & Debugging ===
+.phpunit.cache/
+/.serverless/
+/auto_dump.php
+/.phpstorm.meta.php/
+_ide_helper.php
+_ide_helper_models.php
+.phpstorm.meta.php

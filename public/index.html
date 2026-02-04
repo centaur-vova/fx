@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Swoole Semaphore Pro</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="dist/style.min.css" />
+</head>
+
+<body class="screen-height-fit flex flex-col bg-gray-100">
+    <div class="success-popup" id="successPopup"></div>
+
+    <div class="flex-grow-1 overflow-hidden p-3">
+        <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
+
+            <!-- HEADER -->
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">🔒 Swoole Semaphore Control</h1>
+                        <p class="text-xs text-gray-500">Real-time Coroutine Pipeline</p>
+                    </div>
+                    <div class="flex gap-4 text-right">
+                        <div class="text-xs"><span class="block text-gray-400">MEM</span><b id="memory-usage">-- MB</b>
+                        </div>
+                        <div class="text-xs"><span class="block text-gray-400">CONN</span><b id="connection-count">0</b>
+                        </div>
+                        <div class="text-xs"><span class="block text-gray-400">CPU</span><b id="cpu-load">--%</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIPELINE -->
+            <div class="main-section relative overflow-hidden bg-white rounded-xl border border-gray-200"
+                style="height: 50vh; width: 100%;">
+                <!-- BACKGROUNDS -->
+                <div class="absolute inset-0 flex">
+                    <div style="width: 25%; background: rgba(59, 130, 246, 0.05); border-right: 1px solid #eee;"></div>
+                    <div style="width: 25%; background: rgba(245, 158, 11, 0.05); border-right: 1px solid #fca5a5;">
+                    </div>
+                    <div style="width: 25%; background: rgba(34, 197, 94, 0.05); border-right: 1px solid #eee;"></div>
+                    <div style="width: 25%; background: rgba(107, 114, 128, 0.05);"></div>
+                </div>
+
+                <!-- HEADERS -->
+                <div class="absolute top-4 font-bold text-gray-400"
+                    style="left: 12.5%; transform: translateX(-50%); font-size: 12px;">QUEUE</div>
+                <div class="absolute top-4 font-bold text-orange-500"
+                    style="left: 37.5%; transform: translateX(-50%); font-size: 12px;">CHECK LOCK</div>
+                <div class="absolute top-4 font-bold text-blue-500"
+                    style="left: 62.5%; transform: translateX(-50%); font-size: 12px;">IN PROGRESS</div>
+                <div class="absolute top-4 font-bold text-green-500"
+                    style="left: 87.5%; transform: translateX(-50%); font-size: 12px;">COMPLETE</div>
+
+                <div id="pipeline" class="relative h-full w-full"></div>
+            </div>
+
+            <!-- CONTROLS & MONITOR -->
+            <div class="grid grid-cols-12 gap-3 flex-grow-1 overflow-hidden">
+                <!-- Left: Controls -->
+                <div class="col-span-4 bg-white p-4 rounded-xl border border-gray-200 flex flex-col gap-4">
+                    <div class="slider-group">
+                        <label class="text-xs font-bold text-gray-500 block mb-2">MAX CONCURRENT: <span
+                                id="maxConcurrentDisplay">2</span></label>
+                        <input type="range" id="maxConcurrentSlider" class="w-full" min="1" max="10" value="2" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="task-button" id="createOneBtn">1 Task</button>
+                        <button class="task-button" id="createFiveBtn">5 Tasks</button>
+                        <button class="task-button" id="createTwentyBtn">20 Tasks</button>
+                        <button class="task-button" id="createFiftyBtn">50 Tasks</button>
+                        <button class="col-span-2 task-button bg-red-500" id="createHundredBtn">100 Tasks</button>
+                    </div>
+                </div>
+
+                <div class="col-span-8 bg-gray-900 rounded-xl overflow-hidden flex flex-col">
+                    <div class="p-2 bg-gray-800 text-[10px] text-gray-400 flex justify-between">
+                        <span>TERMINAL LOG</span>
+                        <span id="wsStatus">CONNECTING...</span>
+                    </div>
+                    <div id="logPanel" class="flex-grow-1 p-2 font-mono text-[10px] overflow-y-auto text-green-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <template id="semaphore-template">
+        <div class="semaphore-item p-2 bg-gray-50 rounded border">
+            <div class="flex justify-between text-xs mb-1">
+                <b class="key"></b>
+                <span class="val"></span>
+            </div>
+            <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
+                <div class="progress-fill h-full bg-blue-500"></div>
+            </div>
+        </div>
+    </template>
+
+    <script src="dist/app.min.js"></script>
+</body>
+
+</html>
