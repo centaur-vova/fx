@@ -1,9 +1,9 @@
 # 📝 TODO
 
 ### 🔴 High Priority
-- **Fix Connection Limit Issues**:
-  - Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
-  - Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
+- [ ] **Fix Connection Limit Issues**:
+  - [ ] Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
+  - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
 
 ### 🟡 Medium Priority
 - [ ] **Architectural Refactoring**:
@@ -18,8 +18,7 @@
 
 ### 🟢 Low Priority
 - [ ] **UI/UX Refinement**:
-  - [ ] **Task Overlapping Prevention**: Implement a horizontal jitter/offset algorithm.
+  - [x] **Task Overlapping Prevention**: Implement a horizontal jitter/offset algorithm.
   - [ ] **Visual Overhaul**: Enhance task shapes and color palettes.
 - [ ] **Graceful Shutdown**:
   - [ ] Add signal handling (`SIGTERM`) for safe worker exit.
-

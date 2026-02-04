@@ -45,20 +45,26 @@ document.addEventListener("DOMContentLoaded", () => {
         el.textContent = mc;
 
         const top = 20 + Math.random() * 60;
+        const jitterX = (Math.random() - 0.5) * 6;
+
         el.style.top = `${top}%`;
-        el.style.left = `${COORDS.queued}%`;
+        el.style.left = `${COORDS.queued + jitterX}%`;
 
         DOM.pipeline.appendChild(el);
-        state.tasks[id] = { el, status: "queued", top };
+        state.tasks[id] = { el, status: "queued", top, jitterX };
     };
 
     const updateTask = (id, status, mc) => {
         const task = state.tasks[id];
         if (!task) return;
 
-        if (COORDS[status] && COORDS[status] !== task.lastCoord) {
-            task.el.style.left = COORDS[status] + "%";
-            task.lastCoord = COORDS[status];
+        if (COORDS[status]) {
+            const targetLeft = COORDS[status] + (task.jitterX || 0);
+
+            if (targetLeft !== task.lastCoord) {
+                task.el.style.left = targetLeft + "%";
+                task.lastCoord = targetLeft;
+            }
         }
 
         if (status === "completed") task.el.classList.add("completed");
