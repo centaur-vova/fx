@@ -1,0 +1,25 @@
+# 📝 TODO
+
+### 🔴 High Priority
+- **Fix Connection Limit Issues**:
+  - Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
+  - Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
+
+### 🟡 Medium Priority
+- [ ] **Architectural Refactoring**:
+  - [ ] Decouple `server.php` by moving event handlers into dedicated classes.
+  - [ ] Implement a simple Dependency Injection (DI) container for cleaner bootstrap.
+- [ ] **Environment Configuration**:
+  - [ ] Integrate `vlucas/phpdotenv` to manage application environment.
+  - [ ] Move hardcoded server settings (Host, Port, Worker count) from `server.php` to `.env`.
+- [ ] **System Metrics Implementation**:
+  - [ ] Implement real-time broadcasting of server stats (**MEM**, **CONN**, **CPU**).
+  - [ ] Connect backend timers to frontend header indicators.
+
+### 🟢 Low Priority
+- [ ] **UI/UX Refinement**:
+  - [ ] **Task Overlapping Prevention**: Implement a horizontal jitter/offset algorithm.
+  - [ ] **Visual Overhaul**: Enhance task shapes and color palettes.
+- [ ] **Graceful Shutdown**:
+  - [ ] Add signal handling (`SIGTERM`) for safe worker exit.
+

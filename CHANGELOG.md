@@ -1,0 +1,19 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com),
+and this project adheres to [Semantic Versioning](https://semver.org).
+
+## - 2026-02-05
+
+### Added
+- Core asynchronous engine based on **Swoole**.
+- Coroutine-based worker pool for task processing.
+- Real-time task pipeline visualization (Vanilla JS + Tailwind CSS 4).
+- Shared memory `ConnectionPool` using `Swoole\Table`.
+- Pre-allocated semaphore system via `Swoole\Coroutine\Channel`.
+- PSR-3 compliant logging system.
+- Custom WebSocket protocol with support for ping/pong and channel subscriptions.
+- Event-driven broadcasting compatible with standard WebSocket clients.
+
