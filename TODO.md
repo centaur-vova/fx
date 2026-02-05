@@ -1,5 +1,13 @@
 # 📝 TODO
 
+### 🚀 Roadmap / Upcoming Features
+- [ ] **Infrastructure**: Move `server.php` logic into dedicated Bootstrap and Service Provider classes for better testability.
+- [ ] **Testing**: Implement a comprehensive PHPUnit suite covering DTO integrity, Semaphore logic, and Config validation.
+- [ ] **CI/CD**: Add GitHub Actions to automate testing and linting on every push.
+- [ ] **Real-time Tuning**: Add UI controls to adjust `TASK_LOCK_TIMEOUT` and `GRACEFUL_SHUTDOWN` settings without restarting the server.
+- [ ] **Control Flow**: Implement a Global Pause/Resume toggle for the worker pool using Shared Memory state.
+- [ ] **Health Check**: Enhance the existing `/api/tasks/health` endpoint to report `Swoole\Table` saturation and worker liveness.
+
 ### 🔴 High Priority
 - [ ] **Real-time Pipeline Monitoring**:
   - [x] Implement a live counter for **Incomplete Tasks** (tasks currently being processed).
