@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Integration with `vlucas/phpdotenv` for centralized environment management.
 - Dedicated `Config` service for type-safe access to application settings.
 - Periodic metrics broadcasting (CPU, Memory, Connections) via Swoole Timer.
+- Real-time "In-Flight" task counter using `Swoole\Atomic` for cross-worker synchronization.
+- Extended system metrics with live pipeline occupancy tracking.
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).

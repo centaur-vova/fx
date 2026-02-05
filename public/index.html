@@ -22,6 +22,8 @@
                         <p class="text-xs text-gray-500">Real-time Coroutine Pipeline</p>
                     </div>
                     <div class="flex gap-4 text-right">
+                        <div class="text-xs"><span class="block text-gray-400">TASKS</span><b id="tasks-count">0</b>
+                        </div>
                         <div class="text-xs"><span class="block text-gray-400">MEM</span><b id="memory-usage">-- MB</b>
                         </div>
                         <div class="text-xs"><span class="block text-gray-400">CONN</span><b id="connection-count">0</b>
@@ -32,8 +34,7 @@
             </div>
 
             <!-- PIPELINE -->
-            <div class="main-section relative overflow-hidden bg-white rounded-xl border border-gray-200"
-                style="height: 50vh; width: 100%;">
+            <div class="main-section relative overflow-hidden bg-white rounded-xl border border-gray-200" style="height: 50vh; width: 100%;">
                 <!-- BACKGROUNDS -->
                 <div class="absolute inset-0 flex">
                     <div style="width: 25%; background: rgba(59, 130, 246, 0.05); border-right: 1px solid #eee;"></div>
@@ -44,14 +45,10 @@
                 </div>
 
                 <!-- HEADERS -->
-                <div class="absolute top-4 font-bold text-gray-400"
-                    style="left: 12.5%; transform: translateX(-50%); font-size: 12px;">QUEUE</div>
-                <div class="absolute top-4 font-bold text-orange-500"
-                    style="left: 37.5%; transform: translateX(-50%); font-size: 12px;">CHECK LOCK</div>
-                <div class="absolute top-4 font-bold text-blue-500"
-                    style="left: 62.5%; transform: translateX(-50%); font-size: 12px;">IN PROGRESS</div>
-                <div class="absolute top-4 font-bold text-green-500"
-                    style="left: 87.5%; transform: translateX(-50%); font-size: 12px;">COMPLETE</div>
+                <div class="absolute top-4 font-bold text-gray-400" style="left: 12.5%; transform: translateX(-50%); font-size: 12px;">QUEUE</div>
+                <div class="absolute top-4 font-bold text-orange-500" style="left: 37.5%; transform: translateX(-50%); font-size: 12px;">CHECK LOCK</div>
+                <div class="absolute top-4 font-bold text-blue-500" style="left: 62.5%; transform: translateX(-50%); font-size: 12px;">IN PROGRESS</div>
+                <div class="absolute top-4 font-bold text-green-500" style="left: 87.5%; transform: translateX(-50%); font-size: 12px;">COMPLETE</div>
 
                 <div id="pipeline" class="relative h-full w-full"></div>
             </div>
@@ -61,8 +58,7 @@
                 <!-- Left: Controls -->
                 <div class="col-span-4 bg-white p-4 rounded-xl border border-gray-200 flex flex-col gap-4">
                     <div class="slider-group">
-                        <label class="text-xs font-bold text-gray-500 block mb-2">MAX CONCURRENT: <span
-                                id="maxConcurrentDisplay">2</span></label>
+                        <label class="text-xs font-bold text-gray-500 block mb-2">MAX CONCURRENT: <span id="maxConcurrentDisplay">2</span></label>
                         <input type="range" id="maxConcurrentSlider" class="w-full" min="1" max="10" value="2" />
                     </div>
                     <div class="grid grid-cols-2 gap-2">

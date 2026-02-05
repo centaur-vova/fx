@@ -7,6 +7,7 @@ namespace App\Server;
 use App\Router;
 use App\WebSocket\ConnectionPool;
 use App\WebSocket\MessageHub;
+use Swoole\Atomic;
 use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
@@ -16,6 +17,7 @@ class EventHandler
         private Router $router,
         private MessageHub $wsHub,
         private ConnectionPool $connectionPool,
+        private Atomic $inFlightCounter,
     ) {
     }
 
@@ -63,6 +65,7 @@ class EventHandler
             $hub->broadcast([
                 'event' => 'metrics.update',
                 'data' => [
+                    'tasks' => $this->inFlightCounter->get(),
                     'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
                     'connections' => $this->wsHub->count(),
                     'cpu' => $cpu . '%',

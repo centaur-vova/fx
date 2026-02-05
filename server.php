@@ -12,6 +12,7 @@ use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
 use App\Support\StdoutLogger;
 use App\WebSocket\{ConnectionPool, MessageHub, WsEventBroadcaster};
+use Swoole\Atomic;
 use Swoole\Coroutine as Co;
 use Swoole\Timer;
 use Swoole\WebSocket\Server;
@@ -30,6 +31,8 @@ $server->set([
 ]);
 
 // Infrastructure
+
+$inFlightCounter = new Atomic(0);
 $logger = new StdoutLogger();
 $connectionPool = new ConnectionPool();
 $mainQueue = new Co\Channel($config->getInt('QUEUE_CAPACITY', 10000));
@@ -46,6 +49,7 @@ $taskService = new TaskService(
     $broadcaster,
     $mainQueue,
     $strategy,
+    $inFlightCounter,
     $logger
 );
 
@@ -56,7 +60,7 @@ $taskController = new TaskController($taskService, $wsHub);
 $router = new Router($taskController);
 
 // EventHandler
-$eventHandler = new EventHandler($router, $wsHub, $connectionPool);
+$eventHandler = new EventHandler($router, $wsHub, $connectionPool, $inFlightCounter);
 
 // WS
 $server->on('request', $eventHandler->onRequest(...));

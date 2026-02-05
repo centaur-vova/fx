@@ -8,6 +8,7 @@ use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
 use Psr\Log\LoggerInterface;
+use Swoole\Atomic;
 use Swoole\Coroutine as Co;
 use Swoole\Coroutine\Channel;
 use Swoole\Timer;
@@ -19,6 +20,7 @@ class TaskService
         private Broadcaster $broadcaster,
         private Channel $mainQueue,
         private TaskDelayStrategy $delayStrategy,
+        private Atomic $inFlightCounter,
         private LoggerInterface $logger,
     ) {
     }
@@ -95,7 +97,9 @@ class TaskService
 
                     if ($task) {
                         Co::create(function () use ($task) {
+                            $this->incrementTaskCount();
                             $this->processTask($task['id'], $task['mc']);
+                            $this->decrementTaskCount();
                         });
                     }
                 }
@@ -117,5 +121,15 @@ class TaskService
             'progress' => $progress,
             'attempt' => 1,
         ]);
+    }
+
+    private function incrementTaskCount(): void
+    {
+        $this->inFlightCounter->add(1);
+    }
+
+    private function decrementTaskCount(): void
+    {
+        $this->inFlightCounter->sub(1);
     }
 }

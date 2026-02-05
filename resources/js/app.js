@@ -35,10 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const memEl = document.getElementById("memory-usage");
         const connEl = document.getElementById("connection-count");
         const cpuEl = document.getElementById("cpu-load");
+        const tasksEl = document.getElementById("tasks-count");
 
         if (memEl) memEl.textContent = data.memory;
         if (connEl) connEl.textContent = data.connections;
         if (cpuEl) cpuEl.textContent = data.cpu;
+        if (tasksEl) tasksEl.textContent = data.tasks;
     }
 
     const handleUpdateTasks = (data) => {
