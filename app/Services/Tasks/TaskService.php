@@ -9,7 +9,7 @@ use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
-use App\DTO\Tasks\QueueStatsDTO;
+use App\DTO\Tasks\QueueStats;
 use App\DTO\Tasks\TaskStatusUpdate;
 use App\Exceptions\Tasks\QueueFullException;
 use Psr\Log\LoggerInterface;
@@ -23,7 +23,6 @@ class TaskService
     private ?Channel $mainQueue = null;
 
     public function __construct(
-        private Server $server,
         private TaskSemaphore $semaphore,
         private Broadcaster $broadcaster,
         private TaskDelayStrategy $delayStrategy,
@@ -121,7 +120,7 @@ class TaskService
 
     public function getQueueStats()
     {
-        return new QueueStatsDTO(
+        return new QueueStats(
             usage: $this->getQueue()->stats()['queue_num'],
             max: (int) $this->config->get('QUEUE_CAPACITY', 10000)
         );

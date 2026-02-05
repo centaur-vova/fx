@@ -51,14 +51,20 @@ $container->set('shared.table.connections', fn () => $shared['connections']);
 $container->set('shared.atomic.tasks', fn () => $shared['task_counter']);
 $container->set('shared.cpu_cores', fn () => $shared['cpu_cores']);
 
+// Logger
+$container->set(StdoutLogger::class, function ($c) {
+    $config = $c->get(Config::class);
+    $logLevel = $config->get('LOG_LEVEL', 'info');
+
+    return new StdoutLogger($logLevel);
+});
+
 // Lazy Services
 $container->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
 $container->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
-$container->set(StdoutLogger::class, fn () => new StdoutLogger());
 $container->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
 
 $container->set(TaskService::class, fn ($c) => new TaskService(
-    $server,
     new SwooleChannelSemaphore($config->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10)),
     new WsEventBroadcaster($c->get(MessageHub::class)),
     new DemoDelayStrategy(),

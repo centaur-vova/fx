@@ -6,7 +6,7 @@ namespace App\DTO\Tasks;
 
 use JsonSerializable;
 
-class QueueStatsDTO implements JsonSerializable
+class QueueStats implements JsonSerializable
 {
     public function __construct(
         public readonly int $usage,

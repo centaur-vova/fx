@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Global State Sync**: Frontend now synchronizes task positions based on server-side `mc` values, enabling consistent views across multiple clients.
 - **Resource Guarding (Backend)**: Implemented `QUEUE_CAPACITY` checks and `QueueFullException` to protect VPS resources from task overflow.
 - **Queue Monitoring Logic**: Added `getQueueStats()` and `QueueStatsDTO` to the service layer for future observability.
+- **Log Level Filtering**: Implemented PSR-3 level-based filtering in `StdoutLogger`. Supports all standard levels (debug, info, warning, error, etc.).
+- **Environment Configuration**: Added `LOG_LEVEL` to `.env` to control logging verbosity without code changes.
 
 ### Fixed
 - **WebSocket Session Isolation**: Fixed issue where tasks finishing in one worker couldn't notify clients connected to another.
@@ -48,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Log Performance**: Implemented DOM node recycling to prevent browser lag during high-frequency broadcasting.
 - **Task Counter Leak**: Wrapped task processing in `try-finally` blocks to ensure atomic counter decrements even on failure.
 - **Coroutine Deadlocks**: Optimized shutdown sequence to close all internal channels (Main Queue and Semaphores).
+- **Clean Console**: Eliminated debug noise in production mode.
+- **DI Container**: Refactored `StdoutLogger` instantiation to decouple it from the `Config` object, improving architecture.
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).
