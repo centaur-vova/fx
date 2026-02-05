@@ -152,23 +152,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function addLog(taskId, mc, status, msg) {
         const entry = document.createElement('div');
-        entry.className = 'whitespace-nowrap truncate';
+        entry.className = 'whitespace-nowrap truncate text-[10px] leading-tight mb-0.5';
 
         const time = new Date().toLocaleTimeString([], { hour12: false });
-        const shortStatus = status ? status.toUpperCase() : 'INFO';
-        const msgText = msg ? msg.toUpperCase() : 'INFO';
+        const shortId = taskId.replace('task-', '').substring(0, 8);
 
-        entry.innerHTML = `<span class="text-gray-600">${time}</span> ` +
-            `<span class="text-yellow-500">[${msgText}]</span> ` +
-            `<span class="text-white font-bold">${taskId}</span> ` +
-            `<span class="text-green-500">${shortStatus}</span>`;
+        const statusStyles = {
+            'queued': 'text-gray-400',
+            'check_lock': 'text-amber-500',
+            'lock_acquired': 'text-yellow-400',
+            'lock_failed': 'text-red-500 animate-pulse',
+            'processing': 'text-blue-500',
+            'processing_progress': 'text-sky-400',
+            'completed': 'text-green-500',
+            'default': 'text-gray-500'
+        };
+
+        const colorClass = statusStyles[status] || statusStyles['default'];
+        const displayStatus = status ? status.toUpperCase().replace('_', ' ') : 'INFO';
+
+
+        entry.innerHTML =
+            `<span class="text-gray-600">${time}</span> ` +
+            `<span class="${colorClass} font-bold">[${displayStatus}]</span> ` +
+            `<span class="text-gray-500">ID:</span><span class="text-white">${shortId}</span> ` +
+            `<span class="text-gray-300 ml-1"> ${msg}</span>`;
 
         DOM.log.appendChild(entry);
 
-        while (DOM.log.children.length > 40) {
+        if (DOM.log.children.length > 50) {
             DOM.log.removeChild(DOM.log.firstChild);
         }
-
         DOM.log.scrollTop = DOM.log.scrollHeight;
     }
 

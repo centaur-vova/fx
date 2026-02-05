@@ -41,6 +41,17 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Queue Monitoring Logic**: Added `getQueueStats()` and `QueueStatsDTO` to the service layer for future observability.
 - **Log Level Filtering**: Implemented PSR-3 level-based filtering in `StdoutLogger`. Supports all standard levels (debug, info, warning, error, etc.).
 - **Environment Configuration**: Added `LOG_LEVEL` to `.env` to control logging verbosity without code changes.
+- **7-Stage Lifecycle Visualization**: Implemented full support for task states (`QUEUED`, `CHECK_LOCK`, `LOCK_ACQUIRED`, `LOCK_FAILED`, `PROCESSING`, `PROGRESS`, `COMPLETED`) with unique color coding in the terminal log.
+- **Resource Guarding UI**: Added a "Queue Load" metric to the dashboard to monitor `Swoole\Channel` saturation in real-time.
+- **Visual LOD (Level of Detail)**: Tasks now scale from 40px blocks to 4px particles based on system load to ensure 60FPS UI performance.
+- **DTO Architecture Refactoring**:
+    - Standardized naming conventions across the `App\DTO` namespace.
+    - Renamed `QueueStatsDTO` to `QueueStats` to eliminate redundant suffixes (Clean Code approach).
+    - Synchronized file names with PSR-4 namespaces for full Linux/Production compatibility.
+- **Improved Logging**:
+    - Optimized `addLog` performance to handle high-frequency updates (2500+ events/sec).
+    - Added "Pulse" animation for critical failures (Lock Collisions).
+    - Reduced visual noise by truncating UUIDs and cleaning up status formatting.
 
 ### Fixed
 - **WebSocket Session Isolation**: Fixed issue where tasks finishing in one worker couldn't notify clients connected to another.
@@ -52,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Coroutine Deadlocks**: Optimized shutdown sequence to close all internal channels (Main Queue and Semaphores).
 - **Clean Console**: Eliminated debug noise in production mode.
 - **DI Container**: Refactored `StdoutLogger` instantiation to decouple it from the `Config` object, improving architecture.
+- **UI Desync**: Resolved the "ghost tasks" issue by strictly following server-side MC (Max Concurrency) metadata in the frontend state.
+- **Z-Index Conflicts**: Fixed visibility of zone labels and background grids in Dark Mode.
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).
