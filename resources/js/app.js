@@ -84,15 +84,27 @@ document.addEventListener("DOMContentLoaded", () => {
         if (status === "completed") task.el.classList.add("completed");
     };
 
-    const addLog = (id, status, msg) => {
-        const entry = document.createElement("div");
-        entry.innerHTML = `<span class="text-gray-500">[${new Date().toLocaleTimeString()}]</span>
-                           <span class="text-yellow-400">${id.slice(-4)}</span>
-                           <span class="text-white">${status.toUpperCase()}</span> ${msg}`;
+    function addLog(msg, id, status) {
+        const entry = document.createElement('div');
+        entry.className = 'whitespace-nowrap truncate';
+
+        const time = new Date().toLocaleTimeString([], { hour12: false });
+        const shortId = id ? id.slice(-4) : 'CORE';
+        const statusText = status ? status.toUpperCase() : 'INFO';
+
+        entry.innerHTML = `<span class="text-gray-600">${time}</span> ` +
+            `<span class="text-yellow-500">[${shortId}]</span> ` +
+            `<span class="text-white font-bold">${statusText}</span> ` +
+            `<span class="text-green-500">${msg}</span>`;
+
         DOM.log.appendChild(entry);
+
+        while (DOM.log.children.length > 40) {
+            DOM.log.removeChild(DOM.log.firstChild);
+        }
+
         DOM.log.scrollTop = DOM.log.scrollHeight;
-        if (DOM.log.children.length > 50) DOM.log.removeChild(DOM.log.firstChild);
-    };
+    }
 
     // Listeners
     DOM.mcSlider.oninput = (e) => {

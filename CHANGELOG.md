@@ -15,10 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - PSR-3 compliant logging system.
 - Custom WebSocket protocol with support for ping/pong and channel subscriptions.
 - Event-driven broadcasting compatible with standard WebSocket clients.
-
-## - 2026-02-05
-
-### Added
 - Horizontal jitter algorithm for task markers to prevent overlapping in the pipeline zones.
 - Real-time system metrics broadcasting (CPU load, Memory usage, Active connections).
 - Server-side periodic timer for health monitoring.
@@ -31,11 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Inter-Process Communication**: Added `onPipeMessage` handler to allow all workers to broadcast to their respective clients.
 - **Lazy DI Container**: Services are now instantiated only inside workers, ensuring fresh coroutine channels and timers.
 - **Accurate Monitoring**: Implemented `getrusage`-based CPU tracking (independent of system load) and `memory_get_usage` tracking.
+- **Terminal UI**: Fixed-height scrollable log panel with auto-scroll and line limiting (last 40 entries).
+- **Responsive Layout**: Aligned control panel and terminal log using CSS Grid and `items-stretch`.
+- **Dynamic Styling**: Integrated status-based color coding in terminal logs (INFO/LOCK/PROC).
+- **Session Isolation**: Tasks are now visually isolated per WebSocket client, while still sharing global server resources (CPU, Memory, Semaphores).
 
 ### Fixed
 - **WebSocket Session Isolation**: Fixed issue where tasks finishing in one worker couldn't notify clients connected to another.
 - **Memory Corruption**: Fixed `Swoole\Table` re-initialization on worker restart by removing `create()` calls from constructors.
 - **Ghost Connections**: Implemented `exists()` and `isEstablished()` checks in `MessageHub` with auto-cleanup of dead FDs.
+- **UI Layout Instability**: Prevented terminal log from expanding infinitely and breaking the page flow.
+- **Log Performance**: Implemented DOM node recycling to prevent browser lag during high-frequency broadcasting.
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).
@@ -56,3 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ### Improved
 - Refined task distribution algorithm (jitter) for better pipeline clarity.
+
+### Removed
+- Static "Connecting..." status label to simplify UI.
