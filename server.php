@@ -26,7 +26,7 @@ use Swoole\Process;
 use Swoole\WebSocket\Server;
 
 // Initialize Infrastructure & Shared Memory
-$config = new Config(__DIR__);
+$config = Config::fromEnv(__DIR__);
 $shared = SharedResourceProvider::boot($config);
 
 // Server Instance

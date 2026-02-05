@@ -100,3 +100,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ### Removed
 - Static "Connecting..." status label to simplify UI.
+
+## - 2026-02-06
+### QA
+- **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.
+- **Testing Infrastructure**: Added `phpunit.xml` and automated test scripts via Composer.
+- **Mocking Strategy**: Implemented clean Unit tests using Stubs and Mocks for high-concurrency services.

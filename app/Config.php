@@ -8,17 +8,21 @@ use Dotenv\Dotenv;
 
 class Config
 {
-    private array $repository = [];
+    public function __construct(
+        private readonly array $repository,
+    ) {
+    }
 
-    public function __construct(string $path)
+    public static function fromEnv(string $path): self
     {
         $dotenv = Dotenv::createImmutable($path);
-        $this->repository = $dotenv->load();
+
+        return new self(array_merge($_ENV, $dotenv->load()));
     }
 
     public function get(string $key, mixed $default = null): mixed
     {
-        return $_ENV[$key] ?? $default;
+        return $this->repository[$key] ?? $default;
     }
 
     public function getInt(string $key, int $default = 0): int

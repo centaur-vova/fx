@@ -14,11 +14,20 @@
             "App\\": "app/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "require-dev": {
         "swoole/ide-helper": "^6.0",
-        "friendsofphp/php-cs-fixer": "^3.93"
+        "friendsofphp/php-cs-fixer": "^3.93",
+        "phpunit/phpunit": "^12.5"
     },
     "scripts": {
-        "lint": "php-cs-fixer fix"
+        "lint": "php-cs-fixer fix",
+        "test": "phpunit --colors=always",
+        "test:unit": "phpunit --testsuite=Unit",
+        "test:coverage": "phpunit --coverage-text"
     }
 }
