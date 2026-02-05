@@ -7,4 +7,5 @@ namespace App\Contracts\Tasks;
 interface TaskSemaphore
 {
     public function forLimit(int $mc): SemaphorePermit;
+    public function close(): void;
 }

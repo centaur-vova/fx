@@ -25,5 +25,5 @@
 - [x] **UI/UX Refinement**:
   - [x] **Task Overlapping Prevention**: Implement a horizontal jitter/offset algorithm.
   - [x] **Visual Overhaul**: Enhance task shapes and color palettes.
-- [ ] **Graceful Shutdown**:
-  - [ ] Add signal handling (`SIGTERM`) for safe worker exit.
+- [x] **Graceful Shutdown**:
+  - [x] Add signal handling (`SIGTERM`) for safe worker exit.

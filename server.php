@@ -22,6 +22,7 @@ use App\WebSocket\ConnectionPool;
 use App\WebSocket\MessageHub;
 use App\WebSocket\WsEventBroadcaster;
 use Swoole\Coroutine as Co;
+use Swoole\Process;
 use Swoole\WebSocket\Server;
 
 // Initialize Infrastructure & Shared Memory
@@ -58,7 +59,7 @@ $container->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::cla
 
 $container->set(TaskService::class, fn ($c) => new TaskService(
     $server,
-    new SwooleChannelSemaphore(),
+    new SwooleChannelSemaphore($config->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10)),
     new WsEventBroadcaster($c->get(MessageHub::class)),
     new DemoDelayStrategy(),
     $c->get(TaskCounter::class),
@@ -80,6 +81,11 @@ $container->set(EventHandler::class, function ($c) use ($config) {
 
 // Worker Lifecycle
 $server->on('WorkerStart', function ($server, $workerId) use ($container, $config) {
+    Process::signal(SIGINT, function () use ($server) {
+        // Swoole will call onWorkerStop itself
+        $server->stop();
+    });
+
     try {
         $taskService = $container->get(TaskService::class);
 
@@ -90,6 +96,27 @@ $server->on('WorkerStart', function ($server, $workerId) use ($container, $confi
     } catch (\Throwable $e) {
         echo "!!! ERROR IN WORKER #$workerId: " . $e->getMessage() . "\n";
     }
+});
+
+// Graceful shutdown
+$server->on('WorkerStop', function ($server, $workerId) use ($container) {
+    $taskService = $container->get(TaskService::class);
+    $taskCounter = $container->get(TaskCounter::class);
+    $config = $container->get(Config::class);
+
+    // Close the queue - stop taking new jobs from the channel
+    $taskService->shutdown();
+
+    $timeout = (float) $config->get('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 30);
+    $start = microtime(true);
+
+    // Poll the atomic counter until it's zero or we hit the timeout
+    while ($taskCounter->get() > 0 && (microtime(true) - $start) < $timeout) {
+        usleep(50000);
+    }
+
+    $duration = round(microtime(true) - $start, 2);
+    echo ">>> [System] Worker #$workerId stopped after {$duration}s. Active tasks: " . $taskCounter->get() . "\n";
 });
 
 // Lazy Event Handlers
@@ -107,8 +134,12 @@ $server->on('pipeMessage', function ($server, $srcWorkerId, $message) use ($cont
     }
 });
 
-echo "========================================\n";
-echo "Atomic Flow Server: Ready to process\n";
-echo "========================================\n";
+// On start
+$server->on('start', function (Server $server) use ($config) {
+    echo "========================================\n";
+    echo "Atomic Flow Server: Ready to process\n";
+    echo "URL: http://" . $config->get('SERVER_HOST') . ":" . $config->get('SERVER_PORT') . "\n";
+    echo "========================================\n";
+});
 
 $server->start();

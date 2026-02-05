@@ -9,6 +9,7 @@ use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
+use App\DTO\Tasks\TaskStatusUpdate;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Coroutine\Channel;
@@ -24,7 +25,7 @@ class TaskService
         private TaskSemaphore $semaphore,
         private Broadcaster $broadcaster,
         private TaskDelayStrategy $delayStrategy,
-        private TaskCounter $counter,
+        private TaskCounter $taskCounter,
         private LoggerInterface $logger,
         private Config $config,
     ) {
@@ -39,7 +40,7 @@ class TaskService
             $taskId = $this->generateTaskId();
             $taskIds[] = $taskId;
 
-            $this->notify($taskId, 'queued', 'In queue');
+            $this->notify(TaskStatusUpdate::queued($taskId, $maxConcurrent));
 
             $timerDelay = ($this->delayStrategy)($i, $delay);
 
@@ -56,36 +57,52 @@ class TaskService
     public function processTask(string $taskId, int $mc): void
     {
         $this->logger->info("Task started", ['id' => $taskId, 'mc' => $mc]);
-        $this->notify($taskId, 'processing', 'Started');
+        $this->notify(TaskStatusUpdate::processing($taskId, $mc));
 
         $permit = $this->semaphore->forLimit($mc);
-        $this->notify($taskId, 'check_lock', "Limit: $mc");
+        $this->notify(TaskStatusUpdate::checkLock($taskId, $mc));
 
         $startWait = microtime(true);
-        if ($permit->acquire(30)) {
+
+        $lockTimeout = (float) $this->config->get('TASK_LOCK_TIMEOUT_SEC', 30);
+
+        if ($permit->acquire($lockTimeout)) {
             $waitDuration = microtime(true) - $startWait;
             $this->logger->debug("Lock acquired", ['id' => $taskId, 'wait' => $waitDuration]);
 
             try {
-                $this->notify($taskId, 'lock_acquired', 'Accepted');
+                $this->notify(TaskStatusUpdate::lockAcquired($taskId, $mc));
 
                 for ($i = 1; $i <= 4; $i++) {
+                    if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
+                        return;
+                    }
+
                     $stepDuration = mt_rand(800, 1300) / 1000;
                     Co::sleep($stepDuration);
 
-                    $this->notify($taskId, 'processing_progress', "Step $i/4", $i * 25);
+                    $this->notify(TaskStatusUpdate::processingProgress($taskId, $mc, $i * 25)->withMessage("Step $i/4"));
                 }
 
-                $this->notify($taskId, 'completed', 'Done', 100);
+                $this->notify(TaskStatusUpdate::completed($taskId, $mc));
             } finally {
                 $permit->release();
                 $this->logger->debug("Lock released", ['id' => $taskId]);
             }
         } else {
+            // In case of timeout or server is closed
             $waitDuration = microtime(true) - $startWait;
-            $this->logger->warning("Lock timeout", ['id' => $taskId, 'waited' => $waitDuration]);
 
-            $this->notify($taskId, 'lock_failed', 'Timeout');
+            // Dont push in case of closed server
+            if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
+                $this->logger->info("Task cancelled due to shutdown", ['id' => $taskId]);
+                return;
+            }
+
+            $this->logger->warning("Lock timeout", ['id' => $taskId, 'waited' => $waitDuration]);
+            $this->notify(TaskStatusUpdate::lockFailed($taskId, $mc));
+
+            // Push only if channge is open
             $this->getQueue()->push(['id' => $taskId, 'mc' => $mc]);
         }
     }
@@ -99,23 +116,44 @@ class TaskService
         $concurrentTasks = $this->config->getInt('WORKER_CONCURRENCY', 10);
         for ($i = 0; $i < $concurrentTasks; $i++) {
             Co::create(function () {
-                while (true) {
-                    $task = $this->getQueue()->pop();
+                try {
+                    while (true) {
+                        $task = @$this->getQueue()->pop();
 
-                    if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
-                        break;
-                    }
+                        if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
+                            break;
+                        }
 
-                    if ($task) {
+                        if (!$task) {
+                            continue;
+                        }
+
                         Co::create(function () use ($task) {
                             $this->incrementTaskCount();
-                            $this->processTask($task['id'], $task['mc']);
-                            $this->decrementTaskCount();
+                            try {
+                                $this->processTask($task['id'], $task['mc']);
+                            } catch (\Throwable $e) {
+                                // Ignore
+                            } finally {
+                                $this->decrementTaskCount();
+                            }
                         });
                     }
+                } catch (\Throwable $e) {
+                    // Ignore
                 }
             });
         }
+    }
+
+    public function shutdown(): void
+    {
+        if ($this->mainQueue) {
+            $this->logger->info("Shutting down worker, waiting for queue to drain...");
+            $this->mainQueue->close();
+        }
+
+        $this->semaphore->close();
     }
 
     private function generateTaskId(): string
@@ -123,25 +161,19 @@ class TaskService
         return 'task-' . bin2hex(random_bytes(4)) . '-' . time();
     }
 
-    private function notify(string $id, string $status, string $msg, int $progress = 0): void
+    private function notify(TaskStatusUpdate $taskStatusUpdate): void
     {
-        $this->broadcaster->broadcast('task.status.changed', [
-            'taskId' => $id,
-            'status' => $status,
-            'message' => $msg,
-            'progress' => $progress,
-            'attempt' => 1,
-        ]);
+        $this->broadcaster->broadcast('task.status.changed', $taskStatusUpdate);
     }
 
     private function incrementTaskCount(): void
     {
-        $this->counter->increment();
+        $this->taskCounter->increment();
     }
 
     private function decrementTaskCount(): void
     {
-        $this->counter->decrement();
+        $this->taskCounter->decrement();
     }
 
     private function getQueue(): Co\Channel

@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Responsive Layout**: Aligned control panel and terminal log using CSS Grid and `items-stretch`.
 - **Dynamic Styling**: Integrated status-based color coding in terminal logs (INFO/LOCK/PROC).
 - **Session Isolation**: Tasks are now visually isolated per WebSocket client, while still sharing global server resources (CPU, Memory, Semaphores).
+- **Graceful Shutdown**: Implemented `onWorkerStop` lifecycle hook with active task draining.
+- **Configurable Timeout**: Added `GRACEFUL_SHUTDOWN_TIMEOUT_SEC` to prevent zombie processes.
+- **Semaphore Lifecycle**: Added `close()` method to `TaskSemaphore` interface to unblock waiting coroutines.
+- **DTO Layer**: Introduced `TaskStatusUpdate` DTO with static factories and immutable state to standardize backend-to-frontend communication.
+- **Event Constants**: Centralized WebSocket event names within DTOs to eliminate "magic strings".
+- **Global State Sync**: Frontend now synchronizes task positions based on server-side `mc` values, enabling consistent views across multiple clients.
+
 
 ### Fixed
 - **WebSocket Session Isolation**: Fixed issue where tasks finishing in one worker couldn't notify clients connected to another.
@@ -38,10 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Ghost Connections**: Implemented `exists()` and `isEstablished()` checks in `MessageHub` with auto-cleanup of dead FDs.
 - **UI Layout Instability**: Prevented terminal log from expanding infinitely and breaking the page flow.
 - **Log Performance**: Implemented DOM node recycling to prevent browser lag during high-frequency broadcasting.
+- **Task Counter Leak**: Wrapped task processing in `try-finally` blocks to ensure atomic counter decrements even on failure.
+- **Coroutine Deadlocks**: Optimized shutdown sequence to close all internal channels (Main Queue and Semaphores).
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).
 - Implemented unique geometric primitives (circles, diamonds, polygons) to improve cognitive task differentiation.
+- **Messaging Architecture**: Migrated from loose arrays to a structured `TaskStatusUpdate` DTO.
+- **UI Logic**: Updated `app.js` to prioritize server-sent `mc` values, fixing the visualization bug between different browser windows.
 
 ### Optimized
 - Server memory footprint stabilized at ~3.5MB (idle) and ~7.5MB (high load: 500+ tasks).
@@ -58,6 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ### Improved
 - Refined task distribution algorithm (jitter) for better pipeline clarity.
+- **Broadcast Logic**: Refactored `WsEventBroadcaster` to accept DTO objects, ensuring data integrity before transmission.
+- **TaskService**: Integrated `try-finally` blocks and `isShuttingDown` checks for bulletproof graceful exits.
+- **Environment Configuration**: Decoupled semaphore limits and lock timeouts into `.env` for production tuning.
 
 ### Removed
 - Static "Connecting..." status label to simplify UI.

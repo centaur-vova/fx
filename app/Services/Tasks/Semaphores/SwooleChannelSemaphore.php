@@ -13,16 +13,16 @@ class SwooleChannelSemaphore implements TaskSemaphore
     /** @var Channel[] */
     private array $channels = [];
 
-    public function __construct()
+    public function __construct(private int $maxLimit)
     {
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= $maxLimit; $i++) {
             $this->channels[$i] = new Co\Channel($i);
         }
     }
 
     public function forLimit(int $mc): SemaphorePermit
     {
-        $limit = ($mc >= 1 && $mc <= 10) ? $mc : 1;
+        $limit = ($mc >= 1 && $mc <= $this->maxLimit) ? $mc : 1;
         $channel = $this->channels[$limit];
 
         return new class ($channel, $limit) implements SemaphorePermit {
@@ -33,7 +33,17 @@ class SwooleChannelSemaphore implements TaskSemaphore
 
             public function acquire(float $timeout): bool
             {
-                return $this->channel->push(true, $timeout);
+                if ($this->channel->errCode === SWOOLE_CHANNEL_CLOSED) {
+                    return false;
+                }
+
+                $result = @$this->channel->push(true, $timeout); // suppress warnings in console
+
+                if ($this->channel->errCode === SWOOLE_CHANNEL_CLOSED) {
+                    return false;
+                }
+
+                return $result;
             }
 
             public function release(): void
@@ -43,5 +53,12 @@ class SwooleChannelSemaphore implements TaskSemaphore
                 }
             }
         };
+    }
+
+    public function close(): void
+    {
+        foreach ($this->channels as $channel) {
+            $channel->close();
+        }
     }
 }

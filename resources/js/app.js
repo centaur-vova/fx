@@ -45,10 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const handleUpdateTasks = (data) => {
-        const { taskId, status, progress, message } = data;
-        addLog(taskId, status, message);
+        const { taskId, mc, status, progress, message } = data;
+        addLog(taskId, mc, status, message);
 
-        if (!state.tasks[taskId]) createTask(taskId, data.mc || state.mc);
+        if (!state.tasks[taskId]) createTask(taskId, mc || state.mc);
         updateTask(taskId, status, progress);
     };
 
@@ -84,18 +84,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (status === "completed") task.el.classList.add("completed");
     };
 
-    function addLog(msg, id, status) {
+    function addLog(taskId, mc, status, msg) {
         const entry = document.createElement('div');
         entry.className = 'whitespace-nowrap truncate';
 
         const time = new Date().toLocaleTimeString([], { hour12: false });
-        const shortId = id ? id.slice(-4) : 'CORE';
-        const statusText = status ? status.toUpperCase() : 'INFO';
+        const shortStatus = status ? status.toUpperCase() : 'INFO';
+        const msgText = msg ? msg.toUpperCase() : 'INFO';
 
         entry.innerHTML = `<span class="text-gray-600">${time}</span> ` +
-            `<span class="text-yellow-500">[${shortId}]</span> ` +
-            `<span class="text-white font-bold">${statusText}</span> ` +
-            `<span class="text-green-500">${msg}</span>`;
+            `<span class="text-yellow-500">[${shortStatus}]</span> ` +
+            `<span class="text-white font-bold">${taskId}</span> ` +
+            `<span class="text-green-500">${msgText}</span>`;
 
         DOM.log.appendChild(entry);
 

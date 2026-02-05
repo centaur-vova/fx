@@ -12,7 +12,7 @@ class WsEventBroadcaster implements Broadcaster
     {
     }
 
-    public function broadcast(string $event, array $data): void
+    public function broadcast(string $event, mixed $data): void
     {
         $this->hub->broadcast([
             'event' => $event,
