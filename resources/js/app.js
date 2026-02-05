@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
             if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
         };
+        state.ws.onopen = () => console.log("%c CONNECTED ", "background: green; color: white");
     };
 
     const handleUpdateMetrics = (data) => {

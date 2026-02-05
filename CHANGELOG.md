@@ -27,10 +27,22 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Periodic metrics broadcasting (CPU, Memory, Connections) via Swoole Timer.
 - Real-time "In-Flight" task counter using `Swoole\Atomic` for cross-worker synchronization.
 - Extended system metrics with live pipeline occupancy tracking.
+- **SharedResourceProvider**: New layer for safe Master-process memory allocation.
+- **Inter-Process Communication**: Added `onPipeMessage` handler to allow all workers to broadcast to their respective clients.
+- **Lazy DI Container**: Services are now instantiated only inside workers, ensuring fresh coroutine channels and timers.
+- **Accurate Monitoring**: Implemented `getrusage`-based CPU tracking (independent of system load) and `memory_get_usage` tracking.
+
+### Fixed
+- **WebSocket Session Isolation**: Fixed issue where tasks finishing in one worker couldn't notify clients connected to another.
+- **Memory Corruption**: Fixed `Swoole\Table` re-initialization on worker restart by removing `create()` calls from constructors.
+- **Ghost Connections**: Implemented `exists()` and `isEstablished()` checks in `MessageHub` with auto-cleanup of dead FDs.
 
 ### Changed
 - Enhanced task visualization with a professional color palette (Tailwind-based).
 - Implemented unique geometric primitives (circles, diamonds, polygons) to improve cognitive task differentiation.
+
+### Optimized
+- Server memory footprint stabilized at ~3.5MB (idle) and ~7.5MB (high load: 500+ tasks).
 
 ### Refactored
 - Decoupled `server.php` by extracting event logic into `App\Server\EventHandler`.

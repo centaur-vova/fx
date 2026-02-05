@@ -4,25 +4,32 @@ declare(strict_types=1);
 
 namespace App\Services\Tasks;
 
+use App\Config;
+use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
 use Psr\Log\LoggerInterface;
-use Swoole\Atomic;
 use Swoole\Coroutine as Co;
 use Swoole\Coroutine\Channel;
 use Swoole\Timer;
+use Swoole\WebSocket\Server;
 
 class TaskService
 {
+    private ?Channel $mainQueue = null;
+
     public function __construct(
+        private Server $server,
         private TaskSemaphore $semaphore,
         private Broadcaster $broadcaster,
-        private Channel $mainQueue,
         private TaskDelayStrategy $delayStrategy,
-        private Atomic $inFlightCounter,
+        private TaskCounter $counter,
         private LoggerInterface $logger,
+        private Config $config,
     ) {
+        // Channel is now safe to create here as TaskService is worker-local
+        $this->mainQueue = new Channel($this->config->getInt('QUEUE_CAPACITY', 10000));
     }
 
     public function createBatch(int $count, int $delay, int $maxConcurrent): array
@@ -37,7 +44,7 @@ class TaskService
             $timerDelay = ($this->delayStrategy)($i, $delay);
 
             Timer::after($timerDelay, function () use ($taskId, $maxConcurrent) {
-                $this->mainQueue->push([
+                $this->getQueue()->push([
                     'id' => $taskId,
                     'mc' => $maxConcurrent,
                 ]);
@@ -55,7 +62,7 @@ class TaskService
         $this->notify($taskId, 'check_lock', "Limit: $mc");
 
         $startWait = microtime(true);
-        if ($permit->acquire(5)) {
+        if ($permit->acquire(30)) {
             $waitDuration = microtime(true) - $startWait;
             $this->logger->debug("Lock acquired", ['id' => $taskId, 'wait' => $waitDuration]);
 
@@ -79,19 +86,23 @@ class TaskService
             $this->logger->warning("Lock timeout", ['id' => $taskId, 'waited' => $waitDuration]);
 
             $this->notify($taskId, 'lock_failed', 'Timeout');
-            $this->mainQueue->push(['id' => $taskId, 'mc' => $mc]);
+            $this->getQueue()->push(['id' => $taskId, 'mc' => $mc]);
         }
     }
 
     public function startWorker($server, $workerId): void
     {
-        for ($i = 0; $i < 10; $i++) {
+        if ($this->mainQueue === null) {
+            $this->mainQueue = new Co\Channel($this->config->getInt('QUEUE_CAPACITY', 10000));
+        }
+
+        $concurrentTasks = $this->config->getInt('WORKER_CONCURRENCY', 10);
+        for ($i = 0; $i < $concurrentTasks; $i++) {
             Co::create(function () {
                 while (true) {
-                    $task = $this->mainQueue->pop();
+                    $task = $this->getQueue()->pop();
 
-                    // Если канал закрыт, выходим из цикла
-                    if ($this->mainQueue->errCode === SWOOLE_CHANNEL_CLOSED) {
+                    if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
                         break;
                     }
 
@@ -125,11 +136,18 @@ class TaskService
 
     private function incrementTaskCount(): void
     {
-        $this->inFlightCounter->add(1);
+        $this->counter->increment();
     }
 
     private function decrementTaskCount(): void
     {
-        $this->inFlightCounter->sub(1);
+        $this->counter->decrement();
+    }
+
+    private function getQueue(): Co\Channel
+    {
+        return $this->mainQueue ??= new Co\Channel(
+            $this->config->getInt('QUEUE_CAPACITY', 10000)
+        );
     }
 }

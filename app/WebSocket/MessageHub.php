@@ -16,10 +16,33 @@ class MessageHub
 
     public function broadcast(array $payload): void
     {
+        $data = [
+            'action' => 'broadcast_ws',
+            'payload' => $payload,
+        ];
+        $message = json_encode($data);
+        $currentWorkerId = $this->server->worker_id;
+
+        for ($i = 0; $i < $this->server->setting['worker_num']; $i++) {
+            if ($i === $currentWorkerId) {
+                $this->localBroadcast($payload);
+                continue;
+            }
+
+            $this->server->sendMessage($message, $i);
+        }
+    }
+
+    public function localBroadcast(array $payload): void
+    {
         $json = json_encode($payload);
-        foreach ($this->connectionPool as $fd => $conn) {
-            if ($this->server->isEstablished($fd) && $this->server->getWorkerId($fd) === $this->server->worker_id) {
-                $this->server->push($fd, $json);
+        foreach ($this->connectionPool as $fd => $row) {
+            $fd = (int)$fd;
+
+            if ($this->server->getWorkerId($fd) === $this->server->worker_id) {
+                if ($this->server->exists($fd) && $this->server->isEstablished($fd)) {
+                    $this->server->push($fd, $json);
+                }
             }
         }
     }

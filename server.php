@@ -4,23 +4,31 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+// --- Imports (Keep your existing use statements) ---
+
+use App\Config;
+use App\Container;
+use App\Contracts\Monitoring\TaskCounter;
 use App\Controllers\TaskController;
 use App\Router;
 use App\Server\EventHandler;
+use App\Server\SharedResourceProvider;
 use App\Services\Tasks\Semaphores\SwooleChannelSemaphore;
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
+use App\Support\Monitoring\SwooleAtomicCounter;
 use App\Support\StdoutLogger;
-use App\WebSocket\{ConnectionPool, MessageHub, WsEventBroadcaster};
-use Swoole\Atomic;
+use App\WebSocket\ConnectionPool;
+use App\WebSocket\MessageHub;
+use App\WebSocket\WsEventBroadcaster;
 use Swoole\Coroutine as Co;
-use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
-// Config
-$config = new App\Config(__DIR__);
+// Initialize Infrastructure & Shared Memory
+$config = new Config(__DIR__);
+$shared = SharedResourceProvider::boot($config);
 
-// Server
+// Server Instance
 $server = new Server(
     $config->get('SERVER_HOST', '0.0.0.0'),
     $config->getInt('SERVER_PORT', 9501)
@@ -28,66 +36,79 @@ $server = new Server(
 
 $server->set([
     'worker_num' => $config->getInt('SERVER_WORKER_NUM', 4),
+    'dispatch_mode' => $config->getInt('SERVER_DISPATCH_MODE', 2),
+    'enable_coroutine' => true,
 ]);
 
-// Infrastructure
+// DI Container Configuration (Recipes only)
+$container = new Container();
 
-$inFlightCounter = new Atomic(0);
-$logger = new StdoutLogger();
-$connectionPool = new ConnectionPool();
-$mainQueue = new Co\Channel($config->getInt('QUEUE_CAPACITY', 10000));
-$semaphore = new SwooleChannelSemaphore();
-$strategy = new DemoDelayStrategy();
+// Global shared instances
+$container->set(Server::class, fn () => $server);
+$container->set(Config::class, fn () => $config);
+$container->set('shared.table.connections', fn () => $shared['connections']);
+$container->set('shared.atomic.tasks', fn () => $shared['task_counter']);
+$container->set('shared.cpu_cores', fn () => $shared['cpu_cores']);
 
-// WebSocket
-$wsHub = new MessageHub($server, $connectionPool);
-$broadcaster = new WsEventBroadcaster($wsHub);
+// Lazy Services
+$container->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
+$container->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
+$container->set(StdoutLogger::class, fn () => new StdoutLogger());
+$container->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
 
-// TaskService
-$taskService = new TaskService(
-    $semaphore,
-    $broadcaster,
-    $mainQueue,
-    $strategy,
-    $inFlightCounter,
-    $logger
-);
+$container->set(TaskService::class, fn ($c) => new TaskService(
+    $server,
+    new SwooleChannelSemaphore(),
+    new WsEventBroadcaster($c->get(MessageHub::class)),
+    new DemoDelayStrategy(),
+    $c->get(TaskCounter::class),
+    $c->get(StdoutLogger::class),
+    $config
+));
 
-// API/Controllers
-$taskController = new TaskController($taskService, $wsHub);
+$container->set(EventHandler::class, function ($c) use ($config) {
+    $taskController = new TaskController($c->get(TaskService::class), $c->get(MessageHub::class));
 
-// Router
-$router = new Router($taskController);
+    return new EventHandler(
+        new Router($taskController),
+        $c->get(MessageHub::class),
+        $c->get(ConnectionPool::class),
+        $c->get(TaskCounter::class),
+        $config,
+    );
+});
 
-// EventHandler
-$eventHandler = new EventHandler($router, $wsHub, $connectionPool, $inFlightCounter);
+// Worker Lifecycle
+$server->on('WorkerStart', function ($server, $workerId) use ($container, $config) {
+    try {
+        $taskService = $container->get(TaskService::class);
 
-// WS
-$server->on('request', $eventHandler->onRequest(...));
-$server->on('open', $eventHandler->onOpen(...));
-$server->on('message', $eventHandler->onMessage(...));
-$server->on('close', $eventHandler->onClose(...));
+        // Start task consumers inside the worker
+        Co::create(function () use ($taskService, $server, $workerId) {
+            $taskService->startWorker($server, $workerId);
+        });
+    } catch (\Throwable $e) {
+        echo "!!! ERROR IN WORKER #$workerId: " . $e->getMessage() . "\n";
+    }
+});
 
-// Workers
-$server->on('WorkerStart', function ($server, $workerId) use ($config, $taskService, $eventHandler) {
-    Co::create(function () use ($taskService, $server, $workerId) {
-        $taskService->startWorker($server, $workerId);
-    });
-    Co::create(function () use ($taskService, $server, $workerId) {
-        $taskService->startWorker($server, $workerId);
-    });
+// Lazy Event Handlers
+$server->on('request', fn ($req, $res) => $container->get(EventHandler::class)->onRequest($req, $res));
+$server->on('open', fn ($s, $req) => $container->get(EventHandler::class)->onOpen($s, $req));
+$server->on('message', fn ($s, $f) => $container->get(EventHandler::class)->onMessage($s, $f));
+$server->on('close', fn ($s, $fd) => $container->get(EventHandler::class)->onClose($s, $fd));
 
-    Timer::after(100, function () use ($eventHandler, $config) {
-        $eventHandler->registerMetricsTimer($config->getInt('METRICS_UPDATE_INTERVAL_MS', 1000));
-        echo ">>> [System] Metrics Engine Started on Worker #0\n";
-    });
+// IPC for Global Broadcast
+$server->on('pipeMessage', function ($server, $srcWorkerId, $message) use ($container) {
+    $data = json_decode($message, true);
+
+    if (is_array($data) && isset($data['action']) && $data['action'] === 'broadcast_ws') {
+        $container->get(MessageHub::class)->localBroadcast($data['payload']);
+    }
 });
 
 echo "========================================\n";
-echo "Swoole HTTP/WebSocket server started\n";
-echo "URL: http://0.0.0.0:9501\n";
-echo "WebSocket: ws://localhost:9501\n";
-echo "Static files: http://localhost:9501/dist/\n";
+echo "Atomic Flow Server: Ready to process\n";
 echo "========================================\n";
 
 $server->start();

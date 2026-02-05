@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use App\Config;
+use App\Contracts\Monitoring\TaskCounter;
 use App\Router;
 use App\WebSocket\ConnectionPool;
 use App\WebSocket\MessageHub;
-use Swoole\Atomic;
 use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
@@ -17,7 +18,8 @@ class EventHandler
         private Router $router,
         private MessageHub $wsHub,
         private ConnectionPool $connectionPool,
-        private Atomic $inFlightCounter,
+        private TaskCounter $taskCounter,
+        private Config $config,
     ) {
     }
 
@@ -28,7 +30,9 @@ class EventHandler
 
     public function onOpen(Server $server, $request): void
     {
-        $this->connectionPool->add($request->fd);
+        $this->connectionPool->add((int) $request->fd);
+
+        $this->startMetricsStream($server, $request->fd);
     }
 
     public function onMessage(Server $server, $frame): void
@@ -54,23 +58,50 @@ class EventHandler
         $this->connectionPool->remove($fd);
     }
 
-    public function registerMetricsTimer(int $updateIntervalMs): void
+    private function startMetricsStream(Server $server, int $fd): void
     {
-        $hub = $this->wsHub;
+        $interval = $this->config->getInt('METRICS_UPDATE_INTERVAL_MS', 1000);
 
-        Timer::tick($updateIntervalMs, function () use ($hub) {
-            $load = sys_getloadavg();
-            $cpu = $load ? round($load[0] * 10, 1) : 0;
+        $lastUsage = getrusage();
+        $lastTime = microtime(true);
 
-            $hub->broadcast([
+        Timer::tick($interval, function ($timerId) use ($server, $fd, &$lastUsage, &$lastTime) {
+            // In case of disconnect clear the timer
+            if (!$server->exists($fd)) {
+                Timer::clear($timerId);
+                return;
+            }
+
+            $currentUsage = getrusage();
+            $currentTime = microtime(true);
+
+            // Calculate time delta (ms)
+            $userDelta = ($currentUsage['ru_utime.tv_sec'] + $currentUsage['ru_utime.tv_usec'] / 1000000)
+                - ($lastUsage['ru_utime.tv_sec'] + $lastUsage['ru_utime.tv_usec'] / 1000000);
+            $sysDelta = ($currentUsage['ru_stime.tv_sec'] + $currentUsage['ru_stime.tv_usec'] / 1000000)
+                - ($lastUsage['ru_stime.tv_sec'] + $lastUsage['ru_stime.tv_usec'] / 1000000);
+
+            $timeDelta = $currentTime - $lastTime;
+
+            // Load = (process_time / real_time) * 100 (%)
+            $cpuUsage = round((($userDelta + $sysDelta) / $timeDelta) * 100, 2) . '%';
+
+            // Update outer state
+            $lastUsage = $currentUsage;
+            $lastTime = $currentTime;
+
+            $payload = [
                 'event' => 'metrics.update',
                 'data' => [
-                    'tasks' => $this->inFlightCounter->get(),
-                    'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
-                    'connections' => $this->wsHub->count(),
-                    'cpu' => $cpu . '%',
+                    'worker' => $server->worker_id,
+                    'memory' => round(memory_get_usage() / 1024 / 1024, 2) . 'MB',
+                    'connections' => $this->connectionPool->count(),
+                    'cpu' => $cpuUsage,
+                    'tasks'  => $this->taskCounter->get(),
                 ],
-            ]);
+            ];
+
+            $server->push($fd, json_encode($payload));
         });
     }
 }

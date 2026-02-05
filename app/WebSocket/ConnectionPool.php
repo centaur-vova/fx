@@ -18,19 +18,20 @@ class ConnectionPool implements IteratorAggregate, Countable
     private const COL_CONNECTED_AT = 'connected_at';
     private const COL_LAST_PING = 'last_ping';
 
-    /** @var Table */
-    private $connections;
-
-    public function __construct()
+    public static function configureAndCreateTable(int $size): Table
     {
-        $this->connections = new Table(1024);
+        $table = new Table($size);
 
-        // Define table columns
-        $this->connections->column(self::COL_FD, Table::TYPE_INT, 4);
-        $this->connections->column(self::COL_CONNECTED_AT, Table::TYPE_INT, 8);
-        $this->connections->column(self::COL_LAST_PING, Table::TYPE_INT, 8);
+        $table->column(self::COL_FD, Table::TYPE_INT, 4);
+        $table->column(self::COL_CONNECTED_AT, Table::TYPE_INT, 8);
+        $table->column(self::COL_LAST_PING, Table::TYPE_INT, 8);
+        $table->create();
 
-        $this->connections->create();
+        return $table;
+    }
+
+    public function __construct(private Table $connections)
+    {
     }
 
     public function has(int $fd): bool
@@ -59,11 +60,14 @@ class ConnectionPool implements IteratorAggregate, Countable
 
     public function add(int $fd): bool
     {
+        $this->connections->set((string)$fd, [self::COL_FD => $fd]);
+
         $this->connections->set((string) $fd, [
             self::COL_FD => $fd,
             self::COL_CONNECTED_AT => time(),
             self::COL_LAST_PING => time(),
         ]);
+
         return true;
     }
 
