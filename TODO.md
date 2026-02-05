@@ -9,6 +9,9 @@
   - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
 
 ### 🟡 Medium Priority
+- [ ] **Load & Stress Testing**:
+  - [ ] Implement **k6** or **Locust** scripts to simulate 1,000+ concurrent WebSocket clients.
+  - [ ] Measure memory stability and `Swoole\Table` contention under high-frequency broadcasting.
 - [ ] **Architectural Refactoring**:
   - [x] Decouple `server.php` by moving event handlers into dedicated classes.
   - [ ] Implement a simple Dependency Injection (DI) container for cleaner bootstrap.
