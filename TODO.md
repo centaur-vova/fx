@@ -1,6 +1,9 @@
 # 📝 TODO
 
 ### 🔴 High Priority
+- [ ] **Real-time Pipeline Monitoring**:
+  - [ ] Implement a live counter for **Incomplete Tasks** (tasks currently being processed).
+  - [ ] Integrate "In-Flight" task count into the global metrics broadcasting.
 - [ ] **Fix Connection Limit Issues**:
   - [ ] Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
   - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
