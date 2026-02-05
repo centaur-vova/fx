@@ -32,6 +32,33 @@ document.addEventListener("DOMContentLoaded", () => {
         state.ws.onopen = () => console.log("%c CONNECTED ", "background: green; color: white");
     };
 
+    const updateGlobalScale = (totalTasks) => {
+        const container = document.getElementById('pipeline');
+        let scale = 1;
+        let mode = 'normal';
+
+        if (totalTasks <= 10) {
+            scale = 1.66;
+        } else if (totalTasks <= 50) {
+            scale = 1;
+        } else if (totalTasks <= 200) {
+            scale = 0.75;
+        } else if (totalTasks <= 500) {
+            scale = 0.5;
+        } else if (totalTasks <= 1000) {
+            scale = 0.3;
+            mode = 'dot';
+        } else {
+            scale = 0.2;
+            mode = 'dot';
+        }
+
+        if (container) {
+            container.style.setProperty('--task-scale', scale);
+            container.setAttribute('data-view-mode', mode);
+        }
+    }
+
     const handleUpdateMetrics = (data) => {
         const memEl = document.getElementById("memory-usage");
         const connEl = document.getElementById("connection-count");
@@ -42,6 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (connEl) connEl.textContent = data.connections;
         if (cpuEl) cpuEl.textContent = data.cpu;
         if (tasksEl) tasksEl.textContent = data.tasks;
+
+        updateGlobalScale(parseInt(data.tasks, 10));
     }
 
     const handleUpdateTasks = (data) => {
@@ -81,7 +110,26 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        if (status === "completed") task.el.classList.add("completed");
+        if (status === "completed") completeTask(id);
+    };
+
+    const completeTask = (id) => {
+        const task = state.tasks[id];
+        if (!task) return;
+
+        task.el.classList.add("completed");
+
+        setTimeout(() => {
+            if (task.el && task.el.parentNode) {
+                task.el.style.opacity = '0';
+                task.el.style.transform = 'translate(-50%, -50%) scale(0)';
+
+                setTimeout(() => {
+                    task.el.remove();
+                    delete state.tasks[id];
+                }, 300);
+            }
+        }, 5000);
     };
 
     function addLog(taskId, mc, status, msg) {
@@ -93,9 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const msgText = msg ? msg.toUpperCase() : 'INFO';
 
         entry.innerHTML = `<span class="text-gray-600">${time}</span> ` +
-            `<span class="text-yellow-500">[${shortStatus}]</span> ` +
+            `<span class="text-yellow-500">[${msgText}]</span> ` +
             `<span class="text-white font-bold">${taskId}</span> ` +
-            `<span class="text-green-500">${msgText}</span>`;
+            `<span class="text-green-500">${shortStatus}</span>`;
 
         DOM.log.appendChild(entry);
 

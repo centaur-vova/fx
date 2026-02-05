@@ -15,43 +15,54 @@
         <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
 
             <!-- HEADER -->
-            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+            <div class="bg-[#111111] rounded-xl shadow-2xl p-4 border border-[#222222]">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-xl font-bold text-gray-800">🔒 Swoole Semaphore Control</h1>
-                        <p class="text-xs text-gray-500">Real-time Coroutine Pipeline</p>
+                        <h1 class="text-xl font-black tracking-tighter text-white uppercase italic">
+                            Atomic <span class="text-green-500">Flow</span>
+                        </h1>
+                        <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">High-Load Pipeline Engine</p>
                     </div>
-                    <div class="flex gap-4 text-right">
-                        <div class="text-xs"><span class="block text-gray-400">TASKS</span><b id="tasks-count">0</b>
+                    <div class="flex gap-6 text-right">
+                        <div class="text-xs">
+                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Tasks</span>
+                            <b id="tasks-count" class="text-green-400 font-mono text-sm">0</b>
                         </div>
-                        <div class="text-xs"><span class="block text-gray-400">MEM</span><b id="memory-usage">-- MB</b>
+                        <div class="text-xs">
+                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Memory</span>
+                            <b id="memory-usage" class="text-blue-400 font-mono text-sm">-- MB</b>
                         </div>
-                        <div class="text-xs"><span class="block text-gray-400">CONN</span><b id="connection-count">0</b>
+                        <div class="text-xs">
+                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Clients</span>
+                            <b id="connection-count" class="text-purple-400 font-mono text-sm">0</b>
                         </div>
-                        <div class="text-xs"><span class="block text-gray-400">CPU</span><b id="cpu-load">--%</b></div>
+                        <div class="text-xs">
+                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU Load</span>
+                            <b id="cpu-load" class="text-red-400 font-mono text-sm">--%</b>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- PIPELINE -->
-            <div class="main-section relative overflow-hidden bg-white rounded-xl border border-gray-200" style="height: 50vh; width: 100%;">
-                <!-- BACKGROUNDS -->
-                <div class="absolute inset-0 flex">
-                    <div style="width: 25%; background: rgba(59, 130, 246, 0.05); border-right: 1px solid #eee;"></div>
-                    <div style="width: 25%; background: rgba(245, 158, 11, 0.05); border-right: 1px solid #fca5a5;">
-                    </div>
-                    <div style="width: 25%; background: rgba(34, 197, 94, 0.05); border-right: 1px solid #eee;"></div>
-                    <div style="width: 25%; background: rgba(107, 114, 128, 0.05);"></div>
+            <div class="main-section relative overflow-hidden bg-[#0a0a0a] rounded-xl border border-[#222]" style="height: 50vh; width: 100%;">
+
+                <div class="absolute inset-0 flex z-0 opacity-20">
+                    <div style="width: 25%; background: rgba(59, 130, 246, 0.03); border-right: 1px solid rgba(255,255,255,0.05);"></div>
+                    <div style="width: 25%; background: rgba(245, 158, 11, 0.03); border-right: 1px solid rgba(245, 158, 11, 0.1);"></div>
+                    <div style="width: 25%; background: rgba(34, 197, 94, 0.03); border-right: 1px solid rgba(255,255,255,0.05);"></div>
+                    <div style="width: 25%; background: rgba(107, 114, 128, 0.03);"></div>
                 </div>
 
-                <!-- HEADERS -->
-                <div class="absolute top-4 font-bold text-gray-400" style="left: 12.5%; transform: translateX(-50%); font-size: 12px;">QUEUE</div>
-                <div class="absolute top-4 font-bold text-orange-500" style="left: 37.5%; transform: translateX(-50%); font-size: 12px;">CHECK LOCK</div>
-                <div class="absolute top-4 font-bold text-blue-500" style="left: 62.5%; transform: translateX(-50%); font-size: 12px;">IN PROGRESS</div>
-                <div class="absolute top-4 font-bold text-green-500" style="left: 87.5%; transform: translateX(-50%); font-size: 12px;">COMPLETE</div>
+                <div id="pipeline" class="relative h-full w-full z-10">
+                </div>
 
-                <div id="pipeline" class="relative h-full w-full"></div>
+                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-gray-500 z-20 pointer-events-none" style="left: 12.5%; transform: translateX(-50%);">Queue</div>
+                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-orange-500 z-20 pointer-events-none" style="left: 37.5%; transform: translateX(-50%);">Check Lock</div>
+                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-blue-500 z-20 pointer-events-none" style="left: 62.5%; transform: translateX(-50%);">In Progress</div>
+                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-green-500 z-20 pointer-events-none" style="left: 87.5%; transform: translateX(-50%);">Complete</div>
             </div>
+
 
             <!-- CONTROLS & MONITOR -->
             <div class="grid grid-cols-12 gap-3 items-stretch">
