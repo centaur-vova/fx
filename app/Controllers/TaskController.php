@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Exceptions\Tasks\QueueFullException;
 use App\Services\Tasks\TaskService;
 use App\WebSocket\MessageHub;
 
@@ -17,13 +18,21 @@ class TaskController
 
     public function createTasks(int $count, int $delay = 0, int $maxConcurrent = 2): array
     {
-        $taskIds = $this->taskService->createBatch($count, $delay, $maxConcurrent);
+        try {
+            $taskIds = $this->taskService->createBatch($count, $delay, $maxConcurrent);
+            return [
+                'success' => true,
+                'task_ids' => $taskIds,
+                'message' => "{$count} task(s) queued",
+            ];
 
-        return [
-            'success' => true,
-            'task_ids' => $taskIds,
-            'message' => "{$count} task(s) queued",
-        ];
+        } catch (QueueFullException $e) {
+            return [
+                'success' => false,
+                'task_ids' => [],
+                'message' => $e->getMessage(),
+            ];
+        }
     }
 
     public function health(): array

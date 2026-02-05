@@ -7,8 +7,8 @@ namespace App\Server;
 use App\Config;
 use App\Contracts\Monitoring\TaskCounter;
 use App\Router;
+use App\Services\Tasks\TaskService;
 use App\WebSocket\ConnectionPool;
-use App\WebSocket\MessageHub;
 use Swoole\Timer;
 use Swoole\WebSocket\Server;
 
@@ -16,9 +16,9 @@ class EventHandler
 {
     public function __construct(
         private Router $router,
-        private MessageHub $wsHub,
         private ConnectionPool $connectionPool,
         private TaskCounter $taskCounter,
+        private TaskService $taskService,
         private Config $config,
     ) {
     }
@@ -98,6 +98,7 @@ class EventHandler
                     'connections' => $this->connectionPool->count(),
                     'cpu' => $cpuUsage,
                     'tasks'  => $this->taskCounter->get(),
+                    'queue' => $this->taskService->getQueueStats(),
                 ],
             ];
 

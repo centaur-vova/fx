@@ -9,7 +9,9 @@ use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
+use App\DTO\Tasks\QueueStatsDTO;
 use App\DTO\Tasks\TaskStatusUpdate;
+use App\Exceptions\Tasks\QueueFullException;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Coroutine\Channel;
@@ -33,8 +35,18 @@ class TaskService
         $this->mainQueue = new Channel($this->config->getInt('QUEUE_CAPACITY', 10000));
     }
 
+    /**
+     * @throws QueueFullException
+     */
     public function createBatch(int $count, int $delay, int $maxConcurrent): array
     {
+        $capacity = (int) $this->config->get('QUEUE_CAPACITY', 10000);
+        $currentQueueSize = $this->getQueue()->stats()['queue_num'];
+
+        if (($currentQueueSize + $count) >= $capacity) {
+            throw new QueueFullException($capacity);
+        }
+
         $taskIds = [];
         for ($i = 0; $i < $count; $i++) {
             $taskId = $this->generateTaskId();
@@ -105,6 +117,14 @@ class TaskService
             // Push only if channge is open
             $this->getQueue()->push(['id' => $taskId, 'mc' => $mc]);
         }
+    }
+
+    public function getQueueStats()
+    {
+        return new QueueStatsDTO(
+            usage: $this->getQueue()->stats()['queue_num'],
+            max: (int) $this->config->get('QUEUE_CAPACITY', 10000)
+        );
     }
 
     public function startWorker($server, $workerId): void

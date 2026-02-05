@@ -72,9 +72,9 @@ $container->set(EventHandler::class, function ($c) use ($config) {
 
     return new EventHandler(
         new Router($taskController),
-        $c->get(MessageHub::class),
         $c->get(ConnectionPool::class),
         $c->get(TaskCounter::class),
+        $c->get(TaskService::class),
         $config,
     );
 });

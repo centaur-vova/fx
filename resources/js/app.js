@@ -64,11 +64,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const connEl = document.getElementById("connection-count");
         const cpuEl = document.getElementById("cpu-load");
         const tasksEl = document.getElementById("tasks-count");
+        const usageEl = document.getElementById("queue-usage");
+        const maxEl = document.getElementById("queue-max");
 
         if (memEl) memEl.textContent = data.memory;
         if (connEl) connEl.textContent = data.connections;
         if (cpuEl) cpuEl.textContent = data.cpu;
         if (tasksEl) tasksEl.textContent = data.tasks;
+
+        if (usageEl && data.queue) {
+            const usage = parseInt(data.queue.usage, 10);
+            const max = parseInt(data.queue.max, 10);
+
+            usageEl.textContent = usage;
+            if (maxEl) maxEl.textContent = max;
+
+            if (usage / max > 0.9) {
+                usageEl.classList.add('text-red-500');
+                usageEl.classList.remove('text-yellow-500');
+            } else {
+                usageEl.classList.add('text-yellow-500');
+                usageEl.classList.remove('text-red-500');
+            }
+        }
 
         updateGlobalScale(parseInt(data.tasks, 10));
     }
