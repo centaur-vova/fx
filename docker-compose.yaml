@@ -3,14 +3,14 @@ services:
     build: .
     container_name: atomic-flow-app
     restart: always
+    # Docker reads your local .env and injects variables into the container environment
+    env_file:
+      - .env
     ports:
       - "${SERVER_PORT:-9501}:${SERVER_PORT:-9501}"
-    environment:
-      - APP_ENV=production
     networks:
       - atomic-network
 
 networks:
   atomic-network:
     driver: bridge
-

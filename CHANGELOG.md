@@ -119,6 +119,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Refactored monolithic `server.php` into a modular, decoupled architecture.
 - **PHP Requirement**: Bumped to **8.4+**.
 - **Rebranding**: Package renamed to `shmandalf/atomic-flow`.
+- **Configuration**: Switched to a system environment-first configuration model. The application now prioritizes environment variables provided by the container runtime over local `.env` files.
+- **Docker**: Optimized `Dockerfile` by removing the redundant `.env` file creation step, ensuring image immutability.
+- **Infrastructure**: Added `env_file` support in `docker-compose.yaml` for seamless local development.
 
 ### Fixed
 - **Configuration**: Standardized environment variables to use `SERVER_HOST` and `SERVER_PORT`.
@@ -126,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Swoole Infrastructure**: Refined `enable_static_handler` logic to prevent conflicts with API routes.
 - **Routing**: Fixed a bug where the Router would intercept WebSocket (`/ws`) handshakes and static files with JSON 404 responses.
 - **Performance**: Switched static file delivery to use Swoole's native `sendfile` via `document_root`.
+- **Config**: Added a safety check for `.env` file existence and readability, preventing crashes in environments where the file is not present (e.g., production containers).
 
 ### QA
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.

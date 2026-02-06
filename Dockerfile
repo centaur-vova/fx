@@ -1,5 +1,7 @@
+# --- Stage 1: Build stage ---
 FROM php:8.4-alpine AS builder
 
+# Install build dependencies for Swoole
 RUN apk add --no-cache \
     git \
     unzip \
@@ -14,6 +16,7 @@ RUN apk add --no-cache \
     && pecl install swoole \
     && docker-php-ext-enable swoole
 
+# Install Node.js for frontend assets compilation
 RUN apk add --no-cache nodejs npm
 
 WORKDIR /app
@@ -21,42 +24,44 @@ WORKDIR /app
 ARG SERVER_PORT=9501
 ENV SERVER_PORT=${SERVER_PORT}
 
-# Composer
+# Copy composer from official image
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 RUN chmod +x /usr/local/bin/composer
 
-# Copy manifests only
+# Install PHP and Node dependencies
 COPY composer.json composer.lock package.json package-lock.json ./
-
-# Install composer & npm deps
 RUN php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs \
     && npm install
 
+# Build assets and dump autoload
 COPY . .
-
 RUN npm run build
 RUN php /usr/local/bin/composer dump-autoload --optimize --no-dev --classmap-authoritative
 
-# --- Stage 2: Final Runtime ---
+# --- Stage 2: Production runtime ---
 FROM php:8.4-alpine
 
-# Runtime libraries
+# Install shared libraries required by Swoole
 RUN apk add --no-cache libstdc++ libgcc brotli-libs
 
-# Copy swoole
+# Copy compiled Swoole extension from builder
 COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
 COPY --from=builder /usr/local/etc/php/conf.d/docker-php-ext-swoole.ini /usr/local/etc/php/conf.d/
 
 WORKDIR /app
 
-# Copy everything from builder
-COPY --from=builder /app /app
+# Selective copy: exclude node_modules and build caches by copying only artifacts
+# This helps keep the final image size optimized
+COPY --from=builder /app/vendor ./vendor
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/server.php ./server.php
+COPY --from=builder /app/composer.json ./composer.json
 
-# Copy .env.example to .env & chmod public
-RUN if [ -f .env.example ]; then cp .env.example .env; fi \
-    && chmod -R 755 public/
+# Only set permissions for public assets, no .env file generation here
+RUN chmod -R 755 public/
 
 EXPOSE ${SERVER_PORT}
 
-# Starting
+# Start the application. Config will be read from environment variables.
 CMD ["php", "server.php"]

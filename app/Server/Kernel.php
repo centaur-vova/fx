@@ -114,9 +114,10 @@ class Kernel
 
         $c->set(EventHandler::class, function ($c) {
             $taskController = new TaskController($c->get(TaskService::class), $c->get(MessageHub::class));
+            $router = new Router($taskController);
 
             return new EventHandler(
-                new Router($taskController),
+                $router,
                 $c->get(ConnectionPool::class),
                 $c->get(TaskCounter::class),
                 $c->get(TaskService::class),
