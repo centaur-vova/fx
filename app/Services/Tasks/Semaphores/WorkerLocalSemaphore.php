@@ -8,7 +8,7 @@ use App\Contracts\Tasks\SemaphorePermit;
 use App\Contracts\Tasks\TaskSemaphore;
 use Swoole\Coroutine as Co;
 
-class SwooleChannelSemaphore implements TaskSemaphore
+class WorkerLocalSemaphore implements TaskSemaphore
 {
     /** @var Channel[] */
     private array $channels = [];

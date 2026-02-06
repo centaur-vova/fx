@@ -8,9 +8,10 @@ use App\Config;
 use App\Container;
 use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
+use App\Contracts\Tasks\TaskSemaphore;
 use App\Controllers\TaskController;
 use App\Router;
-use App\Services\Tasks\Semaphores\SwooleChannelSemaphore;
+use App\Services\Tasks\Semaphores\WorkerLocalSemaphore;
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
 use App\Support\Monitoring\SwooleAtomicCounter;
@@ -95,8 +96,8 @@ class Kernel
         $c->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
         $c->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
         $c->set(
-            SwooleChannelSemaphore::class,
-            fn ($c) => new SwooleChannelSemaphore(
+            TaskSemaphore::class,
+            fn ($c) => new WorkerLocalSemaphore(
                 $c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10)
             )
         );
@@ -104,7 +105,7 @@ class Kernel
         $c->set(TaskDelayStrategy::class, fn ($c) => new DemoDelayStrategy());
 
         $c->set(TaskService::class, fn ($c) => new TaskService(
-            $c->get(SwooleChannelSemaphore::class),
+            $c->get(TaskSemaphore::class),
             $c->get(WsEventBroadcaster::class),
             $c->get(TaskDelayStrategy::class),
             $c->get(TaskCounter::class),
