@@ -48,9 +48,12 @@ class WorkerLocalSemaphore implements TaskSemaphore
 
             public function release(): void
             {
-                if ($this->channel->stats()['queue_num'] > 0) {
-                    $this->channel->pop();
+                if ($this->channel->errCode === SWOOLE_CHANNEL_CLOSED) {
+                    return;
                 }
+
+                // Always way since it was pushed
+                $this->channel->pop();
             }
         };
     }

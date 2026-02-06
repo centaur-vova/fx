@@ -39,7 +39,7 @@ class TaskService
     public function createBatch(int $count, int $delay, int $maxConcurrent): array
     {
         $capacity = (int) $this->config->get('QUEUE_CAPACITY', 10000);
-        $currentQueueSize = $this->getQueue()->stats()['queue_num'];
+        $currentQueueSize = $this->taskCounter->get();
 
         if (($currentQueueSize + $count) >= $capacity) {
             throw new QueueFullException($capacity);
@@ -120,7 +120,7 @@ class TaskService
     public function getQueueStats()
     {
         return new QueueStats(
-            usage: $this->getQueue()->stats()['queue_num'],
+            usage: $this->taskCounter->get(),
             max: (int) $this->config->get('QUEUE_CAPACITY', 10000)
         );
     }

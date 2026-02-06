@@ -44,6 +44,7 @@ class TaskController
                 'memory' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
                 'ws_connections' => $this->wsHub->count(),
             ],
+            'queue' => $this->taskService->getQueueStats(),
         ];
     }
 

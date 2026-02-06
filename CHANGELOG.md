@@ -133,6 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Routing**: Fixed a bug where the Router would intercept WebSocket (`/ws`) handshakes and static files with JSON 404 responses.
 - **Performance**: Switched static file delivery to use Swoole's native `sendfile` via `document_root`.
 - **Config**: Added a safety check for `.env` file existence and readability, preventing crashes in environments where the file is not present (e.g., production containers).
+- **Metrics**: Corrected `queue.usage` reporting in `metrics.update` event to show global task count instead of local worker stats.
+- **Validation**: Fixed task batch creation logic to accurately check global capacity using atomic counters, preventing race conditions and overflow.
 
 ### Improved
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.
