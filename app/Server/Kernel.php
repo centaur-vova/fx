@@ -45,6 +45,12 @@ class Kernel
             'worker_num' => $this->config->getInt('SERVER_WORKER_NUM', 4),
             'dispatch_mode' => $this->config->getInt('SERVER_DISPATCH_MODE', 2),
             'enable_coroutine' => true,
+
+            // Static files
+            'enable_static_handler' => true,
+            'document_root' => rtrim($this->basePath, '/') . '/public',
+            'http_compression' => true,
+            'http_index_files' => ['index.html'],
         ]);
 
         $this->container = $this->bootContainer();

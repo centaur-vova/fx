@@ -16,7 +16,6 @@ use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Coroutine\Channel;
 use Swoole\Timer;
-use Swoole\WebSocket\Server;
 
 class TaskService
 {

@@ -112,6 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Build Pipeline**: Integrated Composer and NPM build steps into the container assembly.
 - **Orchestration**: `docker-compose.yaml` for simplified service management and networking.
 - **Optimization**: `.dockerignore` file to prevent heavy local directories from bloating the build context.
+- **UI/UX**: Custom SVG/ICO favicon with "AF" branding (green on black terminal style).
+- **Branding**: Updated application title to `FAST.Atomic.Flow`.
 
 ### Changed
 - Refactored monolithic `server.php` into a modular, decoupled architecture.
@@ -121,6 +123,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ### Fixed
 - **Configuration**: Standardized environment variables to use `SERVER_HOST` and `SERVER_PORT`.
 - **WebSocket**: Replaced hardcoded connection strings with `window.location.host` for seamless switching between local dev (port 9501) and production (Nginx proxy).
+- **Swoole Infrastructure**: Refined `enable_static_handler` logic to prevent conflicts with API routes.
+- **Routing**: Fixed a bug where the Router would intercept WebSocket (`/ws`) handshakes and static files with JSON 404 responses.
+- **Performance**: Switched static file delivery to use Swoole's native `sendfile` via `document_root`.
 
 ### QA
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.

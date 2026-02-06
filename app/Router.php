@@ -29,6 +29,10 @@ class Router
     public function handle(Request $request, Response $response): void
     {
         $path = $request->server['request_uri'] ?? '/';
+        // fast return for websockets
+        if ($path === '/ws') {
+            return;
+        }
         $method = $request->server['request_method'] ?? 'GET';
         $key = "$method|$path";
 
@@ -37,11 +41,6 @@ class Router
         if ($method === 'OPTIONS') {
             $response->status(200);
             $response->end();
-            return;
-        }
-
-        if ($method === 'GET' && $path === '/') {
-            $this->serveHtml($response, 'index.html');
             return;
         }
 
@@ -68,26 +67,6 @@ class Router
             return;
         }
 
-        if ($method === 'GET') {
-            $staticPaths = ['/dist/style.min.css', '/dist/app.min.js', '/favicon.ico'];
-
-            if (in_array($path, $staticPaths, true)) {
-                $filePath = __DIR__ . '/../public' . $path;
-                if (file_exists($filePath)) {
-                    $ext = pathinfo($filePath, PATHINFO_EXTENSION);
-                    $mime = [
-                        'css' => 'text/css',
-                        'js' => 'application/javascript',
-                        'ico' => 'image/x-icon',
-                    ][$ext] ?? 'text/plain';
-
-                    $response->header('Content-Type', $mime);
-                    $response->end(file_get_contents($filePath));
-                    return;
-                }
-            }
-        }
-
         $this->sendError($response, 'Not Found', 404);
     }
 
@@ -97,18 +76,6 @@ class Router
         $response->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         $response->header('Access-Control-Allow-Headers', 'Content-Type');
         $response->header('Content-Type', 'application/json');
-    }
-
-    private function serveHtml(Response $response, string $filename): void
-    {
-        $response->header('Content-Type', 'text/html');
-        $file = __DIR__ . '/../public/' . $filename;
-
-        if (file_exists($file)) {
-            $response->end(file_get_contents($file));
-        } else {
-            $this->sendError($response, "Entry file $filename not found", 500);
-        }
     }
 
     private function getJsonPayload(Request $request): array
