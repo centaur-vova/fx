@@ -102,6 +102,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Static "Connecting..." status label to simplify UI.
 
 ## - 2026-02-06
+### Added
+- **Kernel-based Architecture**: Centralized application lifecycle management via `App\Server\Kernel`.
+
+### Changed
+- Refactored monolithic `server.php` into a modular, decoupled architecture.
+
 ### QA
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.
 - **Testing Infrastructure**: Added `phpunit.xml` and automated test scripts via Composer.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\DTO\Tasks;
 
 use App\DTO\Tasks\TaskStatusUpdate;
@@ -31,7 +33,6 @@ class TaskStatusUpdateTest extends TestCase
     {
         $dto = TaskStatusUpdate::completed('task-1', 2);
         $serialized = $dto->jsonSerialize();
-
 
         $this->assertArrayHasKey('mc', $serialized);
         $this->assertArrayHasKey('taskId', $serialized);

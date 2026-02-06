@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Services\Tasks;
 
 use App\Config;
@@ -17,7 +19,7 @@ class TaskServiceTest extends TestCase
     public function test_create_batch_throws_exception_if_queue_is_full(): void
     {
         $config = new \App\Config([
-            'QUEUE_CAPACITY' => 5
+            'QUEUE_CAPACITY' => 5,
         ]);
 
         $service = new TaskService(

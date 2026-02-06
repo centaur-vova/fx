@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Services\Tasks\Strategies;
 
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
