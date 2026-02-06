@@ -36,8 +36,8 @@ class Kernel
 
         // Create Server instance
         $this->server = new Server(
-            $this->config->get('WS_HOST', '0.0.0.0'),
-            $this->config->getInt('WS_PORT', 9501)
+            $this->config->get('SERVER_HOST', '0.0.0.0'),
+            $this->config->getInt('SERVER_PORT', 9501)
         );
 
         // Server config
@@ -181,8 +181,8 @@ class Kernel
 
         // On start
         $this->server->on('start', function (Server $server) {
-            $host = $this->config->get('WS_HOST', '0.0.0.0');
-            $port = $this->config->get('WS_PORT', 9501);
+            $host = $this->config->get('SERVER_HOST', '0.0.0.0');
+            $port = $this->config->get('SERVER_PORT', 9501);
 
             $this
                 ->container

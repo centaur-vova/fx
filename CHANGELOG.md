@@ -107,11 +107,20 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **PHP Version Requirement**: Bumped minimum version to **8.4+** to support modern engine features.
 - **Package Identity**: Renamed project to `shmandalf/atomic-flow`.
 - **Dependency Alignment**: Updated `composer.json` to resolve conflicts with PHPUnit 12 on PHP 8.4.
+- **Dockerization**: Multi-stage `Dockerfile` based on PHP 8.4 Alpine for optimized image size.
+- **Swoole Support**: Automatic installation and configuration of Swoole extension in the container.
+- **Build Pipeline**: Integrated Composer and NPM build steps into the container assembly.
+- **Orchestration**: `docker-compose.yaml` for simplified service management and networking.
+- **Optimization**: `.dockerignore` file to prevent heavy local directories from bloating the build context.
 
 ### Changed
 - Refactored monolithic `server.php` into a modular, decoupled architecture.
 - **PHP Requirement**: Bumped to **8.4+**.
 - **Rebranding**: Package renamed to `shmandalf/atomic-flow`.
+
+### Fixed
+- **Configuration**: Standardized environment variables to use `SERVER_HOST` and `SERVER_PORT`.
+- **WebSocket**: Replaced hardcoded connection strings with `window.location.host` for seamless switching between local dev (port 9501) and production (Nginx proxy).
 
 ### QA
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.

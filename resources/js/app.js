@@ -23,7 +23,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // WebSocket Init
     const connect = () => {
-        state.ws = new WebSocket(`ws://${window.location.hostname}:9501`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        state.ws = new WebSocket(`${protocol}//${window.location.host}`);
         state.ws.onmessage = (e) => {
             const msg = JSON.parse(e.data);
             if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);

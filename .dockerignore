@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (Docker will install them itself)
+vendor/
+node_modules/
+
+# Local Environment & Secrets
+.env
+.env.local
+.ssh/
+
+# Docker related
+Dockerfile
+docker-compose.yaml
+docker-compose.yml
+
+# Testing & QA
+tests/
+.phpunit.cache/
+phpunit.xml
+.php-cs-fixer.cache
+.php-cs-fixer.dist.php
+
+# Build Assets & Cache
+public/build/
+public/hot/
+storage/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Logs & Temporary files
+*.log
+.DS_Store
+Thumbs.db
+
