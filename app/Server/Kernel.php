@@ -11,6 +11,7 @@ use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Controllers\TaskController;
 use App\Router;
+use App\Services\Tasks\Semaphores\GlobalSharedSemaphore;
 use App\Services\Tasks\Semaphores\WorkerLocalSemaphore;
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
@@ -71,16 +72,33 @@ class Kernel
         $c->set(Config::class, fn () => $this->config);
         $c->set(Server::class, fn () => $this->server);
 
-        // Shared memory resources
+        // WebSocket Connections storage
         $tableSize = $this->config->getInt('WS_TABLE_SIZE', 1024);
         $connectionsTable = ConnectionPool::configureAndCreateTable($tableSize);
+
+        // Task counter
         $tasksAtomic = new Atomic(0);
+
+        // Available CPU cores
         $cpuCores = (int) shell_exec('nproc') ?: 1;
+
+        /**
+         * Pre-allocate Shared Memory Semaphores
+         *
+         * {@see \App\Services\Tasks\Semaphores\GlobalSharedSemaphore}
+         */
+        $maxSemaphoreLimit = $this->config->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10);
+        $semaphoreAtomics = [];
+        for ($i = 1; $i <= $maxSemaphoreLimit; $i++) {
+            // Each index represents a specific max_concurrent limit
+            $semaphoreAtomics[$i] = new \Swoole\Atomic(0);
+        }
 
         // Register shared infrastructure primitives
         $c->set('shared.table.connections', fn () => $connectionsTable);
         $c->set('shared.atomic.tasks', fn () => $tasksAtomic);
         $c->set('shared.cpu_cores', fn () => $cpuCores);
+        $c->set('shared.semaphores.atomics', fn () => $semaphoreAtomics);
 
         // Logger
         $c->set(StdoutLogger::class, function ($c) {
@@ -95,12 +113,11 @@ class Kernel
         $c->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
         $c->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
         $c->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
-        $c->set(
-            TaskSemaphore::class,
-            fn ($c) => new WorkerLocalSemaphore(
-                $c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10)
-            )
-        );
+        $c->set(TaskSemaphore::class, function ($c) {
+            // TODO: Add the abity to switch semaphore implementation
+            // return new WorkerLocalSemaphore($c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10));
+            return new GlobalSharedSemaphore($c->get('shared.semaphores.atomics'));
+        });
         $c->set(WsEventBroadcaster::class, fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
         $c->set(TaskDelayStrategy::class, fn ($c) => new DemoDelayStrategy());
 

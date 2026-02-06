@@ -114,6 +114,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Optimization**: `.dockerignore` file to prevent heavy local directories from bloating the build context.
 - **UI/UX**: Custom SVG/ICO favicon with "AF" branding (green on black terminal style).
 - **Branding**: Updated application title to `FAST.Atomic.Flow`.
+- **Global Concurrency**: Switched to `GlobalSharedSemaphore` powered by `Swoole\Atomic`. Concurrency limits are now strictly enforced across all worker processes.
+- **Race Condition Fix**: Implemented a non-blocking spin-lock with `cmpset` (CAS) to prevent task overflows during high-frequency bursts.
+- **Shared Infrastructure**: Added a pool of pre-allocated atomic counters in shared memory, managed via the `shared.semaphores.atomics` container key.
 
 ### Changed
 - Refactored monolithic `server.php` into a modular, decoupled architecture.
@@ -131,7 +134,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Performance**: Switched static file delivery to use Swoole's native `sendfile` via `document_root`.
 - **Config**: Added a safety check for `.env` file existence and readability, preventing crashes in environments where the file is not present (e.g., production containers).
 
-### QA
+### Improved
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.
 - **Testing Infrastructure**: Added `phpunit.xml` and automated test scripts via Composer.
 - **Mocking Strategy**: Implemented clean Unit tests using Stubs and Mocks for high-concurrency services.
+- **Code Navigation**: Integrated `{@see}` PHPDoc annotations to link infrastructure resource allocation with service implementations.
+- **Architecture**: Refined the PSR-container structure to clearly distinguish between local and shared (IPC) resources.
