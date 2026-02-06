@@ -117,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Global Concurrency**: Switched to `GlobalSharedSemaphore` powered by `Swoole\Atomic`. Concurrency limits are now strictly enforced across all worker processes.
 - **Race Condition Fix**: Implemented a non-blocking spin-lock with `cmpset` (CAS) to prevent task overflows during high-frequency bursts.
 - **Shared Infrastructure**: Added a pool of pre-allocated atomic counters in shared memory, managed via the `shared.semaphores.atomics` container key.
+- **Network**: New configuration parameter `SOCKET_BUFFER_SIZE_MB` in `.env` to control Swoole reactor output buffers.
 
 ### Changed
 - Refactored monolithic `server.php` into a modular, decoupled architecture.
@@ -135,6 +136,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Config**: Added a safety check for `.env` file existence and readability, preventing crashes in environments where the file is not present (e.g., production containers).
 - **Metrics**: Corrected `queue.usage` reporting in `metrics.update` event to show global task count instead of local worker stats.
 - **Validation**: Fixed task batch creation logic to accurately check global capacity using atomic counters, preventing race conditions and overflow.
+- **Network**: Resolved `socket output buffer overflow` (ERRNO 1009) by increasing `socket_buffer_size` in the Swoole reactor configuration.
+- **Infrastructure**: Eliminated hardcoded network limits in the Kernel, enabling environment-specific performance tuning.
 
 ### Improved
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.

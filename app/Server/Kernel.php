@@ -11,8 +11,7 @@ use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Controllers\TaskController;
 use App\Router;
-use App\Services\Tasks\Semaphores\GlobalSharedSemaphore;
-use App\Services\Tasks\Semaphores\WorkerLocalSemaphore;
+use App\Services\Tasks\Semaphores\{GlobalSharedSemaphore, WorkerLocalSemaphore};
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
 use App\Support\Monitoring\SwooleAtomicCounter;
@@ -47,6 +46,7 @@ class Kernel
             'worker_num' => $this->config->getInt('SERVER_WORKER_NUM', 4),
             'dispatch_mode' => $this->config->getInt('SERVER_DISPATCH_MODE', 2),
             'enable_coroutine' => true,
+            'socket_buffer_size' => $this->config->getInt('SOCKET_BUFFER_SIZE_MB', 64) * 1024 * 1024,
 
             // Static files
             'enable_static_handler' => true,
