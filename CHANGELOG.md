@@ -104,9 +104,14 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ## - 2026-02-06
 ### Added
 - **Kernel-based Architecture**: Centralized application lifecycle management via `App\Server\Kernel`.
+- **PHP Version Requirement**: Bumped minimum version to **8.4+** to support modern engine features.
+- **Package Identity**: Renamed project to `shmandalf/atomic-flow`.
+- **Dependency Alignment**: Updated `composer.json` to resolve conflicts with PHPUnit 12 on PHP 8.4.
 
 ### Changed
 - Refactored monolithic `server.php` into a modular, decoupled architecture.
+- **PHP Requirement**: Bumped to **8.4+**.
+- **Rebranding**: Package renamed to `shmandalf/atomic-flow`.
 
 ### QA
 - **Unit Test Suite**: Reached stable coverage for core business logic, DTOs, and infrastructure components.
