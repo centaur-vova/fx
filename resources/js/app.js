@@ -1,27 +1,151 @@
 document.addEventListener("DOMContentLoaded", () => {
     const state = {
-        tasks: {},
+        tasks: new Map(),
         mc: 2,
         ws: null,
+        scale: 1,
+        mode: 'normal',
+        width: 0,
+        height: 0
+    };
+
+    // Configuration from your CSS
+    const COLORS = {
+        1: '#6366f1', 2: '#10b981', 3: '#f59e0b', 4: '#ea580c', 5: '#f43f5e',
+        6: '#8b5cf6', 7: '#d946ef', 8: '#06b6d4', 9: '#84cc16', 10: '#3b82f6'
+    };
+
+    const COORDS = {
+        queued: 0.125,
+        check_lock: 0.375,
+        lock_acquired: 0.625,
+        processing_progress: 0.625,
+        completed: 0.875,
+        lock_failed: 0.125
     };
 
     const DOM = {
-        pipeline: document.getElementById("pipeline"),
+        container: document.getElementById("pipeline"),
         log: document.getElementById("logPanel"),
         mcDisplay: document.getElementById("maxConcurrentDisplay"),
         mcSlider: document.getElementById("maxConcurrentSlider"),
     };
 
-    const COORDS = {
-        queued: 12.5,
-        check_lock: 37.5,
-        lock_acquired: 62.5,
-        processing_progress: 62.5,
-        completed: 87.5,
-        lock_failed: 12.5,
+    // Setup Canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    DOM.container.appendChild(canvas);
+
+    const resize = () => {
+        state.width = DOM.container.clientWidth;
+        state.height = DOM.container.clientHeight;
+        canvas.width = state.width * window.devicePixelRatio;
+        canvas.height = state.height * window.devicePixelRatio;
+        canvas.style.width = state.width + 'px';
+        canvas.style.height = state.height + 'px';
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Drawing Primitives (Your CSS Shapes)
+    const drawShape = (x, y, size, mc, status) => {
+        ctx.fillStyle = COLORS[mc] || '#ffffff';
+        ctx.globalAlpha = status === 'completed' ? 0.3 : 1;
+
+        if (state.mode === 'dot') {
+            ctx.beginPath();
+            ctx.arc(x, y, 2 * state.scale, 0, Math.PI * 2);
+            ctx.shadowBlur = state.mode === 'dot' ? 5 : 0;
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.fill();
+            return;
+        }
+
+        const s = size * state.scale;
+        ctx.beginPath();
+
+        switch (parseInt(mc)) {
+            case 1: // Circle
+                ctx.arc(x, y, s / 2, 0, Math.PI * 2); break;
+            case 5: // Diamond
+                ctx.moveTo(x, y - s / 2); ctx.lineTo(x + s / 2, y); ctx.lineTo(x, y + s / 2); ctx.lineTo(x - s / 2, y); break;
+            case 8: // Hexagon
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i;
+                    ctx.lineTo(x + s / 2 * Math.cos(angle), y + s / 2 * Math.sin(angle));
+                } break;
+            case 10: // Octagon
+                for (let i = 0; i < 8; i++) {
+                    const angle = (Math.PI / 4) * i;
+                    ctx.lineTo(x + s / 2 * Math.cos(angle), y + s / 2 * Math.sin(angle));
+                } break;
+            default: // Rounded Rect (simplified)
+                ctx.roundRect(x - s / 2, y - s / 2, s, s, 4 * state.scale);
+        }
+        ctx.fill();
+
+        if (state.scale > 0.8) {
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${10 * state.scale}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(mc, x, y);
+        }
     };
 
-    // WebSocket Init
+    // Animation Loop
+    const render = () => {
+        ctx.clearRect(0, 0, state.width, state.height);
+        const now = Date.now();
+
+        state.tasks.forEach((task, id) => {
+            // Smooth movement (Lerp)
+            task.currentX += (task.targetX - task.currentX) * 0.1;
+
+            // Remove completed tasks after some time
+            if (task.status === 'completed' && now - task.endTime > 5000) {
+                state.tasks.delete(id);
+                return;
+            }
+
+            drawShape(task.currentX * state.width, task.y * state.height, 24, task.mc, task.status);
+        });
+
+        requestAnimationFrame(render);
+    };
+    requestAnimationFrame(render);
+
+    const handleUpdateTasks = (data) => {
+        const { taskId, mc, status, progress, message } = data;
+
+        // Throttled logging for performance
+        if (state.tasks.size < 300) addLog(taskId, mc, status, message);
+
+        if (!state.tasks.has(taskId)) {
+            const y = 0.15 + Math.random() * 0.7;
+
+            const jitterX = (Math.random() - 0.5) * 0.22;
+
+            state.tasks.set(taskId, {
+                mc: mc || state.mc,
+                y: y,
+                jitterX: jitterX,
+                currentX: COORDS.queued + jitterX,
+                targetX: COORDS.queued + jitterX,
+                status: 'queued'
+            });
+        }
+
+        const task = state.tasks.get(taskId);
+        task.status = status;
+        if (COORDS[status]) {
+            task.targetX = COORDS[status] + task.jitterX;
+        }
+        if (status === 'completed') task.endTime = Date.now();
+    };
+
+    // WebSocket & Logic (Minimal changes)
     const connect = () => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         state.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
@@ -30,187 +154,49 @@ document.addEventListener("DOMContentLoaded", () => {
             if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
             if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
         };
-        state.ws.onopen = () => console.log("%c CONNECTED ", "background: green; color: white");
     };
-
-    const updateGlobalScale = (totalTasks) => {
-        const container = document.getElementById('pipeline');
-        let scale = 1;
-        let mode = 'normal';
-
-        if (totalTasks <= 10) {
-            scale = 1.66;
-        } else if (totalTasks <= 50) {
-            scale = 1;
-        } else if (totalTasks <= 200) {
-            scale = 0.75;
-        } else if (totalTasks <= 500) {
-            scale = 0.5;
-        } else if (totalTasks <= 1000) {
-            scale = 0.3;
-            mode = 'dot';
-        } else {
-            scale = 0.2;
-            mode = 'dot';
-        }
-
-        if (container) {
-            container.style.setProperty('--task-scale', scale);
-            container.setAttribute('data-view-mode', mode);
-        }
-    }
 
     const handleUpdateMetrics = (data) => {
-        const memEl = document.getElementById("memory-usage");
-        const connEl = document.getElementById("connection-count");
-        const cpuEl = document.getElementById("cpu-load");
-        const tasksEl = document.getElementById("tasks-count");
-        const usageEl = document.getElementById("queue-usage");
-        const maxEl = document.getElementById("queue-max");
+        document.getElementById("memory-usage").textContent = data.memory;
+        document.getElementById("connection-count").textContent = data.connections;
+        document.getElementById("cpu-load").textContent = data.cpu;
+        document.getElementById("tasks-count").textContent = data.tasks;
 
-        if (memEl) memEl.textContent = data.memory;
-        if (connEl) connEl.textContent = data.connections;
-        if (cpuEl) cpuEl.textContent = data.cpu;
-        if (tasksEl) tasksEl.textContent = data.tasks;
-
-        if (usageEl && data.queue) {
-            const usage = parseInt(data.queue.usage, 10);
-            const max = parseInt(data.queue.max, 10);
-
-            usageEl.textContent = usage;
-            if (maxEl) maxEl.textContent = max;
-
-            if (usage / max > 0.9) {
-                usageEl.classList.add('text-red-500');
-                usageEl.classList.remove('text-yellow-500');
-            } else {
-                usageEl.classList.add('text-yellow-500');
-                usageEl.classList.remove('text-red-500');
-            }
-        }
-
-        updateGlobalScale(parseInt(data.tasks, 10));
-    }
-
-    const handleUpdateTasks = (data) => {
-        const { taskId, mc, status, progress, message } = data;
-        addLog(taskId, mc, status, message);
-
-        if (!state.tasks[taskId]) createTask(taskId, mc || state.mc);
-        updateTask(taskId, status, progress);
+        const total = parseInt(data.tasks);
+        if (total <= 50) { state.scale = 1; state.mode = 'normal'; }
+        else if (total <= 500) { state.scale = 0.5; state.mode = 'normal'; }
+        else { state.scale = 0.3; state.mode = 'dot'; }
     };
 
-    const createTask = (id, mc) => {
-        const el = document.createElement("div");
-        el.id = `task-${id}`;
-        el.className = `task task-concurrent-${mc}`;
-        el.textContent = mc;
-
-        const top = 20 + Math.random() * 60;
-        const jitterX = (Math.random() - 0.5) * 12;
-
-        el.style.top = `${top}%`;
-        el.style.left = `${COORDS.queued + jitterX}%`;
-
-        DOM.pipeline.appendChild(el);
-        state.tasks[id] = { el, status: "queued", top, jitterX };
-    };
-
-    const updateTask = (id, status, mc) => {
-        const task = state.tasks[id];
-        if (!task) return;
-
-        if (COORDS[status]) {
-            const targetLeft = COORDS[status] + (task.jitterX || 0);
-
-            if (targetLeft !== task.lastCoord) {
-                task.el.style.left = targetLeft + "%";
-                task.lastCoord = targetLeft;
-            }
-        }
-
-        if (status === "completed") completeTask(id);
-    };
-
-    const completeTask = (id) => {
-        const task = state.tasks[id];
-        if (!task) return;
-
-        task.el.classList.add("completed");
-
-        setTimeout(() => {
-            if (task.el && task.el.parentNode) {
-                task.el.style.opacity = '0';
-                task.el.style.transform = 'translate(-50%, -50%) scale(0)';
-
-                setTimeout(() => {
-                    task.el.remove();
-                    delete state.tasks[id];
-                }, 300);
-            }
-        }, 5000);
-    };
-
-    function addLog(taskId, mc, status, msg) {
-        const entry = document.createElement('div');
-        entry.className = 'whitespace-nowrap truncate text-[10px] leading-tight mb-0.5';
-
-        const time = new Date().toLocaleTimeString([], { hour12: false });
-        const shortId = taskId.replace('task-', '').substring(0, 8);
-
-        const statusStyles = {
-            'queued': 'text-gray-400',
-            'check_lock': 'text-amber-500',
-            'lock_acquired': 'text-yellow-400',
-            'lock_failed': 'text-red-500 animate-pulse',
-            'processing': 'text-blue-500',
-            'processing_progress': 'text-sky-400',
-            'completed': 'text-green-500',
-            'default': 'text-gray-500'
-        };
-
-        const colorClass = statusStyles[status] || statusStyles['default'];
-        const displayStatus = status ? status.toUpperCase().replace('_', ' ') : 'INFO';
-
-
-        entry.innerHTML =
-            `<span class="text-gray-600">${time}</span> ` +
-            `<span class="${colorClass} font-bold">[${displayStatus}]</span> ` +
-            `<span class="text-gray-500">ID:</span><span class="text-white">${shortId}</span> ` +
-            `<span class="text-gray-300 ml-1"> ${msg}</span>`;
-
-        DOM.log.appendChild(entry);
-
-        if (DOM.log.children.length > 50) {
-            DOM.log.removeChild(DOM.log.firstChild);
-        }
-        DOM.log.scrollTop = DOM.log.scrollHeight;
-    }
-
-    // Listeners
+    // Controls
     DOM.mcSlider.oninput = (e) => {
         state.mc = e.target.value;
         DOM.mcDisplay.textContent = state.mc;
     };
 
-    [1, 5, 20, 50, 100].forEach((count) => {
-        const btnId =
-            count === 1
-                ? "createOneBtn"
-                : count === 5
-                    ? "createFiveBtn"
-                    : count === 20
-                        ? "createTwentyBtn"
-                        : count === 50
-                            ? "createFiftyBtn"
-                            : "createHundredBtn";
-        document.getElementById(btnId).onclick = () => {
-            fetch("/api/tasks/create", {
-                method: "POST",
-                body: JSON.stringify({ count, max_concurrent: state.mc }),
-            });
-        };
-    });
+    const createTasks = (count) => {
+        fetch("/api/tasks/create", {
+            method: "POST",
+            body: JSON.stringify({ count, max_concurrent: state.mc }),
+        });
+    };
+
+    document.getElementById("createOneBtn").onclick = () => createTasks(1);
+    document.getElementById("createFiveBtn").onclick = () => createTasks(5);
+    document.getElementById("createTwentyBtn").onclick = () => createTasks(20);
+    document.getElementById("createFiftyBtn").onclick = () => createTasks(50);
+    document.getElementById("createHundredBtn").onclick = () => createTasks(100);
+    document.getElementById("createFiveHundredBtn").onclick = () => createTasks(500);
+
+    function addLog(taskId, mc, status, msg) {
+        const entry = document.createElement('div');
+        entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
+        const time = new Date().toLocaleTimeString([], { hour12: false });
+        entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.substring(0, 8)}</span> <span class="text-gray-400">${msg}</span>`;
+        DOM.log.appendChild(entry);
+        if (DOM.log.children.length > 30) DOM.log.removeChild(DOM.log.firstChild);
+        DOM.log.scrollTop = DOM.log.scrollHeight;
+    }
 
     connect();
 });
