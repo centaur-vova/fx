@@ -1,5 +1,7 @@
 # 🚀 Atomic Flow: High-Performance Task Engine
 
+[![Tests](https://github.com)](https://github.com)
+
 > **A deep dive into PHP Swoole, Coroutines, and Event-Driven Architecture.**
 
 This project is a technical laboratory where I explore high-concurrency patterns in PHP, inspired by the Golang concurrency model. It demonstrates how to push PHP beyond the classic Request-Response (FPM) cycle into the realm of persistent, high-performance distributed systems.

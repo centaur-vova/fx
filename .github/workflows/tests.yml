@@ -1,0 +1,22 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP with Swoole
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: swoole, pcntl
+          coverage: none
+
+      - name: Install Dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: Run Unit Tests
+        run: composer test
