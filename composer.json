@@ -1,9 +1,9 @@
 {
-    "name": "swoole/semaphore-demo",
-    "description": "Pure Swoole semaphore implementation demo",
+    "name": "shmandalf/atomic-flow",
+    "description": "High-performance task visualizer built with PHP 8.4+ & Swoole",
     "type": "project",
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.4",
         "ext-swoole": "*",
         "psr/log": "^3.0",
         "vlucas/phpdotenv": "^5.6",

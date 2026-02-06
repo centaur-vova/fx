@@ -1,6 +1,8 @@
 # 🚀 Atomic Flow: High-Performance Task Engine
 
-[![Tests](https://github.com)](https://github.com)
+<p align="center">
+<a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yml/badge.svg" alt="Tests"></a><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+</p>
 
 > **A deep dive into PHP Swoole, Coroutines, and Event-Driven Architecture.**
 
@@ -12,7 +14,7 @@ This project is a technical laboratory where I explore high-concurrency patterns
 
 To run this engine, your environment must meet the following requirements:
 
-*   **PHP:** `^8.2` (Uses Constructor Property Promotion).
+*   **PHP:** `^8.4` (Uses Constructor Property Promotion).
 *   **Swoole Extension:** `^5.0` (Required for Coroutines, Channels, and Table support).
 *   **Composer:** For dependency management.
 *   **Linux/macOS:** Swoole has limited support for Windows (Docker is recommended for Windows users).
@@ -29,7 +31,7 @@ Testing on a single-core environment yielded the following results:
 ---
 
 ### 🛠 Tech Stack & Core Abstractions
-*   **Runtime:** [Swoole PHP](https://www.swoole.co.uk) (Event-driven, Coroutines).
+*   **Runtime:** [Swoole PHP](https://wiki.swoole.com/en/#/) (Event-driven, Coroutines).
 *   **Shared Memory:** `Swoole\Table` for ultra-fast cross-process state management.
 *   **Atomic Operations:** `Swoole\Atomic` for thread-safe global metrics (Tasks, Connections).
 *   **Concurrency Control:** Custom Semaphores built on `Swoole\Coroutine\Channel`.
