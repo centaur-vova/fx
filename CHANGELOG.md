@@ -163,6 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Reliability Engineering**: Configured extended `stop_grace_period` (60s) to ensure zero-data-loss during asynchronous Swoole worker shutdowns.
 - **Linting**: Introduced `lint-dry` command for code style verification without modifying files.
 - **Workflow**: Added `check-all` composer script to run static analysis, linting, and rector dry-runs in a single pass.
+- **Monitoring Service**: Introduced `SystemMonitor` for high-frequency resource usage tracking (CPU, Memory, Connections).
+- **Data Transfer**: Implemented `Metrics` DTO for structured, type-safe monitoring updates.
+- **Developer Experience**: Added `make check` command in Makefile for comprehensive project validation.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.
@@ -187,6 +190,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   - *Visuals*: Enhanced Canvas visualization with more organic, non-linear task distribution.
 - **Code Style**: Migrated to a stricter PHP-CS-Fixer configuration based on PSR-12.
 - **Strictness**: Enforced `declare_strict_types`, `strict_comparison`, and `strict_param` across the entire codebase to prevent runtime type-related bugs.
+- **Dashboard**: Redesigned the main header to include a centralized **Reactor Status** and **Queue Load** (usage vs. capacity).
+- **Frontend**: Refactored the metrics handler to support the new DTO-driven WebSocket payload.
+- **Terminal**: Removed legacy connection indicator from the log panel in favor of the new header status.
+- **Clean Code**: Decoupled system telemetry collection from the WebSocket `EventHandler`.
+- **Frontend Logic**: Optimized task creation UI by implementing event delegation via `data-count` attributes, reducing DOM selector overhead.
+- **Code Reliability**: Applied explicit decimal parsing (`radix 10`) in Canvas rendering logic to ensure consistent behavior across different JS engines.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

@@ -3,7 +3,7 @@ PHP_BIN = php
 SERVER_FILE = server.php
 
 # --- Methods ---
-.PHONY: install build run stop restart watch test help
+.PHONY: install build run stop restart watch test check help
 
 help:
 	@echo "Usage:"
@@ -14,6 +14,8 @@ help:
 	@echo "  make restart  - Restart the Swoole server"
 	@echo "  make watch    - Watch frontend changes"
 	@echo "  make test     - Run PHPUnit tests"
+	@echo "  make check    - Run full static analysis & quality gate (PHPStan, Lint, Rector)"
+
 
 install:
 	cp .env.example .env
@@ -38,3 +40,6 @@ watch:
 
 test:
 	./vendor/bin/phpunit --colors=always
+
+check:
+	composer check-all

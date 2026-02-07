@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Server;
 
 use App\Config;
-use App\Contracts\Monitoring\TaskCounter;
 use App\Router;
-use App\Services\Tasks\TaskService;
+use App\Services\Monitoring\SystemMonitor;
 use App\WebSocket\ConnectionPool;
 use Swoole\Timer;
 use Swoole\WebSocket\Server;
@@ -17,8 +16,7 @@ class EventHandler
     public function __construct(
         private readonly Router $router,
         private readonly ConnectionPool $connectionPool,
-        private readonly TaskCounter $taskCounter,
-        private readonly TaskService $taskService,
+        private readonly SystemMonitor $systemMonitor,
         private readonly Config $config,
     ) {
     }
@@ -62,44 +60,16 @@ class EventHandler
     {
         $interval = $this->config->getInt('METRICS_UPDATE_INTERVAL_MS', 1000);
 
-        $lastUsage = getrusage();
-        $lastTime = microtime(true);
-
-        Timer::tick($interval, function ($timerId) use ($server, $fd, &$lastUsage, &$lastTime) {
+        Timer::tick($interval, function ($timerId) use ($server, $fd) {
             // In case of disconnect clear the timer
             if (!$server->exists($fd)) {
                 Timer::clear($timerId);
                 return;
             }
 
-            $currentUsage = getrusage();
-            $currentTime = microtime(true);
-
-            // Calculate time delta (ms)
-            $userDelta = ($currentUsage['ru_utime.tv_sec'] + $currentUsage['ru_utime.tv_usec'] / 1000000)
-                - ($lastUsage['ru_utime.tv_sec'] + $lastUsage['ru_utime.tv_usec'] / 1000000);
-            $sysDelta = ($currentUsage['ru_stime.tv_sec'] + $currentUsage['ru_stime.tv_usec'] / 1000000)
-                - ($lastUsage['ru_stime.tv_sec'] + $lastUsage['ru_stime.tv_usec'] / 1000000);
-
-            $timeDelta = $currentTime - $lastTime;
-
-            // Load = (process_time / real_time) * 100 (%)
-            $cpuUsage = round((($userDelta + $sysDelta) / $timeDelta) * 100, 2) . '%';
-
-            // Update outer state
-            $lastUsage = $currentUsage;
-            $lastTime = $currentTime;
-
             $payload = [
                 'event' => 'metrics.update',
-                'data' => [
-                    'worker' => $server->worker_id,
-                    'memory' => round(memory_get_usage() / 1024 / 1024, 2) . 'MB',
-                    'connections' => $this->connectionPool->count(),
-                    'cpu' => $cpuUsage,
-                    'tasks' => $this->taskCounter->get(),
-                    'queue' => $this->taskService->getQueueStats(),
-                ],
+                'data' => $this->systemMonitor->capture($server),
             ];
 
             $server->push($fd, json_encode($payload));

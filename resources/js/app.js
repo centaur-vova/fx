@@ -26,9 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const DOM = {
         container: document.getElementById("pipeline"),
-        log: document.getElementById("logPanel"),
-        mcDisplay: document.getElementById("maxConcurrentDisplay"),
-        mcSlider: document.getElementById("maxConcurrentSlider"),
+        log: document.getElementById("log-panel"),
+        mcDisplay: document.getElementById("max-concurrent-display"),
+        mcSlider: document.getElementById("max-concurrent-slider"),
     };
 
     // Setup Canvas
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const s = size * state.scale;
         ctx.beginPath();
 
-        switch (parseInt(mc)) {
+        switch (parseInt(mc, 10)) {
             case 1: // Circle
                 ctx.arc(x, y, s / 2, 0, Math.PI * 2); break;
             case 5: // Diamond
@@ -149,6 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const connect = () => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         state.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        state.ws.onopen = (e) => updateWsStatus(true);
+        state.ws.onclose = (e) => {
+            updateWsStatus(false);
+            setTimeout(connect, 3000); // Auto-reconnect
+        }
         state.ws.onmessage = (e) => {
             const msg = JSON.parse(e.data);
             if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
@@ -156,13 +161,44 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
+    const updateWsStatus = (online) => {
+        const dot = document.getElementById("ws-status-dot");
+        const text = document.getElementById("ws-status-text");
+
+        if (online) {
+            dot.className = "w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
+            text.textContent = "Online";
+            text.className = "text-green-400 font-mono text-[10px] uppercase";
+        } else {
+            dot.className = "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse";
+            text.textContent = "Offline";
+            text.className = "text-red-500 font-mono text-[10px] uppercase";
+        }
+    };
+
     const handleUpdateMetrics = (data) => {
+        // Basic metrics
         document.getElementById("memory-usage").textContent = data.memory;
         document.getElementById("connection-count").textContent = data.connections;
         document.getElementById("cpu-load").textContent = data.cpu;
-        document.getElementById("tasks-count").textContent = data.tasks;
 
-        const total = parseInt(data.tasks);
+        // Queue info: "usage / max"
+        const queueEl = document.getElementById("queue-info");
+        if (queueEl && data.queue) {
+            queueEl.textContent = `${data.queue.usage} / ${Math.floor(data.queue.max / 1000)}k`;
+
+            // Critical load coloring
+            if (data.queue.usage / data.queue.max > 0.8) {
+                queueEl.classList.replace('text-yellow-500', 'text-red-500');
+            } else {
+                queueEl.classList.replace('text-red-500', 'text-yellow-500');
+            }
+        }
+
+        handleLODLogic(parseInt(data.tasks, 10));
+    };
+
+    const handleLODLogic = (total) => {
         if (total <= 50) { state.scale = 1; state.mode = 'normal'; }
         else if (total <= 500) { state.scale = 0.5; state.mode = 'normal'; }
         else { state.scale = 0.3; state.mode = 'dot'; }
@@ -181,12 +217,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    document.getElementById("createOneBtn").onclick = () => createTasks(1);
-    document.getElementById("createFiveBtn").onclick = () => createTasks(5);
-    document.getElementById("createTwentyBtn").onclick = () => createTasks(20);
-    document.getElementById("createFiftyBtn").onclick = () => createTasks(50);
-    document.getElementById("createHundredBtn").onclick = () => createTasks(100);
-    document.getElementById("createFiveHundredBtn").onclick = () => createTasks(500);
+    document.querySelectorAll('.task-button').forEach(btn => {
+        btn.onclick = () => {
+            const count = parseInt(btn.getAttribute('data-count'), 10);
+            if (count) createTasks(count);
+        };
+    });
 
     function addLog(taskId, mc, status, msg) {
         const entry = document.createElement('div');
