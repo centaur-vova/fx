@@ -180,6 +180,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Unified CI/CD Pipeline**: Consolidated **PHPStan** (Level 5) and **PHPUnit** testing into a single **GitHub Actions** workflow (`ci.yaml`).
 - **Task Scheduling Optimization**: Increased the jitter window in `DemoDelayStrategy` from 300ms to 3000ms.
   - *Rationale*: Improved temporal distribution of tasks to mitigate CPU spikes and enhance semaphore efficiency during massive batch processing.
+- **Task Scheduling**: Refactored `DemoDelayStrategy` to use pure high-entropy jitter.
+  - *Improvement*: Eliminated linear "task grouping" effect by removing iteration-based staggering.
+  - *Visuals*: Enhanced Canvas visualization with more organic, non-linear task distribution.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.
