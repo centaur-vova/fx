@@ -166,6 +166,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Monitoring Service**: Introduced `SystemMonitor` for high-frequency resource usage tracking (CPU, Memory, Connections).
 - **Data Transfer**: Implemented `Metrics` DTO for structured, type-safe monitoring updates.
 - **Developer Experience**: Added `make check` command in Makefile for comprehensive project validation.
+- **Resilience**: Implemented automatic WebSocket reconnection with linear backoff (3s interval).
+- **UX**: Added a real-time **Reactor Status** indicator with visual pulsing for disconnected states.
+- **Notifications**: Introduced a "Success Popup" for immediate visual confirmation of batch task injections.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.
@@ -196,6 +199,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Clean Code**: Decoupled system telemetry collection from the WebSocket `EventHandler`.
 - **Frontend Logic**: Optimized task creation UI by implementing event delegation via `data-count` attributes, reducing DOM selector overhead.
 - **Code Reliability**: Applied explicit decimal parsing (`radix 10`) in Canvas rendering logic to ensure consistent behavior across different JS engines.
+- **Stability**: Enhanced WebSocket lifecycle management by handling `onerror` and `onclose` events gracefully.
+- **UI State**: Centralized reconnection attempts and popup timeouts within the global application state.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

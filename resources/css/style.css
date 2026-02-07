@@ -179,3 +179,28 @@ body {
     background-color: #3b82f6;
     clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
 }
+
+/* --- Alerts & Popups --- */
+.success-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #111;
+    border-left: 4px solid #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    transform: translateX(150%);
+    transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    z-index: 1000;
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.success-popup.show {
+    transform: translateX(0);
+}

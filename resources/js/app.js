@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
         scale: 1,
         mode: 'normal',
         width: 0,
-        height: 0
+        height: 0,
+        popupTimeout: null,
+        reconnectAttempts: 0,
     };
 
     // Configuration from your CSS
@@ -148,16 +150,42 @@ document.addEventListener("DOMContentLoaded", () => {
     // WebSocket & Logic (Minimal changes)
     const connect = () => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        state.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-        state.ws.onopen = (e) => updateWsStatus(true);
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+        state.ws = new WebSocket(wsUrl);
+
+        // open/close/error handling
+        state.ws.onopen = (e) => {
+            console.log("%c REACTOR ONLINE ", "background: #064e3b; color: #10b981; font-weight: bold;");
+            updateWsStatus(true);
+            // Reset any reconnection attempts if successful
+            state.reconnectAttempts = 0;
+        }
         state.ws.onclose = (e) => {
             updateWsStatus(false);
-            setTimeout(connect, 3000); // Auto-reconnect
+            console.log("%c REACTOR OFFLINE ", "background: #450a0a; color: #f87171; font-weight: bold;");
+
+            // Linear backoff: try to reconnect every 3 seconds
+            // You can make it exponential if needed: Math.min(30000, (state.reconnectAttempts ** 2) * 1000)
+            setTimeout(() => {
+                state.reconnectAttempts = (state.reconnectAttempts || 0) + 1;
+                console.log(`Reconnection attempt #${state.reconnectAttempts}...`);
+                connect();
+            }, 3000);
         }
+        state.ws.onerror = (err) => {
+            // ws.onclose will be called automatically after onerror
+            state.ws.close();
+        };
+
         state.ws.onmessage = (e) => {
-            const msg = JSON.parse(e.data);
-            if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
-            if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
+            try {
+                const msg = JSON.parse(e.data);
+                if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
+                if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
+            } catch (err) {
+                console.error("Malformed message received", err);
+            }
         };
     };
 
@@ -165,16 +193,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const dot = document.getElementById("ws-status-dot");
         const text = document.getElementById("ws-status-text");
 
+        if (!dot || !text) return;
+
         if (online) {
-            dot.className = "w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
+            dot.className = "w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] transition-all";
             text.textContent = "Online";
             text.className = "text-green-400 font-mono text-[10px] uppercase";
         } else {
-            dot.className = "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse";
-            text.textContent = "Offline";
+            dot.className = "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse transition-all";
+            text.textContent = "Disconnected";
             text.className = "text-red-500 font-mono text-[10px] uppercase";
         }
     };
+
 
     const handleUpdateMetrics = (data) => {
         // Basic metrics
@@ -204,6 +235,27 @@ document.addEventListener("DOMContentLoaded", () => {
         else { state.scale = 0.3; state.mode = 'dot'; }
     };
 
+    const showPopup = (count) => {
+        const popup = document.getElementById("successPopup");
+        if (!popup) return;
+
+        popup.innerHTML = `
+        <span class="text-gray-500 mr-2">REACTOR:</span>
+        <b class="text-green-500">${count}</b>
+        <span class="text-gray-300">tasks injected</span>
+    `;
+
+        popup.classList.add("show");
+
+        // Clear previous timeout if user clicks rapidly
+        if (state.popupTimeout) clearTimeout(state.popupTimeout);
+
+        state.popupTimeout = setTimeout(() => {
+            popup.classList.remove("show");
+        }, 3000);
+    };
+
+
     // Controls
     DOM.mcSlider.oninput = (e) => {
         state.mc = e.target.value;
@@ -214,6 +266,10 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/api/tasks/create", {
             method: "POST",
             body: JSON.stringify({ count, max_concurrent: state.mc }),
+        }).then(response => {
+            if (response.ok) {
+                showPopup(count);
+            }
         });
     };
 
