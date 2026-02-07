@@ -22,11 +22,11 @@ class Config
     public static function fromEnv(string $path): self
     {
         $fileData = [];
-        $envPath  = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '.env';
+        $envPath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '.env';
 
         // Load from file only if it exists (local dev without Docker)
         if (file_exists($envPath) && is_readable($envPath)) {
-            $dotenv   = Dotenv::createImmutable($path);
+            $dotenv = Dotenv::createImmutable($path);
             $fileData = $dotenv->load();
         }
 

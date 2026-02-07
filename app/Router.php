@@ -22,7 +22,7 @@ class Router
     {
         $this->routes = [
             'POST|/api/tasks/create' => [$this->taskController, 'createTasks'],
-            'GET|/api/tasks/health'  => [$this->taskController, 'health'],
+            'GET|/api/tasks/health' => [$this->taskController, 'health'],
         ];
     }
 

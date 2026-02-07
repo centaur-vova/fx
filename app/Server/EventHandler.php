@@ -97,7 +97,7 @@ class EventHandler
                     'memory' => round(memory_get_usage() / 1024 / 1024, 2) . 'MB',
                     'connections' => $this->connectionPool->count(),
                     'cpu' => $cpuUsage,
-                    'tasks'  => $this->taskCounter->get(),
+                    'tasks' => $this->taskCounter->get(),
                     'queue' => $this->taskService->getQueueStats(),
                 ],
             ];

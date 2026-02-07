@@ -32,9 +32,11 @@
         "refactor-dry": "vendor/bin/rector process --dry-run",
         "check-all": [
             "@analyze",
+            "@lint-dry",
             "@refactor-dry"
         ],
         "lint": "php-cs-fixer fix",
+        "lint-dry": "php-cs-fixer fix --dry-run --diff",
         "test": "phpunit --colors=always",
         "test:unit": "phpunit --testsuite=Unit",
         "test:coverage": "phpunit --coverage-text"

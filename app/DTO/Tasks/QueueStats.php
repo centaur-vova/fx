@@ -18,7 +18,7 @@ class QueueStats implements JsonSerializable
     {
         return [
             'usage' => $this->usage,
-            'max'   => $this->max,
+            'max' => $this->max,
         ];
     }
 }

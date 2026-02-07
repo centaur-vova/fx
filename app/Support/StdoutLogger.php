@@ -29,7 +29,7 @@ class StdoutLogger extends AbstractLogger
 
         $time = microtime(true);
         $date = date('H:i:s', (int)$time);
-        $ms = sprintf("%03d", ($time - (int)$time) * 1000);
+        $ms = sprintf('%03d', ($time - (int)$time) * 1000);
 
         $output = sprintf(
             "[%s.%s] [%s] %s %s\n",

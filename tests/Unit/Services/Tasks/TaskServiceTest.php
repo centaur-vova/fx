@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services\Tasks;
 
-use App\Config;
 use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
@@ -34,5 +33,4 @@ class TaskServiceTest extends TestCase
         $this->expectException(QueueFullException::class);
         $service->createBatch(10, 0, 2);
     }
-
 }

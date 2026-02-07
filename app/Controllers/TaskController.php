@@ -47,5 +47,4 @@ class TaskController
             'queue' => $this->taskService->getQueueStats(),
         ];
     }
-
 }

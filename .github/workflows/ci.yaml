@@ -22,6 +22,10 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-progress --no-suggest
 
+      # Check PSR-12 and custom strict rules
+      - name: PHP Linting (Coding Standards)
+        run: composer lint-dry
+
       - name: Static Analysis (PHPStan)
         run: composer analyze
 

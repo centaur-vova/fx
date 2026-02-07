@@ -74,10 +74,10 @@ class TaskStatusUpdate implements JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'mc'    => $this->mc,
-            'taskId'       => $this->id,
-            'status'   => $this->status,
-            'message'  => $this->message,
+            'mc' => $this->mc,
+            'taskId' => $this->id,
+            'status' => $this->status,
+            'message' => $this->message,
             'progress' => $this->progress,
         ];
     }

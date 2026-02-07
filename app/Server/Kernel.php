@@ -116,8 +116,8 @@ class Kernel
         $c->set(
             TaskSemaphore::class,
             // TODO: Add the abity to switch semaphore implementation
-            fn ($c) => new WorkerLocalSemaphore($c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10))
-            // fn($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics'))
+            // fn ($c) => new WorkerLocalSemaphore($c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10))
+            fn ($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics'))
         );
         $c->set(WsEventBroadcaster::class, fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
         $c->set(TaskDelayStrategy::class, fn ($c) => new DemoDelayStrategy());
@@ -162,7 +162,7 @@ class Kernel
                 $this
                     ->container
                     ->get(LoggerInterface::class)
-                    ->error("Worker start failed", ['e' => $e->getMessage()]);
+                    ->error('Worker start failed', ['e' => $e->getMessage()]);
             }
         });
 
@@ -213,7 +213,7 @@ class Kernel
             $this
                 ->container
                 ->get(LoggerInterface::class)
-                ->info("Atomic Flow Server: Ready to process", [
+                ->info('Atomic Flow Server: Ready to process', [
                     'url' => "http://{$host}:{$port}",
                     'version' => '1.0.0',
                     'worker_num' => $server->setting['worker_num'] ?? 0,

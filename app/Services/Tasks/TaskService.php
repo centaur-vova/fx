@@ -66,7 +66,7 @@ class TaskService
 
     public function processTask(string $taskId, int $mc): void
     {
-        $this->logger->info("Task started", ['id' => $taskId, 'mc' => $mc]);
+        $this->logger->info('Task started', ['id' => $taskId, 'mc' => $mc]);
         $this->notify(TaskStatusUpdate::processing($taskId, $mc));
 
         $permit = $this->semaphore->forLimit($mc);
@@ -78,7 +78,7 @@ class TaskService
 
         if ($permit->acquire($lockTimeout)) {
             $waitDuration = microtime(true) - $startWait;
-            $this->logger->debug("Lock acquired", ['id' => $taskId, 'wait' => $waitDuration]);
+            $this->logger->debug('Lock acquired', ['id' => $taskId, 'wait' => $waitDuration]);
 
             try {
                 $this->notify(TaskStatusUpdate::lockAcquired($taskId, $mc));
@@ -98,7 +98,7 @@ class TaskService
                 $this->notify(TaskStatusUpdate::completed($taskId, $mc));
             } finally {
                 $permit->release();
-                $this->logger->debug("Lock released", ['id' => $taskId]);
+                $this->logger->debug('Lock released', ['id' => $taskId]);
             }
         } else {
             // In case of timeout or server is closed
@@ -106,11 +106,11 @@ class TaskService
 
             // Dont push in case of closed server
             if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
-                $this->logger->info("Task cancelled due to shutdown", ['id' => $taskId]);
+                $this->logger->info('Task cancelled due to shutdown', ['id' => $taskId]);
                 return;
             }
 
-            $this->logger->warning("Lock timeout", ['id' => $taskId, 'waited' => $waitDuration]);
+            $this->logger->warning('Lock timeout', ['id' => $taskId, 'waited' => $waitDuration]);
             $this->notify(TaskStatusUpdate::lockFailed($taskId, $mc));
 
             // Push only if channge is open
@@ -168,7 +168,7 @@ class TaskService
     public function shutdown(): void
     {
         if ($this->mainQueue) {
-            $this->logger->info("Shutting down worker, waiting for queue to drain...");
+            $this->logger->info('Shutting down worker, waiting for queue to drain...');
             $this->mainQueue->close();
         }
 

@@ -161,6 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Continuous Deployment (CD)**: Automated image builds and delivery to **GHCR (GitHub Container Registry)**.
 - **Remote Orchestration**: Fully automated VPS deployment via GitHub Actions and **Docker Compose**, including atomic container swaps.
 - **Reliability Engineering**: Configured extended `stop_grace_period` (60s) to ensure zero-data-loss during asynchronous Swoole worker shutdowns.
+- **Linting**: Introduced `lint-dry` command for code style verification without modifying files.
+- **Workflow**: Added `check-all` composer script to run static analysis, linting, and rector dry-runs in a single pass.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.
@@ -183,7 +185,11 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Task Scheduling**: Refactored `DemoDelayStrategy` to use pure high-entropy jitter.
   - *Improvement*: Eliminated linear "task grouping" effect by removing iteration-based staggering.
   - *Visuals*: Enhanced Canvas visualization with more organic, non-linear task distribution.
+- **Code Style**: Migrated to a stricter PHP-CS-Fixer configuration based on PSR-12.
+- **Strictness**: Enforced `declare_strict_types`, `strict_comparison`, and `strict_param` across the entire codebase to prevent runtime type-related bugs.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.
 - **Type Integrity**: Leveraged PHP 8.4 native types to eliminate "Type Juggling" vulnerabilities in task processing pipelines.
+- **DX**: Standardized formatting rules (single quotes, ordered imports, method spacing) to ensure clean and readable Git diffs.
+- **Maintenance**: Updated file discovery rules to ignore `vendor`, `storage`, and `cache` directories.

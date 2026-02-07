@@ -34,7 +34,7 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Service not found in container: missing");
+        $this->expectExceptionMessage('Service not found in container: missing');
 
         $container->get('missing');
     }
