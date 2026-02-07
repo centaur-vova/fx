@@ -202,6 +202,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Code Reliability**: Applied explicit decimal parsing (`radix 10`) in Canvas rendering logic to ensure consistent behavior across different JS engines.
 - **Stability**: Enhanced WebSocket lifecycle management by handling `onerror` and `onclose` events gracefully.
 - **UI State**: Centralized reconnection attempts and popup timeouts within the global application state.
+- **UI/UX Stability**: Fixed dashboard layout shifting by implementing `min-width` containers for all real-time metrics.
+- **Header Refactoring**: Repositioned status and diagnostic elements to the right-hand anchor for improved visual balance.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

@@ -17,6 +17,7 @@
             <!-- HEADER -->
             <div class="bg-[#111111] rounded-xl shadow-2xl p-4 border border-[#222222]">
                 <div class="flex justify-between items-center">
+                    <!-- LEFT: LOGO (Stay static) -->
                     <div>
                         <h1 class="text-xl font-black tracking-tighter text-white uppercase italic">
                             Atomic <span class="text-green-500">Flow</span>
@@ -24,34 +25,43 @@
                         <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">High-Load Pipeline Engine</p>
                     </div>
 
-                    <div class="flex gap-6 text-right items-center">
-                        <!-- Reactor Status (Replacement for Terminal Dot) -->
-                        <div class="text-xs pr-4 border-r border-[#222]">
-                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter">Reactor</span>
+                    <!-- RIGHT: METRICS (Fixed layout) -->
+                    <div class="flex items-center gap-6">
+                        <!-- Stats Grid: Use flex with fixed widths to prevent shifting -->
+                        <div class="flex gap-6 text-right">
+                            <div class="text-xs">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Queue</span>
+                                <b id="queue-info" class="block font-mono text-sm text-yellow-500 min-w-[70px]">0 / 0</b>
+                            </div>
+
+                            <div class="text-xs">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Memory</span>
+                                <b id="memory-usage" class="block font-mono text-sm text-blue-400 min-w-[70px]">-- MB</b>
+                            </div>
+
+                            <div class="text-xs">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Clients</span>
+                                <b id="connection-count" class="block font-mono text-sm text-purple-400 min-w-[40px]">0</b>
+                            </div>
+
+                            <div class="text-xs">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU Load</span>
+                                <b id="cpu-load" class="block font-mono text-sm text-red-400 min-w-[50px]">--%</b>
+                            </div>
+
+                            <div class="text-xs">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Ping</span>
+                                <b id="latency-display" class="block font-mono text-sm text-orange-400 min-w-[55px]">--ms</b>
+                            </div>
+                        </div>
+
+                        <!-- Reactor Status: Anchored to the far right -->
+                        <div class="pl-6 border-l border-[#222] min-w-[90px]">
+                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right">Reactor</span>
                             <div class="flex items-center gap-2 justify-end">
                                 <div id="ws-status-dot" class="w-1.5 h-1.5 rounded-full bg-red-500 transition-all duration-300"></div>
                                 <b id="ws-status-text" class="text-gray-500 font-mono text-[10px] uppercase">Offline</b>
                             </div>
-                        </div>
-
-                        <div class="text-xs">
-                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Queue</span>
-                            <b id="queue-info" class="text-yellow-500 font-mono text-sm">0 / 0</b>
-                        </div>
-
-                        <div class="text-xs">
-                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Memory</span>
-                            <b id="memory-usage" class="text-blue-400 font-mono text-sm">-- MB</b>
-                        </div>
-
-                        <div class="text-xs">
-                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Clients</span>
-                            <b id="connection-count" class="text-purple-400 font-mono text-sm">0</b>
-                        </div>
-
-                        <div class="text-xs">
-                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU Load</span>
-                            <b id="cpu-load" class="text-red-400 font-mono text-sm">--%</b>
                         </div>
                     </div>
                 </div>
