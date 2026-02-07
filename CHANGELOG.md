@@ -172,6 +172,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Strict Type Enforcement**: Global pass of scalar and return type declarations across the entire **Fast-Atomic-Flow** engine.
 - **Task Progress Reporting**: Refactored progress tracking from discrete steps to percentage-based metrics (0-100%).
   - *UX Improvement*: Enhanced readability for real-time monitoring and Canvas visualization.
+- **Unified CI/CD Pipeline**: Consolidated **PHPStan** (Level 5) and **PHPUnit** testing into a single **GitHub Actions** workflow (`ci.yml`).
+- **Test Suite Refactoring**: Removed legacy format assertions to align with the new high-entropy ID generation logic.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

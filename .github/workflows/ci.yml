@@ -1,22 +1,30 @@
-name: CI
+name: Continuous Integration
 
 on: [push, pull_request]
 
 jobs:
-  ci:
+  quality-gate:
+    name: PHP 8.4 Quality & Testing
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Setup PHP with Swoole
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: swoole, pcntl
+          extensions: swoole, pcntl, posix
+          tools: composer:v2
           coverage: none
 
       - name: Install Dependencies
-        run: composer install --no-progress --prefer-dist
+        run: composer install --no-progress --no-suggest
 
-      - name: Run Unit Tests
+      - name: Static Analysis (PHPStan)
+        run: composer analyze
+
+      - name: Run Unit Tests (PHPUnit)
         run: composer test
+        continue-on-error: false

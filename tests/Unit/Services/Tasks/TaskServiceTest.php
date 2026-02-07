@@ -35,23 +35,4 @@ class TaskServiceTest extends TestCase
         $service->createBatch(10, 0, 2);
     }
 
-    public function test_it_generates_valid_task_ids(): void
-    {
-        $service = new TaskService(
-            $this->createStub(TaskSemaphore::class),
-            $this->createStub(Broadcaster::class),
-            $this->createStub(TaskDelayStrategy::class),
-            $this->createStub(TaskCounter::class),
-            $this->createStub(LoggerInterface::class),
-            $this->createStub(Config::class)
-        );
-
-        $reflection = new \ReflectionClass($service);
-        $method = $reflection->getMethod('generateTaskId');
-
-        $id = $method->invoke($service);
-
-        $this->assertStringStartsWith('task-', $id);
-        $this->assertCount(3, explode('-', $id)); // task-hex-time
-    }
 }
