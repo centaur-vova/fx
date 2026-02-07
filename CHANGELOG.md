@@ -178,6 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Test Suite Refactoring**: Removed legacy format assertions to align with the new high-entropy ID generation logic.
 - **Standardization**: Refactored all configuration files (`ci`, `deploy`) to use the official `.yaml` extension for improved consistency and standard compliance.
 - **Unified CI/CD Pipeline**: Consolidated **PHPStan** (Level 5) and **PHPUnit** testing into a single **GitHub Actions** workflow (`ci.yaml`).
+- **Task Scheduling Optimization**: Increased the jitter window in `DemoDelayStrategy` from 300ms to 3000ms.
+  - *Rationale*: Improved temporal distribution of tasks to mitigate CPU spikes and enhance semaphore efficiency during massive batch processing.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

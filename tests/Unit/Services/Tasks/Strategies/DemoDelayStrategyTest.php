@@ -14,13 +14,19 @@ class DemoDelayStrategyTest extends TestCase
         $strategy = new DemoDelayStrategy();
 
         $iteration = 2;
-        $baseDelay = 1; // 1 second
+        $baseDelay = 1; // 1 second (1000ms)
 
         $result = $strategy($iteration, $baseDelay);
 
-        $this->assertGreaterThanOrEqual(1300, $result);
-        $this->assertLessThanOrEqual(1600, $result);
+        /**
+         * Logic validation:
+         * Min: 1000 (base) + 300 (stagger: 2 * 150) + 0 (min jitter) = 1300ms
+         * Max: 1000 (base) + 300 (stagger: 2 * 150) + 3000 (max jitter) = 4300ms
+         */
+        $this->assertGreaterThanOrEqual(1300, $result, 'Delay must include base time and iteration stagger');
+        $this->assertLessThanOrEqual(4300, $result, 'Delay must not exceed the maximum jitter boundary');
     }
+
 
     public function test_it_increases_delay_with_iterations(): void
     {

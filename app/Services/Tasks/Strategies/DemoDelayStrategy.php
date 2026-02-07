@@ -11,7 +11,7 @@ class DemoDelayStrategy implements TaskDelayStrategy
     public function __invoke(int $iteration, int $baseDelay): int
     {
         $stagger = $iteration * 150;
-        $jitter = mt_rand(0, 300);
+        $jitter = mt_rand(0, 3000);
 
         // Base delay (ms)
         $base = $baseDelay * 1000;
