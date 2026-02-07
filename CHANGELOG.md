@@ -169,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Resilience**: Implemented automatic WebSocket reconnection with linear backoff (3s interval).
 - **UX**: Added a real-time **Reactor Status** indicator with visual pulsing for disconnected states.
 - **Notifications**: Introduced a "Success Popup" for immediate visual confirmation of batch task injections.
+- **Local Quality Gate**: Added **Git Hooks** support to enforce static analysis and unit testing before every commit.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.

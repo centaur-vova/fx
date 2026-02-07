@@ -1,5 +1,6 @@
 # Git
 .git
+.githooks
 .gitignore
 .github
 
