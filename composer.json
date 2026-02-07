@@ -22,7 +22,8 @@
     "require-dev": {
         "swoole/ide-helper": "^6.0",
         "friendsofphp/php-cs-fixer": "^3.93",
-        "phpunit/phpunit": "^12.5"
+        "phpunit/phpunit": "^12.5",
+        "rector/rector": "^2.3"
     },
     "scripts": {
         "lint": "php-cs-fixer fix",

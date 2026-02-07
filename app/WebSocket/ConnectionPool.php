@@ -14,9 +14,9 @@ use Traversable;
  */
 class ConnectionPool implements IteratorAggregate, Countable
 {
-    private const COL_FD = 'fd';
-    private const COL_CONNECTED_AT = 'connected_at';
-    private const COL_LAST_PING = 'last_ping';
+    private const string COL_FD = 'fd';
+    private const string COL_CONNECTED_AT = 'connected_at';
+    private const string COL_LAST_PING = 'last_ping';
 
     public static function configureAndCreateTable(int $size): Table
     {
@@ -30,7 +30,7 @@ class ConnectionPool implements IteratorAggregate, Countable
         return $table;
     }
 
-    public function __construct(private Table $connections)
+    public function __construct(private readonly Table $connections)
     {
     }
 

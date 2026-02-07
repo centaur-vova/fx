@@ -23,7 +23,7 @@ class GlobalSharedSemaphore implements TaskSemaphore
     {
         $atomic = $this->atomics[$mc] ?? null;
 
-        return new class ($atomic, $mc) implements SemaphorePermit {
+        return new readonly class ($atomic, $mc) implements SemaphorePermit {
             public function __construct(
                 private ?Atomic $atomic,
                 private int $limit,

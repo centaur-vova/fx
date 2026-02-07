@@ -26,11 +26,11 @@ use Swoole\WebSocket\Server;
 
 class Kernel
 {
-    private Container $container;
-    private Server $server;
-    private Config $config;
+    private readonly Container $container;
+    private readonly Server $server;
+    private readonly Config $config;
 
-    public function __construct(private string $basePath)
+    public function __construct(private readonly string $basePath)
     {
         // Load config
         $this->config = Config::fromEnv($this->basePath);
@@ -113,11 +113,12 @@ class Kernel
         $c->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
         $c->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
         $c->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
-        $c->set(TaskSemaphore::class, function ($c) {
+        $c->set(
+            TaskSemaphore::class,
             // TODO: Add the abity to switch semaphore implementation
-            // return new WorkerLocalSemaphore($c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10));
-            return new GlobalSharedSemaphore($c->get('shared.semaphores.atomics'));
-        });
+            fn ($c) => new WorkerLocalSemaphore($c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10))
+            // fn($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics'))
+        );
         $c->set(WsEventBroadcaster::class, fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
         $c->set(TaskDelayStrategy::class, fn ($c) => new DemoDelayStrategy());
 

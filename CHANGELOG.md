@@ -151,7 +151,22 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Canvas Rendering**: Introduced a dedicated 2D Canvas engine for the task pipeline, enabling smooth 60 FPS visualization for 10,000+ concurrent tasks.
 - **Physics & Animation**: Added linear interpolation (Lerp) and time-based delta normalization to ensure consistent animation speed regardless of frame rate.
 - **High-Density HUD**: Implemented an automated Level of Detail (LOD) system that switches to pixel-perfect "Star Dust" mode during high-load bursts.
+- **Native PHP 8.4 Support**: Fully integrated strict typing, asymmetric visibility, and `readonly` properties.
+- **Rector Integration**: Automated architectural consistency and modern standards enforcement.
+- **Property Hooks**: Initial implementation for cleaner DTO state management (PHP 8.4 feature).
 
-### Improved
+### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.
 - **UI Scalability**: Refined task jitter and zone positioning to provide better visual density across the pipeline.
+- **Optimized Task Identification**: Refactored Task ID generation to a compact `bin2hex(random_bytes(4)) . time()` format.
+  - *Impact*: Reduced memory footprint per task object and improved log density.
+  - *Security*: Maintained high entropy (2^32 combinations per second) to prevent collisions in concurrent worker environments.
+- **Core Architecture Refactoring**:
+  - `Kernel` and `MessageHub` updated with **Typed Constants** for zero-overhead configuration at the Zend Engine level.
+  - Hardened service isolation via `readonly` constraints on DI-injected core dependencies.
+- **Naming Conventions**: Unified service naming (e.g., `hub` -> `messageHub`) to improve self-documentation and IDE discoverability.
+- **Strict Type Enforcement**: Global pass of scalar and return type declarations across the entire **Fast-Atomic-Flow** engine.
+
+### Security
+- **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.
+- **Type Integrity**: Leveraged PHP 8.4 native types to eliminate "Type Juggling" vulnerabilities in task processing pipelines.

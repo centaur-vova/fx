@@ -13,7 +13,7 @@ class Router
     /** @var array<string, array> Map: "METHOD|/path" => [Controller, Method] */
     private array $routes = [];
 
-    public function __construct(private TaskController $taskController)
+    public function __construct(private readonly TaskController $taskController)
     {
         $this->registerRoutes();
     }

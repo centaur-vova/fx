@@ -13,7 +13,7 @@ class WorkerLocalSemaphore implements TaskSemaphore
     /** @var Channel[] */
     private array $channels = [];
 
-    public function __construct(private int $maxLimit)
+    public function __construct(private readonly int $maxLimit)
     {
         for ($i = 1; $i <= $maxLimit; $i++) {
             $this->channels[$i] = new Co\Channel($i);
@@ -25,7 +25,7 @@ class WorkerLocalSemaphore implements TaskSemaphore
         $limit = ($mc >= 1 && $mc <= $this->maxLimit) ? $mc : 1;
         $channel = $this->channels[$limit];
 
-        return new class ($channel, $limit) implements SemaphorePermit {
+        return new readonly class ($channel, $limit) implements SemaphorePermit {
             public function __construct(
                 private Co\Channel $channel,
             ) {

@@ -11,8 +11,8 @@ use App\WebSocket\MessageHub;
 class TaskController
 {
     public function __construct(
-        private TaskService $taskService,
-        private MessageHub $wsHub,
+        private readonly TaskService $taskService,
+        private readonly MessageHub $wsHub,
     ) {
     }
 

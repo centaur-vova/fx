@@ -15,11 +15,11 @@ use Swoole\WebSocket\Server;
 class EventHandler
 {
     public function __construct(
-        private Router $router,
-        private ConnectionPool $connectionPool,
-        private TaskCounter $taskCounter,
-        private TaskService $taskService,
-        private Config $config,
+        private readonly Router $router,
+        private readonly ConnectionPool $connectionPool,
+        private readonly TaskCounter $taskCounter,
+        private readonly TaskService $taskService,
+        private readonly Config $config,
     ) {
     }
 
@@ -37,7 +37,7 @@ class EventHandler
 
     public function onMessage(Server $server, $frame): void
     {
-        $data = json_decode($frame->data, true);
+        $data = json_decode((string) $frame->data, true);
         if (isset($data['event'])) {
             switch ($data['event']) {
                 case 'pusher:ping':

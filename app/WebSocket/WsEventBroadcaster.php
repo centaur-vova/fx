@@ -8,9 +8,9 @@ use App\Contracts\Websockets\Broadcaster;
 
 class WsEventBroadcaster implements Broadcaster
 {
-    private const CHANNEL = 'tasks';
+    private const string CHANNEL = 'tasks';
 
-    public function __construct(private MessageHub $hub)
+    public function __construct(private readonly MessageHub $hub)
     {
     }
 

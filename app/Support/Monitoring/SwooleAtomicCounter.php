@@ -8,7 +8,7 @@ use App\Contracts\Monitoring\TaskCounter;
 
 class SwooleAtomicCounter implements TaskCounter
 {
-    public function __construct(private \Swoole\Atomic $atomic)
+    public function __construct(private readonly \Swoole\Atomic $atomic)
     {
     }
 

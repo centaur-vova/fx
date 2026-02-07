@@ -22,12 +22,12 @@ class TaskService
     private ?Channel $mainQueue = null;
 
     public function __construct(
-        private TaskSemaphore $semaphore,
-        private Broadcaster $broadcaster,
-        private TaskDelayStrategy $delayStrategy,
-        private TaskCounter $taskCounter,
-        private LoggerInterface $logger,
-        private Config $config,
+        private readonly TaskSemaphore $semaphore,
+        private readonly Broadcaster $broadcaster,
+        private readonly TaskDelayStrategy $delayStrategy,
+        private readonly TaskCounter $taskCounter,
+        private readonly LoggerInterface $logger,
+        private readonly Config $config,
     ) {
         // Channel is now safe to create here as TaskService is worker-local
         $this->mainQueue = new Channel($this->config->getInt('QUEUE_CAPACITY', 10000));
@@ -150,14 +150,14 @@ class TaskService
                             $this->incrementTaskCount();
                             try {
                                 $this->processTask($task['id'], $task['mc']);
-                            } catch (\Throwable $e) {
+                            } catch (\Throwable) {
                                 // Ignore
                             } finally {
                                 $this->decrementTaskCount();
                             }
                         });
                     }
-                } catch (\Throwable $e) {
+                } catch (\Throwable) {
                     // Ignore
                 }
             });
@@ -176,7 +176,7 @@ class TaskService
 
     private function generateTaskId(): string
     {
-        return 'task-' . bin2hex(random_bytes(4)) . '-' . time();
+        return sprintf('%s-%d', bin2hex(random_bytes(4)), time());
     }
 
     private function notify(TaskStatusUpdate $taskStatusUpdate): void

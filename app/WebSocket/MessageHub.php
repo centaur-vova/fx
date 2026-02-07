@@ -9,8 +9,8 @@ use Swoole\WebSocket\Server;
 class MessageHub
 {
     public function __construct(
-        private Server $server,
-        private ConnectionPool $connectionPool,
+        private readonly Server $server,
+        private readonly ConnectionPool $connectionPool,
     ) {
     }
 
