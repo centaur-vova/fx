@@ -1,14 +1,17 @@
 services:
   app:
-    build: .
+    image: ghcr.io/shmandalf/fast-atomic-flow:latest
     container_name: atomic-flow-app
-    stop_grace_period: 1m
     restart: always
-    # Docker reads your local .env and injects variables into the container environment
     env_file:
       - .env
     ports:
       - "${SERVER_PORT:-9501}:${SERVER_PORT:-9501}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m" # < 10Mb
+        max-file: "3"   # Keep 3 files max
     networks:
       - atomic-network
 

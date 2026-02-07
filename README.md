@@ -1,7 +1,7 @@
 # 🚀 Atomic Flow: High-Performance Task Engine
 
 <p align="center">
-<a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yml/badge.svg" alt="Tests"></a><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+<a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yaml/badge.svg" alt="Tests"></a><a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
 </p>
 
 > **A deep dive into PHP Swoole, Coroutines, and Event-Driven Architecture.**

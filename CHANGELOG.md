@@ -158,6 +158,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Automated Quality Control**: Added custom Composer scripts (`analyze`, `refactor`, `check-all`) for consistent development workflow.
 - **Asynchronous Safety**: Implemented double-check locking patterns with static analysis suppressions for Swoole-specific coroutine race conditions.
 - **Automated Quality Gate**: Integrated **GitHub Actions** CI pipeline for continuous code validation.
+- **Continuous Deployment (CD)**: Automated image builds and delivery to **GHCR (GitHub Container Registry)**.
+- **Remote Orchestration**: Fully automated VPS deployment via GitHub Actions and **Docker Compose**, including atomic container swaps.
+- **Reliability Engineering**: Configured extended `stop_grace_period` (60s) to ensure zero-data-loss during asynchronous Swoole worker shutdowns.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.
@@ -172,8 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Strict Type Enforcement**: Global pass of scalar and return type declarations across the entire **Fast-Atomic-Flow** engine.
 - **Task Progress Reporting**: Refactored progress tracking from discrete steps to percentage-based metrics (0-100%).
   - *UX Improvement*: Enhanced readability for real-time monitoring and Canvas visualization.
-- **Unified CI/CD Pipeline**: Consolidated **PHPStan** (Level 5) and **PHPUnit** testing into a single **GitHub Actions** workflow (`ci.yml`).
 - **Test Suite Refactoring**: Removed legacy format assertions to align with the new high-entropy ID generation logic.
+- **Standardization**: Refactored all configuration files (`ci`, `deploy`) to use the official `.yaml` extension for improved consistency and standard compliance.
+- **Unified CI/CD Pipeline**: Consolidated **PHPStan** (Level 5) and **PHPUnit** testing into a single **GitHub Actions** workflow (`ci.yaml`).
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

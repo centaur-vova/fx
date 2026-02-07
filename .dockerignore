@@ -1,6 +1,7 @@
 # Git
 .git
 .gitignore
+.github
 
 # Dependencies (Docker will install them itself)
 vendor/
@@ -15,6 +16,8 @@ node_modules/
 Dockerfile
 docker-compose.yaml
 docker-compose.yml
+docker-compose.prod.yaml
+docker-compose.prod.yml
 
 # Testing & QA
 tests/
