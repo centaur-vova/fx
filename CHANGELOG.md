@@ -166,6 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   - Hardened service isolation via `readonly` constraints on DI-injected core dependencies.
 - **Naming Conventions**: Unified service naming (e.g., `hub` -> `messageHub`) to improve self-documentation and IDE discoverability.
 - **Strict Type Enforcement**: Global pass of scalar and return type declarations across the entire **Fast-Atomic-Flow** engine.
+- **Task Progress Reporting**: Refactored progress tracking from discrete steps to percentage-based metrics (0-100%).
+  - *UX Improvement*: Enhanced readability for real-time monitoring and Canvas visualization.
 
 ### Security
 - **Memory Safety**: Prevented accidental state mutation in long-running Swoole workers by enforcing `readonly` on shared services.

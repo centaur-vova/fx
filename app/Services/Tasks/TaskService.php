@@ -83,7 +83,7 @@ class TaskService
             try {
                 $this->notify(TaskStatusUpdate::lockAcquired($taskId, $mc));
 
-                for ($i = 1; $i <= 4; $i++) {
+                for ($step = 1; $step <= 4; $step++) {
                     if ($this->getQueue()->errCode === SWOOLE_CHANNEL_CLOSED) {
                         return;
                     }
@@ -91,7 +91,8 @@ class TaskService
                     $stepDuration = mt_rand(800, 1300) / 1000;
                     Co::sleep($stepDuration);
 
-                    $this->notify(TaskStatusUpdate::processingProgress($taskId, $mc, $i * 25)->withMessage("Step $i/4"));
+                    $this->notify(TaskStatusUpdate::processingProgress($taskId, $mc, $step * 25)
+                        ->withMessage(((int) round(($step / 4 * 100)) . '%')));
                 }
 
                 $this->notify(TaskStatusUpdate::completed($taskId, $mc));
