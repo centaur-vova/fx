@@ -157,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Static Analysis**: Integrated **PHPStan (Level 5)** for rigorous type-safety and architectural integrity.
 - **Automated Quality Control**: Added custom Composer scripts (`analyze`, `refactor`, `check-all`) for consistent development workflow.
 - **Asynchronous Safety**: Implemented double-check locking patterns with static analysis suppressions for Swoole-specific coroutine race conditions.
+- **Automated Quality Gate**: Integrated **GitHub Actions** CI pipeline for continuous code validation.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.
