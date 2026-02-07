@@ -39,6 +39,7 @@ class MessageHub
         foreach ($this->connectionPool as $fd => $row) {
             $fd = (int) $fd;
 
+            /** @phpstan-ignore-next-line */
             if ($this->server->getWorkerId($fd) === $this->server->worker_id) {
                 if ($this->server->exists($fd) && $this->server->isEstablished($fd)) {
                     $this->server->push($fd, $json);

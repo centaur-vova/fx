@@ -1,0 +1,11 @@
+parameters:
+    level: 5
+    paths:
+        - app
+    # Swoole constants & classes sometimes need a boost
+    scanDirectories:
+        - vendor
+    # We ignore some Swoole-specific magic if necessary
+    ignoreErrors:
+        # Example: - '#Property .* has no typehint specified.#'
+

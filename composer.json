@@ -23,9 +23,17 @@
         "swoole/ide-helper": "^6.0",
         "friendsofphp/php-cs-fixer": "^3.93",
         "phpunit/phpunit": "^12.5",
-        "rector/rector": "^2.3"
+        "rector/rector": "^2.3",
+        "phpstan/phpstan": "^2.1"
     },
     "scripts": {
+        "analyze": "vendor/bin/phpstan analyse",
+        "refactor": "vendor/bin/rector process",
+        "refactor-dry": "vendor/bin/rector process --dry-run",
+        "check-all": [
+            "@analyze",
+            "@refactor-dry"
+        ],
         "lint": "php-cs-fixer fix",
         "test": "phpunit --colors=always",
         "test:unit": "phpunit --testsuite=Unit",

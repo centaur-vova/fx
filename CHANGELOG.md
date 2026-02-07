@@ -154,6 +154,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Native PHP 8.4 Support**: Fully integrated strict typing, asymmetric visibility, and `readonly` properties.
 - **Rector Integration**: Automated architectural consistency and modern standards enforcement.
 - **Property Hooks**: Initial implementation for cleaner DTO state management (PHP 8.4 feature).
+- **Static Analysis**: Integrated **PHPStan (Level 5)** for rigorous type-safety and architectural integrity.
+- **Automated Quality Control**: Added custom Composer scripts (`analyze`, `refactor`, `check-all`) for consistent development workflow.
+- **Asynchronous Safety**: Implemented double-check locking patterns with static analysis suppressions for Swoole-specific coroutine race conditions.
 
 ### Changed
 - **Frontend Performance**: Drastically reduced CPU and GPU overhead by eliminating thousands of DOM nodes.

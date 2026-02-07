@@ -10,7 +10,7 @@ use Swoole\Coroutine as Co;
 
 class WorkerLocalSemaphore implements TaskSemaphore
 {
-    /** @var Channel[] */
+    /** @var Co\Channel[] */
     private array $channels = [];
 
     public function __construct(private readonly int $maxLimit)
@@ -25,10 +25,9 @@ class WorkerLocalSemaphore implements TaskSemaphore
         $limit = ($mc >= 1 && $mc <= $this->maxLimit) ? $mc : 1;
         $channel = $this->channels[$limit];
 
-        return new readonly class ($channel, $limit) implements SemaphorePermit {
-            public function __construct(
-                private Co\Channel $channel,
-            ) {
+        return new readonly class ($channel) implements SemaphorePermit {
+            public function __construct(private Co\Channel $channel)
+            {
             }
 
             public function acquire(float $timeout): bool
@@ -39,6 +38,7 @@ class WorkerLocalSemaphore implements TaskSemaphore
 
                 $result = @$this->channel->push(true, $timeout); // suppress warnings in console
 
+                // @phpstan-ignore-next-line
                 if ($this->channel->errCode === SWOOLE_CHANNEL_CLOSED) {
                     return false;
                 }
