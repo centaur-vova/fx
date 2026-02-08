@@ -2,20 +2,18 @@
 
 echo "[Pre-commit] Starting the ritual of purification..."
 
-# 1. Запускаем стат-анализ (наш PHPSatan)
 composer analyze
 if [ $? -ne 0 ]; then
     echo "[Pre-commit] PHPSatan found sins in your code. Fix them before committing!"
     exit 1
 fi
 
-# 2. Проверяем тесты
 composer test
 if [ $? -ne 0 ]; then
     echo "[Pre-commit] Trial by Fire failed. Tests are broken!"
     exit 1
 fi
 
-echo "✅ [Pre-commit] Your code is pure. Proceeding to commit..."
+echo "[Pre-commit] Your code is pure. Proceeding to commit..."
 exit 0
 

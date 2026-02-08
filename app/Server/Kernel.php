@@ -86,7 +86,7 @@ class Kernel
         /**
          * Pre-allocate Shared Memory Semaphores
          *
-         * {@see \App\Services\Tasks\Semaphores\GlobalSharedSemaphore}
+         * {@see GlobalSharedSemaphore}
          */
         $maxSemaphoreLimit = $this->config->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10);
         $semaphoreAtomics = [];
@@ -102,7 +102,7 @@ class Kernel
         $c->set('shared.semaphores.atomics', fn () => $semaphoreAtomics);
 
         // Logger
-        $c->set(StdoutLogger::class, function ($c) {
+        $c->set(StdoutLogger::class, function ($c): StdoutLogger {
             $config = $c->get(Config::class);
             $logLevel = $config->get('LOG_LEVEL', 'info');
 
@@ -133,7 +133,7 @@ class Kernel
             $c->get(Config::class),
         ));
 
-        $c->set(EventHandler::class, function ($c) {
+        $c->set(EventHandler::class, function ($c): EventHandler {
             $taskController = new TaskController($c->get(TaskService::class), $c->get(MessageHub::class));
             $router = new Router($taskController);
 
@@ -153,12 +153,12 @@ class Kernel
     private function registerEvents(): void
     {
         // Worker Lifecycle
-        $this->server->on('WorkerStart', function ($server, $workerId) {
+        $this->server->on('WorkerStart', function ($server, $workerId): void {
             try {
                 $taskService = $this->container->get(TaskService::class);
 
                 // Start task consumers inside the worker
-                Co::create(function () use ($taskService, $server, $workerId) {
+                Co::create(function () use ($taskService, $server, $workerId): void {
                     $taskService->startWorker($server, $workerId);
                 });
             } catch (\Throwable $e) {
@@ -170,7 +170,7 @@ class Kernel
         });
 
         // Graceful shutdown
-        $this->server->on('WorkerStop', function ($server, $workerId) {
+        $this->server->on('WorkerStop', function ($server, $workerId): void {
             $taskService = $this->container->get(TaskService::class);
             $taskCounter = $this->container->get(TaskCounter::class);
             $config = $this->container->get(Config::class);
@@ -200,7 +200,7 @@ class Kernel
         $this->server->on('close', fn ($s, $fd) => $this->container->get(EventHandler::class)->onClose($s, $fd));
 
         // IPC for Global Broadcast
-        $this->server->on('pipeMessage', function ($server, $srcWorkerId, $message) {
+        $this->server->on('pipeMessage', function ($server, $srcWorkerId, $message): void {
             $data = json_decode($message, true);
 
             if (is_array($data) && isset($data['action']) && $data['action'] === 'broadcast_ws') {
@@ -209,7 +209,7 @@ class Kernel
         });
 
         // On start
-        $this->server->on('start', function (Server $server) {
+        $this->server->on('start', function (Server $server): void {
             $host = $this->config->get('SERVER_HOST', '0.0.0.0');
             $port = $this->config->get('SERVER_PORT', 9501);
 

@@ -78,6 +78,10 @@ return (new Config())
         'class_attributes_separation' => [
             'elements' => ['method' => 'one']
         ],
+
+        // Ensure return types are always present
+        'void_return' => true,
+        'fully_qualified_strict_types' => false,
     ])
     ->setFinder($finder)
     ->setRiskyAllowed(true);

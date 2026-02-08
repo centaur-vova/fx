@@ -224,6 +224,14 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Kernel**: Updated `Kernel` and `WsEventBroadcaster` to support the new polymorphic DTO architecture.
 - **Task Scheduling**: Optimized `DemoDelayStrategy` to provide zero-latency execution for the initial task in any batch (iteration 0).
 - **UX**: Enhanced real-time feedback when creating single tasks, removing unnecessary wait times for manual injections.
+- **Coding Style**: Updated PHP-CS-Fixer and Rector configurations to support **Swoole** specific syntax (e.g., preserving `Co\Channel` instead of automatic importing).
+- **Rector**:
+  - Disabled automatic return type declarations for **arrow functions** (`fn()`) to maintain brevity.
+  - Disabled automatic name importing (`withImportNames: false`) to keep FQCN/Swoole aliases intact.
+  - Added `TYPE_DECLARATION` rule set for better automated type coverage in classes and methods.
+- **PHP-CS-Fixer**:
+  - Forced `void` return types for methods without a return statement.
+  - Disabled strict FQCN shortening to prevent breaking Swoole short-name aliases.
 
 ### Fixed
 - **Type Safety**: Added strict `instanceof` guarding and JSON validation for incoming Swoole WebSocket frames.

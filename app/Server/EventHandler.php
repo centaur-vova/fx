@@ -12,6 +12,8 @@ use App\Services\Monitoring\SystemMonitor;
 use App\Services\Tasks\TaskService;
 use App\WebSocket\ConnectionPool;
 use Psr\Log\LoggerInterface;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Swoole\Timer;
 use Swoole\WebSocket\Frame;
 use Swoole\WebSocket\Server;
@@ -28,7 +30,7 @@ class EventHandler
     ) {
     }
 
-    public function onRequest($request, $response): void
+    public function onRequest(Request $request, Response $response): void
     {
         $this->router->handle($request, $response);
     }
@@ -72,7 +74,7 @@ class EventHandler
         }
     }
 
-    public function onClose(Server $server, $fd): void
+    public function onClose(Server $server, int $fd): void
     {
         $this->connectionPool->remove($fd);
     }
@@ -81,7 +83,7 @@ class EventHandler
     {
         $interval = $this->config->getInt('METRICS_UPDATE_INTERVAL_MS', 1000);
 
-        Timer::tick($interval, function ($timerId) use ($server, $fd) {
+        Timer::tick($interval, function (int $timerId) use ($server, $fd): void {
             // In case of disconnect clear the timer
             if (!$server->exists($fd)) {
                 Timer::clear($timerId);

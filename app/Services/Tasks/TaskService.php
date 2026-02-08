@@ -54,7 +54,7 @@ class TaskService
 
             $timerDelay = ($this->delayStrategy)($i, $delay);
 
-            Timer::after($timerDelay, function () use ($taskId, $maxConcurrent) {
+            Timer::after($timerDelay, function () use ($taskId, $maxConcurrent): void {
                 $this->getQueue()->push([
                     'id' => $taskId,
                     'mc' => $maxConcurrent,
@@ -118,7 +118,7 @@ class TaskService
         }
     }
 
-    public function getQueueStats()
+    public function getQueueStats(): QueueStats
     {
         return new QueueStats(
             usage: $this->taskCounter->get(),
@@ -135,7 +135,7 @@ class TaskService
 
         $concurrentTasks = $this->config->getInt('WORKER_CONCURRENCY', 10);
         for ($i = 0; $i < $concurrentTasks; $i++) {
-            Co::create(function () {
+            Co::create(function (): void {
                 try {
                     while (true) {
                         $task = @$this->getQueue()->pop();
@@ -148,7 +148,7 @@ class TaskService
                             continue;
                         }
 
-                        Co::create(function () use ($task) {
+                        Co::create(function () use ($task): void {
                             $this->incrementTaskCount();
                             try {
                                 $this->processTask($task['id'], $task['mc']);
