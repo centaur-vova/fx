@@ -1,13 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
     const state = {
         tasks: new Map(),
+        workers: null,
         mc: 2,
         ws: null,
         scale: 1,
         mode: 'normal',
         width: 0,
         height: 0,
-        popupTimeout: null,
+        toastTimeout: null,
         reconnectAttempts: 0,
         pingTimer: null,
     };
@@ -26,7 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
         lock_acquired: 0.625,
         processing_progress: 0.625,
         completed: 0.875,
-        lock_failed: 0.125
+        retries_failed: 0.875, // same as completed
+        lock_failed: 0.125,
     };
 
     const DOM = {
@@ -56,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Drawing Primitives (Your CSS Shapes)
     const drawShape = (x, y, size, mc, status) => {
         ctx.fillStyle = COLORS[mc] || '#ffffff';
-        ctx.globalAlpha = status === 'completed' ? 0.3 : 1;
+        ctx.globalAlpha = isTaskFinished(status) ? 0.3 : 1;
 
         if (state.mode === 'dot') {
             ctx.beginPath();
@@ -99,6 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const isTaskFinished = (status) => {
+        return status === 'completed' || status === 'retries_failed';
+    }
+
     // Animation Loop
     const render = () => {
         ctx.clearRect(0, 0, state.width, state.height);
@@ -108,8 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // Smooth movement (Lerp)
             task.currentX += (task.targetX - task.currentX) * 0.1;
 
-            // Remove completed tasks after some time
-            if (task.status === 'completed' && now - task.endTime > 5000) {
+            // Remove completed/failed due to retries tasks after some time
+            if (isTaskFinished(task.status) && now - task.endTime > 5000) {
                 state.tasks.delete(id);
                 return;
             }
@@ -122,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(render);
 
     const handleUpdateTasks = (data) => {
-        const { taskId, mc, status, progress, message } = data;
+        const { taskId, worker, mc, status, message } = data;
 
         // Throttled logging for performance
         if (state.tasks.size < 300) addLog(taskId, mc, status, message);
@@ -147,7 +153,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (COORDS[status]) {
             task.targetX = COORDS[status] + task.jitterX;
         }
-        if (status === 'completed') task.endTime = Date.now();
+        if (status === 'completed') {
+            task.endTime = Date.now();
+            handleWorkerHeatmap(worker, false);
+        } else if (status === 'retries_failed') {
+            task.endTime = Date.now();
+            handleWorkerHeatmap(worker, true);
+        }
     };
 
     const startPinger = () => {
@@ -246,25 +258,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const handleUpdateMetrics = (data) => {
+        const { queue, system } = data;
+
         // Basic metrics
-        document.getElementById("memory-usage").textContent = data.system?.memory_mb + 'Mb'
-        document.getElementById("connection-count").textContent = data.system?.connections;
-        document.getElementById("cpu-load").textContent = data.system?.cpu_percent + '%';
+        document.getElementById("memory-usage").textContent = system.memory_mb + 'Mb'
+        document.getElementById("connection-count").textContent = system.connections;
+        document.getElementById("cpu-load").textContent = system.cpu_percent + '%';
 
         // Queue info: "usage / max"
         const queueEl = document.getElementById("queue-info");
-        if (data.queue) {
-            queueEl.textContent = `${data.queue?.usage} / ${Math.floor(data.queue?.max / 1000)}k`;
+        queueEl.textContent = `${data.queue.usage} / ${Math.floor(data.queue.max / 1000)}k`;
 
-            // Critical load coloring
-            if (data.queue?.usage / data.queue?.max > 0.8) {
-                queueEl.classList.replace('text-yellow-500', 'text-red-500');
-            } else {
-                queueEl.classList.replace('text-red-500', 'text-yellow-500');
-            }
+        // Critical load coloring
+        if (queue.usage / queue.max > 0.8) {
+            queueEl.classList.replace('text-yellow-500', 'text-red-500');
+        } else {
+            queueEl.classList.replace('text-red-500', 'text-yellow-500');
         }
 
-        handleLODLogic(parseInt(data.queue?.tasks, 10));
+        handleLODLogic(parseInt(queue.usage, 10));
+        handleWorkerHeatmapInit(system.workers);
+    };
+
+    // Init heatmap bars only once (fixed worker count, not dynamic)
+    const handleWorkerHeatmapInit = (workers) => {
+        // Init bars
+        if (state.workers !== null || !workers) return;
+
+        state.workers = workers;
+
+        const heatmap = document.getElementById("worker-heatmap");
+        for (let i = 0; i < workers; i++) {
+            const bar = document.createElement('div');
+            // Added 'worker-bar' class for CSS animation targeting
+            bar.className = "worker-bar w-3 h-1 bg-[#222] rounded-full";
+            bar.setAttribute('data-worker', i);
+            heatmap.appendChild(bar);
+        }
+    };
+
+    const handleWorkerHeatmap = (activeWorker, isFailed = false) => {
+        if (typeof activeWorker === 'undefined' || !state.workers) return;
+
+        const workerIndex = activeWorker >= state.workers ? activeWorker - state.workers : activeWorker;
+        const activeBar = document.querySelector(`#worker-heatmap [data-worker="${workerIndex}"]`);
+
+        if (activeBar) {
+            const flashClass = isFailed ? 'flash-error' : 'flash-success';
+
+            // Restart animation trick
+            activeBar.classList.remove('flash-success', 'flash-error');
+            void activeBar.offsetWidth; // Force reflow
+            activeBar.classList.add(flashClass);
+        }
     };
 
     const handleLODLogic = (total) => {
@@ -273,23 +319,32 @@ document.addEventListener("DOMContentLoaded", () => {
         else { state.scale = 0.3; state.mode = 'dot'; }
     };
 
-    const showPopup = (count) => {
-        const popup = document.getElementById("successPopup");
-        if (!popup) return;
+    const showToast = (count, success, message) => {
+        const toast = document.getElementById("reactorToast");
+        if (!toast) return;
 
-        popup.innerHTML = `
-        <span class="text-gray-500 mr-2">REACTOR:</span>
-        <b class="text-green-500">${count}</b>
-        <span class="text-gray-300">tasks injected</span>
-    `;
+        // Set theme color using CSS variable
+        const themeColor = success ? "#10b981" : "#ef4444";
+        toast.style.setProperty('--toast-color', themeColor);
 
-        popup.classList.add("show");
+        // Build content: show count on success, or message on error
+        const content = success
+            ? `<b class="toast-brand">${count}</b> <span class="text-gray-300">tasks injected</span>`
+            : `<b class="toast-brand">ERROR:</b> <span class="text-gray-300">${message}</span>`;
+
+        toast.innerHTML = `
+            <span class="text-gray-500 mr-2">REACTOR:</span>
+            ${content}
+        `;
+
+        // Animation logic
+        toast.classList.add("show");
 
         // Clear previous timeout if user clicks rapidly
-        if (state.popupTimeout) clearTimeout(state.popupTimeout);
+        if (state.toastTimeout) clearTimeout(state.toastTimeout);
 
-        state.popupTimeout = setTimeout(() => {
-            popup.classList.remove("show");
+        state.toastTimeout = setTimeout(() => {
+            toast.classList.remove("show");
         }, 1000);
     };
 
@@ -300,15 +355,24 @@ document.addEventListener("DOMContentLoaded", () => {
         DOM.mcDisplay.textContent = state.mc;
     };
 
-    const createTasks = (count) => {
-        fetch("/api/tasks/create", {
-            method: "POST",
-            body: JSON.stringify({ count, max_concurrent: state.mc }),
-        }).then(response => {
-            if (response.ok) {
-                showPopup(count);
-            }
-        });
+    const createTasks = async (count) => {
+        try {
+            const response = await fetch("/api/tasks/create", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ count, max_concurrent: state.mc }),
+            });
+
+            const data = await response.json();
+
+            // Check both HTTP status and your API's success flag
+            showToast(count, response.ok && data.success, data.message);
+
+        } catch (error) {
+            // Handle network errors or parsing errors
+            console.error("FAILED TO CREATE TASKS:", error);
+            showToast(0, false, "Connection error");
+        }
     };
 
     document.querySelectorAll('.task-button').forEach(btn => {

@@ -6,15 +6,16 @@ namespace App\DTO\Tasks;
 
 use JsonSerializable;
 
-class TaskStatusUpdate implements JsonSerializable
+final readonly class TaskStatusUpdate implements JsonSerializable
 {
-    public const EVENT_QUEUED = 'queued';
-    public const EVENT_PROCESSING = 'processing';
-    public const EVENT_CHECK_LOCK = 'check_lock';
-    public const EVENT_PROCESSING_PROGRESS = 'processing_progress';
-    public const EVENT_COMPLETED = 'completed';
-    public const EVENT_LOCK_ACQUIRED = 'lock_acquired';
-    public const EVENT_LOCK_FAILED = 'lock_failed';
+    public const string EVENT_QUEUED = 'queued';
+    public const string EVENT_PROCESSING = 'processing';
+    public const string EVENT_CHECK_LOCK = 'check_lock';
+    public const string EVENT_PROCESSING_PROGRESS = 'processing_progress';
+    public const string EVENT_COMPLETED = 'completed';
+    public const string EVENT_LOCK_ACQUIRED = 'lock_acquired';
+    public const string EVENT_LOCK_FAILED = 'lock_failed';
+    public const string EVENT_RETRIES_FAILED = 'retries_failed';
 
     public function __construct(
         public string $id,
@@ -22,6 +23,7 @@ class TaskStatusUpdate implements JsonSerializable
         public string $message,
         public int $mc,
         public int $progress = 0,
+        public ?int $worker = null,
     ) {
     }
 
@@ -45,9 +47,9 @@ class TaskStatusUpdate implements JsonSerializable
         return new self($id, self::EVENT_PROCESSING_PROGRESS, 'Progress', $mc, $percent);
     }
 
-    public static function completed(string $id, int $mc): self
+    public static function completed(string $id, int $mc, int $worker): self
     {
-        return new self($id, self::EVENT_COMPLETED, 'Done', $mc, 100);
+        return new self($id, self::EVENT_COMPLETED, 'Done', $mc, 100, $worker);
     }
 
     public static function lockAcquired(string $id, int $mc): self
@@ -60,14 +62,20 @@ class TaskStatusUpdate implements JsonSerializable
         return new self($id, self::EVENT_LOCK_FAILED, 'Timeout', $mc);
     }
 
+    public static function retriesFailed(string $id, int $mc, int $worker, int $maxRetries): self
+    {
+        return new self($id, self::EVENT_RETRIES_FAILED, "Max retries reached ({$maxRetries})", $mc, 0, $worker);
+    }
+
     public function withMessage(string $message): self
     {
         return new self(
-            $this->id,
-            $this->status,
-            $message,
-            $this->mc,
-            $this->progress
+            message: $message,
+            id: $this->id,
+            status: $this->status,
+            mc: $this->mc,
+            progress: $this->progress,
+            worker: $this->worker,
         );
     }
 
@@ -79,6 +87,7 @@ class TaskStatusUpdate implements JsonSerializable
             'status' => $this->status,
             'message' => $this->message,
             'progress' => $this->progress,
+            'worker' => $this->worker,
         ];
     }
 }

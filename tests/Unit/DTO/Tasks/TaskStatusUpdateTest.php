@@ -11,10 +11,10 @@ class TaskStatusUpdateTest extends TestCase
 {
     public function test_it_creates_started_event_correctly(): void
     {
-        $dto = TaskStatusUpdate::queued('task-123', 4);
+        $dto = TaskStatusUpdate::queued('task-123', 1);
 
         $this->assertEquals('task-123', $dto->id);
-        $this->assertEquals(4, $dto->mc);
+        $this->assertEquals(1, $dto->mc);
         $this->assertEquals('queued', $dto->status);
         $this->assertEquals(0, $dto->progress);
     }
@@ -31,7 +31,7 @@ class TaskStatusUpdateTest extends TestCase
 
     public function test_json_serialization_contains_required_keys(): void
     {
-        $dto = TaskStatusUpdate::completed('task-1', 2);
+        $dto = TaskStatusUpdate::completed('task-1', 1, 2);
         $serialized = $dto->jsonSerialize();
 
         $this->assertArrayHasKey('mc', $serialized);

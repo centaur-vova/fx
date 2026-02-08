@@ -217,6 +217,12 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Protocol**: Implemented `WsMessage` DTO to handle standardized WebSocket communication using `event` and `data` schema.
 - **Monitoring**: Added `SystemStats` DTO for low-level resource tracking and `Metrics` aggregate for high-level telemetry.
 - **Observability**: Real-time RTT (Ping/Pong) tracking to measure network latency between client and VPS.
+- **Architecture**: Fully migrated to **Swoole Task Workers**, enabling true process-level load balancing for CPU-bound tasks.
+- **Resilience**: Implemented a retry mechanism for semaphore locks with configurable `TASK_MAX_RETRIES` and `TASK_RETRY_DELAY_SEC`.
+- **Dynamic Monitoring**: Introduced a real-time **Worker Heatmap** in the HUD that automatically adapts to the number of active processes.
+- **Visual Feedback**: Added distinct GPU-accelerated CSS flash animations (Green for success, Red for failure/lock-timeout).
+- **Hybrid Task Engine**: Combined Swoole Task Workers with Coroutine-based retry logic for maximum throughput and dynamic concurrency control.
+- **Smart Backpressure**: Implemented `TASK_MAX_RETRIES` and `TASK_RETRY_DELAY_SEC` to prevent worker starvation under heavy lock contention.
 
 ### Changed
 - **Architecture**: Decoupled `SystemMonitor` from `TaskService`. Metrics composition is now handled at the `EventHandler` level.
@@ -232,8 +238,13 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **PHP-CS-Fixer**:
   - Forced `void` return types for methods without a return statement.
   - Disabled strict FQCN shortening to prevent breaking Swoole short-name aliases.
+- **Messaging**: Refactored `TaskService` to be stateless, passing context-specific `workerId` through the pipeline.
+- **Telemetry**: Switched queue usage reporting from local `Co\Channel` stats to global Swoole engine `tasking_num` metrics.
+- **Lifecycle**: Optimized `WorkerStart` logic to ensure clean service initialization across Master, Manager, and Task processes.
+- **Stability**: Refactored Container initialization to ensure process-level isolation in Swoole's multi-worker environment.
 
 ### Fixed
 - **Type Safety**: Added strict `instanceof` guarding and JSON validation for incoming Swoole WebSocket frames.
 - **Standardization**: Refactored protocol events from legacy `type` to consistent `event` naming.
-
+- **Worker Affinity**: Added solating process-level container instances.
+- **UI Stability**: Implemented fixed-width metric slots and data-attribute event delegation to prevent layout shifts.

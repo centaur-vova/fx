@@ -23,6 +23,7 @@ use App\WebSocket\WsEventBroadcaster;
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Coroutine as Co;
+use Swoole\Server\Task;
 use Swoole\WebSocket\Server;
 
 class Kernel
@@ -45,8 +46,10 @@ class Kernel
         // Server config
         $this->server->set([
             'worker_num' => $this->config->getInt('SERVER_WORKER_NUM', 4),
+            'task_worker_num' => $this->config->getInt('SERVER_WORKER_NUM', 4),
             'dispatch_mode' => $this->config->getInt('SERVER_DISPATCH_MODE', 2),
             'enable_coroutine' => true,
+            'task_enable_coroutine' => true,
             'socket_buffer_size' => $this->config->getInt('SOCKET_BUFFER_SIZE_MB', 64) * 1024 * 1024,
 
             // Static files
@@ -114,7 +117,13 @@ class Kernel
         $c->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
         $c->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
         $c->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
-        $c->set(SystemMonitor::class, fn ($c) => new SystemMonitor($c->get(ConnectionPool::class)));
+        $c->set(
+            SystemMonitor::class,
+            fn ($c) => new SystemMonitor(
+                connectionPool: $c->get(ConnectionPool::class),
+                workers: $c->get(Config::class)->getInt('SERVER_WORKER_NUM', 4)
+            )
+        );
         $c->set(
             TaskSemaphore::class,
             // TODO: Add the abity to switch semaphore implementation
@@ -125,12 +134,16 @@ class Kernel
         $c->set(TaskDelayStrategy::class, fn ($c) => new DemoDelayStrategy());
 
         $c->set(TaskService::class, fn ($c) => new TaskService(
-            $c->get(TaskSemaphore::class),
-            $c->get(WsEventBroadcaster::class),
-            $c->get(TaskDelayStrategy::class),
-            $c->get(TaskCounter::class),
-            $c->get(StdoutLogger::class),
-            $c->get(Config::class),
+            server: $c->get(Server::class),
+            semaphore: $c->get(TaskSemaphore::class),
+            broadcaster: $c->get(WsEventBroadcaster::class),
+            delayStrategy: $c->get(TaskDelayStrategy::class),
+            taskCounter: $c->get(TaskCounter::class),
+            logger: $c->get(StdoutLogger::class),
+            queueCapacity: $c->get(Config::class)->getInt('QUEUE_CAPACITY', 10000),
+            maxRetries: $c->get(Config::class)->getInt('TASK_MAX_RETRIES', 10),
+            retryDelaySec: $c->get(Config::class)->getInt('TASK_RETRY_DELAY_SEC', 3),
+            lockTimeoutSec: (float) $c->get(Config::class)->get('TASK_LOCK_TIMEOUT_SEC', 3),
         ));
 
         $c->set(EventHandler::class, function ($c): EventHandler {
@@ -152,21 +165,47 @@ class Kernel
 
     private function registerEvents(): void
     {
+        // Task Lifecycle
+        $this->server->on('task', function (Server $server, Task $task): void {
+            // Create a coroutine so this Task Worker can handle multiple concurrent tasks
+            Co::create(function () use ($server, $task): void {
+                try {
+                    /** @var TaskService $taskService */
+                    $taskService = $this->container->get(TaskService::class);
+                    $data = $task->data;
+
+                    // Execute task logic. Retries are now handled internally via Co::sleep
+                    $taskService->processTask(
+                        $server->worker_id,
+                        $data['id'],
+                        $data['mc']
+                    );
+
+                    $task->finish(['status' => 'ok']);
+                } catch (\Throwable $e) {
+                    $this->container->get(LoggerInterface::class)->error('Task execution failed', [
+                        'error' => $e->getMessage(),
+                        'worker_id' => $server->worker_id,
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            });
+        });
+
+        // Required for task completion
+        $this->server->on('finish', function ($server, $taskId, $data): void {
+            // Optional: Log task completion from worker pool
+        });
+
         // Worker Lifecycle
         $this->server->on('WorkerStart', function ($server, $workerId): void {
-            try {
-                $taskService = $this->container->get(TaskService::class);
+            // Isolate worker's container from Master
+            $this->container->set(Server::class, fn () => $server);
 
-                // Start task consumers inside the worker
-                Co::create(function () use ($taskService, $server, $workerId): void {
-                    $taskService->startWorker($server, $workerId);
-                });
-            } catch (\Throwable $e) {
-                $this
-                    ->container
-                    ->get(LoggerInterface::class)
-                    ->error('Worker start failed', ['e' => $e->getMessage()]);
-            }
+            // Reset cached instances
+            // They will be recreated within this worker's context
+            $this->container->forget(EventHandler::class);
+            $this->container->forget(TaskService::class);
         });
 
         // Graceful shutdown
@@ -174,9 +213,6 @@ class Kernel
             $taskService = $this->container->get(TaskService::class);
             $taskCounter = $this->container->get(TaskCounter::class);
             $config = $this->container->get(Config::class);
-
-            // Close the queue - stop taking new jobs from the channel
-            $taskService->shutdown();
 
             $timeout = (float) $config->get('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 30);
             $start = microtime(true);

@@ -12,7 +12,6 @@ final readonly class QueueStats implements Arrayable, JsonSerializable
     public function __construct(
         public int $usage,
         public int $max,
-        public int $tasks,
     ) {
     }
 
@@ -21,7 +20,6 @@ final readonly class QueueStats implements Arrayable, JsonSerializable
         return [
             'usage' => $this->usage,
             'max' => $this->max,
-            'tasks' => $this->tasks,
         ];
     }
 

@@ -26,4 +26,14 @@ class SwooleAtomicCounter implements TaskCounter
     {
         return $this->atomic->get();
     }
+
+    public function add(int $addValue = 1): int
+    {
+        return $this->atomic->add($addValue);
+    }
+
+    public function sub(int $subValue = 1): int
+    {
+        return $this->atomic->sub($subValue);
+    }
 }

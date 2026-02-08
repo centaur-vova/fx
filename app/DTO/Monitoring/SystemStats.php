@@ -13,8 +13,9 @@ use JsonSerializable;
 final readonly class SystemStats implements Arrayable, JsonSerializable
 {
     public function __construct(
-        public float $memoryMb,
         public int $connections,
+        public int $workers,
+        public float $memoryMb,
         public float $cpuPercent,
     ) {
     }
@@ -25,8 +26,9 @@ final readonly class SystemStats implements Arrayable, JsonSerializable
     public function toArray(): array
     {
         return [
-            'memory_mb' => $this->memoryMb,
             'connections' => $this->connections,
+            'workers' => $this->workers,
+            'memory_mb' => $this->memoryMb,
             'cpu_percent' => $this->cpuPercent,
         ];
     }

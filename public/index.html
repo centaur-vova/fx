@@ -9,7 +9,7 @@
 </head>
 
 <body class="screen-height-fit flex flex-col bg-gray-100">
-    <div class="success-popup" id="successPopup"></div>
+    <div class="toast" id="reactorToast"></div>
 
     <div class="flex-grow-1 overflow-hidden p-3">
         <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
@@ -29,6 +29,14 @@
                     <div class="flex items-center gap-6">
                         <!-- Stats Grid: Use flex with fixed widths to prevent shifting -->
                         <div class="flex gap-6 text-right">
+                            <div class="text-xs pr-6 border-r border-[#222]">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right">Workers</span>
+                                <!-- Bars container -->
+                                <div id="worker-heatmap" class="flex gap-1 justify-end items-center h-[14px]">
+                                    <!-- Bars placeholder -->
+                                </div>
+                            </div>
+
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Queue</span>
                                 <b id="queue-info" class="block font-mono text-sm text-yellow-500 min-w-[70px]">0 / 0</b>

@@ -10,6 +10,6 @@ class QueueFullException extends RuntimeException
 {
     public function __construct(int $capacity)
     {
-        parent::__construct("The queue capacity has been exceeded! Limit: {$capacity} tasks.");
+        parent::__construct("Limit: {$capacity} tasks.");
     }
 }

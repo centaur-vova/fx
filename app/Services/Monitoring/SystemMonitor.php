@@ -15,6 +15,7 @@ class SystemMonitor
 
     public function __construct(
         private readonly ConnectionPool $connectionPool,
+        private readonly int $workers,
     ) {
         $this->lastUsage = getrusage();
         $this->lastTime = microtime(true);
@@ -42,8 +43,9 @@ class SystemMonitor
         $this->lastTime = $currentTime;
 
         return new SystemStats(
-            memoryMb: round(memory_get_usage() / 1024 / 1024, 2),
+            workers: $this->workers,
             connections: $this->connectionPool->count(),
+            memoryMb: round(memory_get_usage() / 1024 / 1024, 2),
             cpuPercent: $cpuPercent,
         );
     }
