@@ -122,7 +122,8 @@ class TaskService
     {
         return new QueueStats(
             usage: $this->taskCounter->get(),
-            max: (int) $this->config->get('QUEUE_CAPACITY', 10000)
+            max: (int) $this->config->get('QUEUE_CAPACITY', 10000),
+            tasks: $this->taskCounter->get(),
         );
     }
 

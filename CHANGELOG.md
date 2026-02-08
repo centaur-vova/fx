@@ -210,3 +210,19 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Type Integrity**: Leveraged PHP 8.4 native types to eliminate "Type Juggling" vulnerabilities in task processing pipelines.
 - **DX**: Standardized formatting rules (single quotes, ordered imports, method spacing) to ensure clean and readable Git diffs.
 - **Maintenance**: Updated file discovery rules to ignore `vendor`, `storage`, and `cache` directories.
+
+## - 2026-02-08
+### Added
+- **Infrastructure**: Introduced `Arrayable` contract in `App\Contracts\Support` to unify DTO-to-array transformations.
+- **Protocol**: Implemented `WsMessage` DTO to handle standardized WebSocket communication using `event` and `data` schema.
+- **Monitoring**: Added `SystemStats` DTO for low-level resource tracking and `Metrics` aggregate for high-level telemetry.
+- **Observability**: Real-time RTT (Ping/Pong) tracking to measure network latency between client and VPS.
+
+### Changed
+- **Architecture**: Decoupled `SystemMonitor` from `TaskService`. Metrics composition is now handled at the `EventHandler` level.
+- **Namespaces**: Reorganized all DTOs into a domain-driven structure for better maintainability and PSR compliance.
+- **Kernel**: Updated `Kernel` and `WsEventBroadcaster` to support the new polymorphic DTO architecture.
+
+### Fixed
+- **Type Safety**: Added strict `instanceof` guarding and JSON validation for incoming Swoole WebSocket frames.
+- **Standardization**: Refactored protocol events from legacy `type` to consistent `event` naming.

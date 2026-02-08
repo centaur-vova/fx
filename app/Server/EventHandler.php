@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Server;
 
 use App\Config;
+use App\DTO\Common\Metrics;
+use App\DTO\WebSockets\WsMessage;
 use App\Router;
 use App\Services\Monitoring\SystemMonitor;
+use App\Services\Tasks\TaskService;
 use App\WebSocket\ConnectionPool;
+use Psr\Log\LoggerInterface;
 use Swoole\Timer;
+use Swoole\WebSocket\Frame;
 use Swoole\WebSocket\Server;
 
 class EventHandler
@@ -17,6 +22,8 @@ class EventHandler
         private readonly Router $router,
         private readonly ConnectionPool $connectionPool,
         private readonly SystemMonitor $systemMonitor,
+        private readonly LoggerInterface $logger,
+        private readonly TaskService $taskService,
         private readonly Config $config,
     ) {
     }
@@ -33,21 +40,35 @@ class EventHandler
         $this->startMetricsStream($server, $request->fd);
     }
 
-    public function onMessage(Server $server, $frame): void
+    /**
+     * Create a DTO from a raw Swoole frame.
+     *
+     * We return null instead of throwing Exceptions to avoid overhead
+     * in high-concurrency environments (stack trace allocation).
+     */
+    public function onMessage(Server $server, mixed $frame): void
     {
-        $data = json_decode((string) $frame->data, true);
-        if (isset($data['event'])) {
-            switch ($data['event']) {
-                case 'pusher:ping':
-                    $server->push($frame->fd, json_encode(['event' => 'pusher:pong']));
-                    break;
-                case 'pusher:subscribe':
-                    $server->push($frame->fd, json_encode([
-                        'event' => 'pusher_internal:subscription_succeeded',
-                        'channel' => $data['data']['channel'],
-                    ]));
-                    break;
-            }
+        // Make sure that Frame is received
+        if (!($frame instanceof Frame)) {
+            return;
+        }
+
+        // Decode
+        $payload = json_decode((string) $frame->data, true);
+        if (!is_array($payload)) {
+            return;
+        }
+
+        // Map to DTO
+        $wsMessage = WsMessage::fromArray($payload);
+        if ($wsMessage === null) {
+            return;
+        }
+
+        switch ($wsMessage->event) {
+            case 'ping':
+                $this->send($server, $frame->fd, new WsMessage('pong', $wsMessage->data));
+                break;
         }
     }
 
@@ -67,12 +88,30 @@ class EventHandler
                 return;
             }
 
-            $payload = [
-                'event' => 'metrics.update',
-                'data' => $this->systemMonitor->capture($server),
-            ];
+            $data = new Metrics(
+                queue: $this->taskService->getQueueStats(),
+                system: $this->systemMonitor->capture($server),
+            );
 
-            $server->push($fd, json_encode($payload));
+            $this->send($server, $fd, new WsMessage(
+                event: 'metrics.update',
+                data: $data,
+            ));
         });
+    }
+
+    /**
+     * Send a standardized payload to the client.
+     */
+    private function send(Server $server, int $fd, WsMessage $wsMessage): void
+    {
+        $result = $server->push($fd, json_encode($wsMessage));
+        if ($result === false) {
+            $this->logger->warning('WS: push failed', [
+                'fd' => $fd,
+                'event' => $wsMessage->event,
+                'error_code' => swoole_last_error(),
+            ]);
+        }
     }
 }

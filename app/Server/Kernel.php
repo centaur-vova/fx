@@ -114,11 +114,7 @@ class Kernel
         $c->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
         $c->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
         $c->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
-        $c->set(SystemMonitor::class, fn ($c) => new SystemMonitor(
-            $c->get(ConnectionPool::class),
-            $c->get(TaskCounter::class),
-            $c->get(TaskService::class),
-        ));
+        $c->set(SystemMonitor::class, fn ($c) => new SystemMonitor($c->get(ConnectionPool::class)));
         $c->set(
             TaskSemaphore::class,
             // TODO: Add the abity to switch semaphore implementation
@@ -145,6 +141,8 @@ class Kernel
                 $router,
                 $c->get(ConnectionPool::class),
                 $c->get(SystemMonitor::class),
+                $c->get(LoggerInterface::class),
+                $c->get(TaskService::class),
                 $c->get(Config::class),
             );
         });

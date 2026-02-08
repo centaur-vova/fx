@@ -8,8 +8,6 @@ use App\Contracts\Websockets\Broadcaster;
 
 class WsEventBroadcaster implements Broadcaster
 {
-    private const string CHANNEL = 'tasks';
-
     public function __construct(private readonly MessageHub $hub)
     {
     }
@@ -23,7 +21,6 @@ class WsEventBroadcaster implements Broadcaster
         $this->hub->broadcast([
             'event' => $event,
             'data' => $payload,
-            'channel' => self::CHANNEL,
         ]);
     }
 }

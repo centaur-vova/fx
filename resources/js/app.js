@@ -9,7 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
         height: 0,
         popupTimeout: null,
         reconnectAttempts: 0,
+        pingTimer: null,
     };
+
+    const PING_INTERVAL_MS = 3000;
 
     // Configuration from your CSS
     const COLORS = {
@@ -147,6 +150,27 @@ document.addEventListener("DOMContentLoaded", () => {
         if (status === 'completed') task.endTime = Date.now();
     };
 
+    const startPinger = () => {
+        stopPinger();
+
+        state.pingTimer = setInterval(() => {
+            if (state.ws?.readyState === WebSocket.OPEN) {
+                state.ws.send(JSON.stringify({
+                    event: 'ping',
+                    data: { ts: performance.now() }
+                }));
+            }
+        }, PING_INTERVAL_MS);
+    }
+
+    const stopPinger = () => {
+
+        if (state.pingTimer) {
+            clearInterval(state.pingTimer);
+            state.pingTimer = null;
+        }
+    }
+
     // WebSocket & Logic (Minimal changes)
     const connect = () => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -156,14 +180,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // open/close/error handling
         state.ws.onopen = (e) => {
+            if (state.ws && state.ws.readyState === WebSocket.CONNECTING) {
+                return;
+            }
+
             console.log("%c REACTOR ONLINE ", "background: #064e3b; color: #10b981; font-weight: bold;");
             updateWsStatus(true);
             // Reset any reconnection attempts if successful
             state.reconnectAttempts = 0;
+
+            startPinger();
         }
         state.ws.onclose = (e) => {
             updateWsStatus(false);
             console.log("%c REACTOR OFFLINE ", "background: #450a0a; color: #f87171; font-weight: bold;");
+
+            stopPinger();
 
             // Linear backoff: try to reconnect every 3 seconds
             // You can make it exponential if needed: Math.min(30000, (state.reconnectAttempts ** 2) * 1000)
@@ -183,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const msg = JSON.parse(e.data);
                 if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
                 if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
+                if (msg.event === "pong") handleUpdateLatency(msg.data);
             } catch (err) {
                 console.error("Malformed message received", err);
             }
@@ -206,27 +239,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const handleUpdateLatency = (data) => {
+        const latencyMs = Math.round(performance.now() - data.ts);
+
+        document.getElementById("latency-display").textContent = `${latencyMs}ms`;
+    }
 
     const handleUpdateMetrics = (data) => {
         // Basic metrics
-        document.getElementById("memory-usage").textContent = data.memory;
-        document.getElementById("connection-count").textContent = data.connections;
-        document.getElementById("cpu-load").textContent = data.cpu;
+        document.getElementById("memory-usage").textContent = data.system?.memory_mb + 'Mb'
+        document.getElementById("connection-count").textContent = data.system?.connections;
+        document.getElementById("cpu-load").textContent = data.system?.cpu_percent + '%';
 
         // Queue info: "usage / max"
         const queueEl = document.getElementById("queue-info");
-        if (queueEl && data.queue) {
-            queueEl.textContent = `${data.queue.usage} / ${Math.floor(data.queue.max / 1000)}k`;
+        if (data.queue) {
+            queueEl.textContent = `${data.queue?.usage} / ${Math.floor(data.queue?.max / 1000)}k`;
 
             // Critical load coloring
-            if (data.queue.usage / data.queue.max > 0.8) {
+            if (data.queue?.usage / data.queue?.max > 0.8) {
                 queueEl.classList.replace('text-yellow-500', 'text-red-500');
             } else {
                 queueEl.classList.replace('text-red-500', 'text-yellow-500');
             }
         }
 
-        handleLODLogic(parseInt(data.tasks, 10));
+        handleLODLogic(parseInt(data.queue?.tasks, 10));
     };
 
     const handleLODLogic = (total) => {
@@ -252,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.popupTimeout = setTimeout(() => {
             popup.classList.remove("show");
-        }, 3000);
+        }, 1000);
     };
 
 
