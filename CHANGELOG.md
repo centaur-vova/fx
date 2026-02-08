@@ -222,7 +222,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Architecture**: Decoupled `SystemMonitor` from `TaskService`. Metrics composition is now handled at the `EventHandler` level.
 - **Namespaces**: Reorganized all DTOs into a domain-driven structure for better maintainability and PSR compliance.
 - **Kernel**: Updated `Kernel` and `WsEventBroadcaster` to support the new polymorphic DTO architecture.
+- **Task Scheduling**: Optimized `DemoDelayStrategy` to provide zero-latency execution for the initial task in any batch (iteration 0).
+- **UX**: Enhanced real-time feedback when creating single tasks, removing unnecessary wait times for manual injections.
 
 ### Fixed
 - **Type Safety**: Added strict `instanceof` guarding and JSON validation for incoming Swoole WebSocket frames.
 - **Standardization**: Refactored protocol events from legacy `type` to consistent `event` naming.
+

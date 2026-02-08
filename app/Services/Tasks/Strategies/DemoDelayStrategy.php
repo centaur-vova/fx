@@ -10,11 +10,16 @@ class DemoDelayStrategy implements TaskDelayStrategy
 {
     public function __invoke(int $iteration, int $baseDelay): int
     {
+        // Minimum 1ms for Swoole Timer compatibility
+        if ($iteration === 0) {
+            return 1;
+        }
+
         $jitter = mt_rand(0, 5000);
 
         // Base delay (ms)
         $base = $baseDelay * 1000;
 
-        return $base + $jitter;
+        return max(1, $base + $jitter);
     }
 }
