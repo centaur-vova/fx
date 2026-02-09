@@ -38,6 +38,19 @@ document.addEventListener("DOMContentLoaded", () => {
         mcSlider: document.getElementById("max-concurrent-slider"),
     };
 
+    // Welcome/branding message
+    const brand = `
+    ███████╗ █████╗ ███████╗████████╗     █████╗ ███████╗
+    ██╔════╝██╔══██╗██╔════╝╚══██╔══╝    ██╔══██╗██╔════╝
+    █████╗  ███████║███████╗   ██║       ███████║█████╗
+    ██╔══╝  ██╔══██║╚════██║   ██║       ██╔══██║██╔══╝
+    ██║     ██║  ██║███████║   ██║    ██╗██║  ██║██║
+    ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝    ╚═╝╚═╝  ╚═╝╚═╝     `;
+
+    console.log(`%c${brand}`, "color: #10b981; font-weight: bold;");
+    console.log("%c» FAST.AF — FAST ATOMIC FLOW", "color: #10b981; font-weight: bold;");
+    console.log("%c» KERNEL: SWOOLE_6.0_STABLE // MODE: SHARED_ATOMIC", "color: #6b7280;");
+
     // Setup Canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { alpha: true });
@@ -375,6 +388,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const initPipelineHud = () => {
+        const hudContainer = document.getElementById('hud-shapes');
+        const template = document.getElementById('hud-item-template');
+        if (!hudContainer || !template) return;
+
+        for (let i = 1; i <= 10; i++) {
+            const clone = template.content.cloneNode(true);
+            const wrapper = clone.querySelector('.hud-item');
+            wrapper.setAttribute('data-mc', i);
+
+            const shape = clone.querySelector('.hud-shape-preview');
+            shape.textContent = i;
+
+            hudContainer.appendChild(clone);
+        }
+    };
+
     document.querySelectorAll('.task-button').forEach(btn => {
         btn.onclick = () => {
             const count = parseInt(btn.getAttribute('data-count'), 10);
@@ -392,5 +422,6 @@ document.addEventListener("DOMContentLoaded", () => {
         DOM.log.scrollTop = DOM.log.scrollHeight;
     }
 
+    initPipelineHud();
     connect();
 });

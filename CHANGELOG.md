@@ -248,3 +248,13 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Standardization**: Refactored protocol events from legacy `type` to consistent `event` naming.
 - **Worker Affinity**: Added solating process-level container instances.
 - **UI Stability**: Implemented fixed-width metric slots and data-attribute event delegation to prevent layout shifts.
+
+## - 2026-02-09
+### Added
+- **New Branding**: Engine rebranded to **FAST.AF** (Fast Atomic Flow).
+- **Interactive HUD Legend**: Implemented a Canvas overlay showing shape-to-concurrency mapping.
+- **Boot Console Art**: Added high-impact ASCII branding and system status on reactor startup.
+- **Engine Rules Logic**: Added technical documentation directly into the UI explaining Starvation prevention and Shared-memory limits.
+
+### Changed
+- **UI Refactoring**: Moved legend from sidebar to Pipeline HUD for optimal layout and terminal visibility.

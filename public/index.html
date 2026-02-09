@@ -18,12 +18,12 @@
             <div class="bg-[#111111] rounded-xl shadow-2xl p-4 border border-[#222222]">
                 <div class="flex justify-between items-center">
                     <!-- LEFT: LOGO (Stay static) -->
-                    <div>
+                    <a href="./" target="_blank" class="block hover:opacity-80 transition-opacity">
                         <h1 class="text-xl font-black tracking-tighter text-white uppercase italic">
-                            Atomic <span class="text-green-500">Flow</span>
+                            Fast.<span class="text-green-500">AF</span>
                         </h1>
                         <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">High-Load Pipeline Engine</p>
-                    </div>
+                    </a>
 
                     <!-- RIGHT: METRICS (Fixed layout) -->
                     <div class="flex items-center gap-6">
@@ -87,6 +87,29 @@
 
                 <div id="pipeline" class="relative h-full w-full z-10">
                 </div>
+
+                <!-- PIPELINE HUD -->
+                <div id="canvas-hud" class="absolute bottom-4 left-0 right-0 z-30 pointer-events-none select-none px-6">
+                    <div class="flex justify-between items-end">
+                        <!-- SHAPES LEGEND -->
+                        <div id="hud-shapes" class="flex gap-3">
+                            <!-- Injected via JS -->
+                        </div>
+
+                        <!-- ENGINE RULES -->
+                        <div class="text-[9px] font-mono text-gray-500 uppercase tracking-tighter leading-tight text-right opacity-60">
+                            <div class="mb-1 text-blue-500 font-bold">» ENGINE: STRICT SHARED-MEMORY LIMITS (SWOOLE ATOMIC)</div>
+                            <div>To prevent starvation: exactly N tasks for Type-N workers.</div>
+                            <div>Visual LOD: 500+ active tasks = "Star Dust" mode (60FPS).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <template id="hud-item-template">
+                    <div class="hud-item flex flex-col items-center">
+                        <div class="hud-shape-preview w-4 h-4 flex items-center justify-center text-[8px] font-black text-white"></div>
+                    </div>
+                </template>
 
                 <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-gray-500 z-20 pointer-events-none" style="left: 12.5%; transform: translateX(-50%);">Queue</div>
                 <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-orange-500 z-20 pointer-events-none" style="left: 37.5%; transform: translateX(-50%);">Check Lock</div>

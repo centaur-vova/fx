@@ -247,3 +247,62 @@ body {
 .flash-error {
     animation: flash-red 0.4s ease-out forwards;
 }
+
+/* --- Pipeline HUD Styles --- */
+#canvas-hud {
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.7) 0%, transparent 100%);
+    padding-top: 20px;
+}
+
+.hud-shape-preview {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Link existing task shapes to HUD previews */
+.hud-item[data-mc="1"] .hud-shape-preview {
+    @apply bg-[#6366f1] rounded-full;
+}
+
+.hud-item[data-mc="2"] .hud-shape-preview {
+    @apply bg-[#10b981];
+}
+
+.hud-item[data-mc="3"] .hud-shape-preview {
+    @apply bg-[#f59e0b] rounded-[30%];
+}
+
+.hud-item[data-mc="4"] .hud-shape-preview {
+    @apply bg-[#ea580c] rounded-[15%];
+}
+
+.hud-item[data-mc="5"] .hud-shape-preview {
+    background: #f43f5e;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.hud-item[data-mc="6"] .hud-shape-preview {
+    background: #8b5cf6;
+    clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%);
+}
+
+.hud-item[data-mc="7"] .hud-shape-preview {
+    background: #d946ef;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+.hud-item[data-mc="8"] .hud-shape-preview {
+    background: #06b6d4;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.legend-item[data-mc="9"] .legend-shape-preview,
+.hud-item[data-mc="9"] .hud-shape-preview {
+    background: #84cc16;
+    border-radius: 6px 0 6px 0;
+}
+
+.hud-item[data-mc="10"] .hud-shape-preview {
+    background: #3b82f6;
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
