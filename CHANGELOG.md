@@ -255,6 +255,13 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Interactive HUD Legend**: Implemented a Canvas overlay showing shape-to-concurrency mapping.
 - **Boot Console Art**: Added high-impact ASCII branding and system status on reactor startup.
 - **Engine Rules Logic**: Added technical documentation directly into the UI explaining Starvation prevention and Shared-memory limits.
+- **Visual Throttling**: Added a greyed-out visual state to the log panel via `.terminal-overloaded` class to indicate high-load conditions.
 
 ### Changed
 - **UI Refactoring**: Moved legend from sidebar to Pipeline HUD for optimal layout and terminal visibility.
+- **Log Management**: Unified terminal behavior using `TASKS_LOG_THRESHOLD`. New log entries are now suppressed and the panel is dimmed when active tasks exceed this limit.
+- **UI Synchronization**: Refactored the terminal state update to trigger within the `render` loop, ensuring the log panel is re-enabled immediately after tasks are deleted from memory.
+
+### UI/UX & Performance
+- **Terminal Load Balancing**: Introduced `TASKS_LOG_THRESHOLD` to manage terminal performance under high pressure.
+- **Visual Throttling**: Added a greyed-out visual state to the log panel, synchronized with the `render` loop to ensure accurate UI feedback after task cleanup.

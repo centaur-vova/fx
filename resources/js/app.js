@@ -11,9 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
         toastTimeout: null,
         reconnectAttempts: 0,
         pingTimer: null,
+        isLogPanelDisabled: false,
     };
 
     const PING_INTERVAL_MS = 3000;
+    const TASKS_LOG_THRESHOLD = 300;
 
     // Configuration from your CSS
     const COLORS = {
@@ -136,15 +138,36 @@ document.addEventListener("DOMContentLoaded", () => {
             drawShape(task.currentX * state.width, task.y * state.height, 24, task.mc, task.status);
         });
 
+        // Enable/disable log panel depending the current task count
+        syncLogPanelState();
+
         requestAnimationFrame(render);
     };
     requestAnimationFrame(render);
+
+    /**
+     * Synchronize terminal UI state with current task count
+     * Only performs DOM operations when state actually changes
+     */
+    const syncLogPanelState = () => {
+        const logPanelShouldBeDisabled = state.tasks.size > TASKS_LOG_THRESHOLD;
+
+        if (state.isLogPanelDisabled !== logPanelShouldBeDisabled) {
+            state.isLogPanelDisabled = logPanelShouldBeDisabled;
+
+            // Use classList.toggle for clean state management
+            DOM.log.classList.toggle('log-panel-disabled', state.isLogPanelDisabled);
+
+            // Optional: Debug log to track transitions
+            // console.log(`[UI] Terminal state changed. Overloaded: ${state.isOverloaded}`);
+        }
+    };
 
     const handleUpdateTasks = (data) => {
         const { taskId, worker, mc, status, message } = data;
 
         // Throttled logging for performance
-        if (state.tasks.size < 300) addLog(taskId, mc, status, message);
+        if (state.tasks.size < TASKS_LOG_THRESHOLD) addLog(taskId, mc, status, message);
 
         if (!state.tasks.has(taskId)) {
             const y = 0.15 + Math.random() * 0.7;

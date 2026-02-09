@@ -306,3 +306,12 @@ body {
     background: #3b82f6;
     clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
 }
+
+/* Terminal log greyed out when system is under high load */
+#log-panel.log-panel-disabled {
+    opacity: 0.2;
+    filter: grayscale(1) contrast(0.8);
+    pointer-events: none;
+    /* Prevent interaction while throttled */
+    transition: all 0.5s ease-in-out;
+}
