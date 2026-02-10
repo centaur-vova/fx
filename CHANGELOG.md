@@ -279,6 +279,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Graceful Termination**: Replaced blocking usleep with coroutine-aware Co::sleep in WorkerStop for safer process shutdown.
 - **Kernel Refactoring**: Decoupled Kernel from raw Environment state; it now only operates on the validated Options DTO.
 
+### Fixed
+- **Canvas Memory Leak**: Resolved a critical issue where the HUD continued to render "ghost" tasks after a server disconnect. The state.tasks Map is now explicitly cleared on connection loss, freeing up browser resources.
+
 ### UI/UX & Performance
 - **Static Metadata Offloading**: Planned the migration of cpuCores and workerNum from the real-time stream to a one-time init handshake packet.
 - **DI Performance**: Optimized container factory closures for better memory footprint during high-concurrency worker spawning.

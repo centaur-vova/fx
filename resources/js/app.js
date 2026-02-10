@@ -245,6 +245,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             stopPinger();
 
+            // Clear tasks
+            state.tasks.clear();
+
             // Linear backoff: try to reconnect every 3 seconds
             // You can make it exponential if needed: Math.min(30000, (state.reconnectAttempts ** 2) * 1000)
             setTimeout(() => {
