@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\Config;
 use App\DTO\Common\Metrics;
 use App\DTO\WebSockets\WsMessage;
 use App\Router;
@@ -26,7 +25,7 @@ class EventHandler
         private readonly SystemMonitor $systemMonitor,
         private readonly LoggerInterface $logger,
         private readonly TaskService $taskService,
-        private readonly Config $config,
+        private readonly int $metricsUpdateIntervalMs,
     ) {
     }
 
@@ -81,7 +80,7 @@ class EventHandler
 
     private function startMetricsStream(Server $server, int $fd): void
     {
-        $interval = $this->config->getInt('METRICS_UPDATE_INTERVAL_MS', 1000);
+        $interval = $this->metricsUpdateIntervalMs;
 
         Timer::tick($interval, function (int $timerId) use ($server, $fd): void {
             // In case of disconnect clear the timer
@@ -92,7 +91,7 @@ class EventHandler
 
             $data = new Metrics(
                 queue: $this->taskService->getQueueStats(),
-                system: $this->systemMonitor->capture($server),
+                system: $this->systemMonitor->capture(),
             );
 
             $this->send($server, $fd, new WsMessage(

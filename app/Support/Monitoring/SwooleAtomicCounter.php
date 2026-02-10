@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Support\Monitoring;
 
 use App\Contracts\Monitoring\TaskCounter;
+use Swoole\Atomic;
 
 class SwooleAtomicCounter implements TaskCounter
 {
-    public function __construct(private readonly \Swoole\Atomic $atomic)
+    public function __construct(private readonly Atomic $atomic)
     {
     }
 

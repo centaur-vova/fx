@@ -14,9 +14,10 @@ final readonly class SystemStats implements Arrayable, JsonSerializable
 {
     public function __construct(
         public int $connections,
-        public int $workers,
         public float $memoryMb,
-        public float $cpuPercent,
+        public float $cpuUsage,
+        public int $workers,
+        public int $cpuCores,
     ) {
     }
 
@@ -27,9 +28,10 @@ final readonly class SystemStats implements Arrayable, JsonSerializable
     {
         return [
             'connections' => $this->connections,
-            'workers' => $this->workers,
             'memory_mb' => $this->memoryMb,
-            'cpu_percent' => $this->cpuPercent,
+            'cpu_usage' => $this->cpuUsage,
+            'workers' => $this->workers,
+            'cpu_cores' => $this->cpuCores,
         ];
     }
 

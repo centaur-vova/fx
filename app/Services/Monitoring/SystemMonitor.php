@@ -6,7 +6,6 @@ namespace App\Services\Monitoring;
 
 use App\DTO\Monitoring\SystemStats;
 use App\WebSocket\ConnectionPool;
-use Swoole\WebSocket\Server;
 
 class SystemMonitor
 {
@@ -16,6 +15,7 @@ class SystemMonitor
     public function __construct(
         private readonly ConnectionPool $connectionPool,
         private readonly int $workers,
+        private readonly int $cpuCores, // TODO
     ) {
         $this->lastUsage = getrusage();
         $this->lastTime = microtime(true);
@@ -24,7 +24,7 @@ class SystemMonitor
     /**
      * Capture current system metrics and calculate delta
      */
-    public function capture(Server $server): SystemStats
+    public function capture(): SystemStats
     {
         $currentUsage = getrusage();
         $currentTime = microtime(true);
@@ -36,17 +36,21 @@ class SystemMonitor
             - ($this->lastUsage['ru_stime.tv_sec'] + $this->lastUsage['ru_stime.tv_usec'] / 1000000);
 
         $timeDelta = $currentTime - $this->lastTime;
-        $cpuPercent = $timeDelta > 0 ? round((($userDelta + $sysDelta) / $timeDelta) * 100, 2) : 0;
+        $totalCpu = ($userDelta + $sysDelta) / $timeDelta;
+        $cpuUsage = $timeDelta > 0 ? round(($totalCpu / max(1, $this->cpuCores)) * 100, 2) : 0;
 
         // Update state
         $this->lastUsage = $currentUsage;
         $this->lastTime = $currentTime;
 
         return new SystemStats(
+            // TODO: move workers/cpuCores somewhere - dont send it here
             workers: $this->workers,
+            cpuCores: $this->cpuCores,
+            // Monitor data
+            cpuUsage: $cpuUsage,
             connections: $this->connectionPool->count(),
             memoryMb: round(memory_get_usage() / 1024 / 1024, 2),
-            cpuPercent: $cpuPercent,
         );
     }
 }

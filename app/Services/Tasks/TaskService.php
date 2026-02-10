@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Tasks;
 
-use App\Config;
 use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;

@@ -12,7 +12,7 @@ use App\Contracts\Tasks\TaskSemaphore;
 use App\Controllers\TaskController;
 use App\Router;
 use App\Services\Monitoring\SystemMonitor;
-use App\Services\Tasks\Semaphores\{GlobalSharedSemaphore, WorkerLocalSemaphore};
+use App\Services\Tasks\Semaphores\{GlobalSharedSemaphore};
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
 use App\Support\Monitoring\SwooleAtomicCounter;
@@ -20,6 +20,7 @@ use App\Support\StdoutLogger;
 use App\WebSocket\ConnectionPool;
 use App\WebSocket\MessageHub;
 use App\WebSocket\WsEventBroadcaster;
+use Fidry\CpuCoreCounter\CpuCoreCounter;
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Coroutine as Co;
@@ -30,29 +31,53 @@ class Kernel
 {
     private readonly Container $container;
     private readonly Server $server;
-    private readonly Config $config;
+    private readonly Options $options;
 
     public function __construct(private readonly string $basePath)
     {
-        // Load config
-        $this->config = Config::fromEnv($this->basePath);
+        // Load config from .env
+        $rawConfig = Config::fromEnv($this->basePath);
 
-        // Create Server instance
-        $this->server = new Server(
-            $this->config->get('SERVER_HOST', '0.0.0.0'),
-            $this->config->getInt('SERVER_PORT', 9501)
+        // Options
+        $options = new Options(
+            serverHost:         $rawConfig->get('SERVER_HOST', '0.0.0.0'),
+            logLevel:           $rawConfig->get('LOG_LEVEL', 'info'),
+            serverPort:         $rawConfig->getInt('SERVER_PORT', 9501),
+            workerNum:          $rawConfig->getInt('SERVER_WORKER_NUM', 4),
+            dispatchMode:       $rawConfig->getInt('SERVER_DISPATCH_MODE', 2),
+            socketBufferMb:     $rawConfig->getInt('SOCKET_BUFFER_SIZE_MB', 64),
+            wsTableSize:        $rawConfig->getInt('WS_TABLE_SIZE', 1024),
+            queueCapacity:      $rawConfig->getInt('QUEUE_CAPACITY', 10000),
+            workerConcurrency:  $rawConfig->getInt('WORKER_CONCURRENCY', 10),
+            taskSemaphoreLimit: $rawConfig->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
+            taskLockTimeoutSec: $rawConfig->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
+            taskRetryDelaySec:  $rawConfig->getInt('TASK_RETRY_DELAY_SEC', 5),
+            taskMaxRetries:     $rawConfig->getInt('TASK_MAX_RETRIES', 3),
+            metricsIntervalMs:  $rawConfig->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
+            shutdownTimeoutSec: $rawConfig->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
         );
 
-        // Server config
+        // Assign options to object state
+        $this->options = $options;
+
+        // Create Server instance
+        $this->server = new Server($options->serverHost, $options->serverPort);
+
+        // Server settings
         $this->server->set([
-            'worker_num' => $this->config->getInt('SERVER_WORKER_NUM', 4),
-            'task_worker_num' => $this->config->getInt('SERVER_WORKER_NUM', 4),
-            'dispatch_mode' => $this->config->getInt('SERVER_DISPATCH_MODE', 2),
+            // Workers
+            'worker_num' => $options->workerNum,
+            'task_worker_num' => $options->workerNum, // same as Server's worker_num
+
+            // System
+            'dispatch_mode' => $options->dispatchMode,
+            'socket_buffer_size' => $options->socketBufferMb * 1024 * 1024,
+
+            // Enable coroutines
             'enable_coroutine' => true,
             'task_enable_coroutine' => true,
-            'socket_buffer_size' => $this->config->getInt('SOCKET_BUFFER_SIZE_MB', 64) * 1024 * 1024,
 
-            // Static files
+            // Static files & HTTP
             'enable_static_handler' => true,
             'document_root' => rtrim($this->basePath, '/') . '/public',
             'http_compression' => true,
@@ -70,83 +95,88 @@ class Kernel
 
     private function bootContainer(): Container
     {
+        /**
+         * Create local references to prevent $this-binding in container closures.
+         * This allows using 'static fn' for better performance and memory isolation.
+         */
+        $server = $this->server;
+        $options = $this->options;
+
+        // Create container
         $c = new Container();
 
         // Global shared instances
-        $c->set(Config::class, fn () => $this->config);
-        $c->set(Server::class, fn () => $this->server);
+        $c->set(Server::class, static fn () => $server);
+        $c->set(Options::class, static fn () => $options);
 
         // WebSocket Connections storage
-        $tableSize = $this->config->getInt('WS_TABLE_SIZE', 1024);
-        $connectionsTable = ConnectionPool::configureAndCreateTable($tableSize);
+        $connectionsTable = ConnectionPool::configureAndCreateTable($options->wsTableSize);
 
         // Task counter
         $tasksAtomic = new Atomic(0);
 
-        // Available CPU cores
-        $cpuCores = (int) shell_exec('nproc') ?: 1;
+        /**
+         * Detect available CPU cores for worker scaling.
+         * PHP 8.4 fluent instantiation style.
+         */
+        $cpuCores = max(1, new CpuCoreCounter()->getCount());
 
         /**
-         * Pre-allocate Shared Memory Semaphores
+         * Pre-allocate Shared Memory Semaphores.
+         * The index $i represents the 'max_concurrency' level.
          *
-         * {@see GlobalSharedSemaphore}
+         * Each Atomic object is a shared counter across all Swoole workers.
+         * @see GlobalSharedSemaphore
          */
-        $maxSemaphoreLimit = $this->config->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10);
+        $semaphoreLimit = max(1, $options->taskSemaphoreLimit);
         $semaphoreAtomics = [];
-        for ($i = 1; $i <= $maxSemaphoreLimit; $i++) {
+
+        for ($i = 1; $i <= $semaphoreLimit; $i++) {
             // Each index represents a specific max_concurrent limit
-            $semaphoreAtomics[$i] = new \Swoole\Atomic(0);
+            $semaphoreAtomics[$i] = new Atomic(0);
         }
 
         // Register shared infrastructure primitives
-        $c->set('shared.table.connections', fn () => $connectionsTable);
-        $c->set('shared.atomic.tasks', fn () => $tasksAtomic);
-        $c->set('shared.cpu_cores', fn () => $cpuCores);
-        $c->set('shared.semaphores.atomics', fn () => $semaphoreAtomics);
+        $c->set('shared.table.connections', static fn () => $connectionsTable);
+        $c->set('shared.atomic.tasks', static fn () => $tasksAtomic);
+        $c->set('shared.cpu_cores', static fn () => $cpuCores);
+        $c->set('shared.semaphores.atomics', static fn () => $semaphoreAtomics);
 
         // Logger
-        $c->set(StdoutLogger::class, function ($c): StdoutLogger {
-            $config = $c->get(Config::class);
-            $logLevel = $config->get('LOG_LEVEL', 'info');
-
-            return new StdoutLogger($logLevel);
-        });
-        $c->set(LoggerInterface::class, fn ($c) => $c->get(StdoutLogger::class));
+        $c->set(StdoutLogger::class, static fn ($c) => new StdoutLogger($options->logLevel));
+        $c->set(LoggerInterface::class, static fn ($c) => $c->get(StdoutLogger::class));
 
         // Services
-        $c->set(ConnectionPool::class, fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
-        $c->set(TaskCounter::class, fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
-        $c->set(MessageHub::class, fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
+        $c->set(ConnectionPool::class, static fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
+        $c->set(TaskCounter::class, static fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
+        $c->set(TaskSemaphore::class, static fn ($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics')));
+        $c->set(MessageHub::class, static fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
         $c->set(
             SystemMonitor::class,
-            fn ($c) => new SystemMonitor(
+            static fn ($c) => new SystemMonitor(
                 connectionPool: $c->get(ConnectionPool::class),
-                workers: $c->get(Config::class)->getInt('SERVER_WORKER_NUM', 4)
+                workers: $options->workerNum,
+                cpuCores: $cpuCores,
             )
         );
-        $c->set(
-            TaskSemaphore::class,
-            // TODO: Add the abity to switch semaphore implementation
-            // fn ($c) => new WorkerLocalSemaphore($c->get(Config::class)->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10))
-            fn ($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics'))
-        );
-        $c->set(WsEventBroadcaster::class, fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
-        $c->set(TaskDelayStrategy::class, fn ($c) => new DemoDelayStrategy());
 
-        $c->set(TaskService::class, fn ($c) => new TaskService(
+        $c->set(WsEventBroadcaster::class, static fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
+        $c->set(TaskDelayStrategy::class, static fn ($c) => new DemoDelayStrategy());
+
+        $c->set(TaskService::class, static fn ($c) => new TaskService(
             server: $c->get(Server::class),
             semaphore: $c->get(TaskSemaphore::class),
             broadcaster: $c->get(WsEventBroadcaster::class),
             delayStrategy: $c->get(TaskDelayStrategy::class),
             taskCounter: $c->get(TaskCounter::class),
             logger: $c->get(StdoutLogger::class),
-            queueCapacity: $c->get(Config::class)->getInt('QUEUE_CAPACITY', 10000),
-            maxRetries: $c->get(Config::class)->getInt('TASK_MAX_RETRIES', 10),
-            retryDelaySec: $c->get(Config::class)->getInt('TASK_RETRY_DELAY_SEC', 3),
-            lockTimeoutSec: (float) $c->get(Config::class)->get('TASK_LOCK_TIMEOUT_SEC', 3),
+            queueCapacity: $options->queueCapacity,
+            maxRetries: $options->taskMaxRetries,
+            retryDelaySec: $options->taskRetryDelaySec,
+            lockTimeoutSec: $options->taskLockTimeoutSec,
         ));
 
-        $c->set(EventHandler::class, function ($c): EventHandler {
+        $c->set(EventHandler::class, static function ($c) use ($options): EventHandler {
             $taskController = new TaskController($c->get(TaskService::class), $c->get(MessageHub::class));
             $router = new Router($taskController);
 
@@ -156,7 +186,7 @@ class Kernel
                 $c->get(SystemMonitor::class),
                 $c->get(LoggerInterface::class),
                 $c->get(TaskService::class),
-                $c->get(Config::class),
+                $options->metricsIntervalMs,
             );
         });
 
@@ -199,27 +229,36 @@ class Kernel
 
         // Worker Lifecycle
         $this->server->on('WorkerStart', function ($server, $workerId): void {
-            // Isolate worker's container from Master
-            $this->container->set(Server::class, fn () => $server);
+            // Re-bind the server instance to the current worker context
+            $this->container->set(Server::class, static fn () => $server);
 
-            // Reset cached instances
-            // They will be recreated within this worker's context
+            /**
+             * IMPORTANT: Clear cached singletons to ensure each worker
+             * starts with fresh, isolated service instances.
+             */
             $this->container->forget(EventHandler::class);
             $this->container->forget(TaskService::class);
+            $this->container->forget(SystemMonitor::class);
+            $this->container->forget(MessageHub::class);
         });
 
         // Graceful shutdown
         $this->server->on('WorkerStop', function ($server, $workerId): void {
-            $taskService = $this->container->get(TaskService::class);
             $taskCounter = $this->container->get(TaskCounter::class);
-            $config = $this->container->get(Config::class);
-
-            $timeout = (float) $config->get('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 30);
+            $timeout = $this->options->shutdownTimeoutSec;
             $start = microtime(true);
 
-            // Poll the atomic counter until it's zero or we hit the timeout
+            /**
+             * Wait for active tasks to finish.
+             * Using Co::sleep (if in coroutine context) or usleep for safe polling.
+             */
             while ($taskCounter->get() > 0 && (microtime(true) - $start) < $timeout) {
-                usleep(50000);
+                // Check if we can use non-blocking sleep
+                if (Co::getuid() > 0) {
+                    Co::sleep(0.05);
+                } else {
+                    usleep(50000);
+                }
             }
 
             $duration = round(microtime(true) - $start, 2);
@@ -246,8 +285,8 @@ class Kernel
 
         // On start
         $this->server->on('start', function (Server $server): void {
-            $host = $this->config->get('SERVER_HOST', '0.0.0.0');
-            $port = $this->config->get('SERVER_PORT', 9501);
+            $host = $this->options->serverHost;
+            $port = $this->options->serverPort;
 
             $this
                 ->container

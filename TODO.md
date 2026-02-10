@@ -35,3 +35,6 @@
   - [x] **Visual Overhaul**: Enhance task shapes and color palettes.
 - [x] **Graceful Shutdown**:
   - [x] Add signal handling (`SIGTERM`) for safe worker exit.
+- [ ] **Protocol Optimization**:
+  - [ ] Move static metadata (`cpuCores`, `workers`) to initial handshake (onOpen).
+  - [ ] Remove redundant fields from real-time `SystemStats` DTO to reduce frame overhead.

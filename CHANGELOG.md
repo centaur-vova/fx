@@ -265,3 +265,20 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ### UI/UX & Performance
 - **Terminal Load Balancing**: Introduced `TASKS_LOG_THRESHOLD` to manage terminal performance under high pressure.
 - **Visual Throttling**: Added a greyed-out visual state to the log panel, synchronized with the `render` loop to ensure accurate UI feedback after task cleanup.
+
+## - 2026-02-10
+### Added
+- **Type-Safe Options DTO**: Introduced a readonly Options class to encapsulate all .env settings into a strictly typed structure.
+- **Hardware Core Detection**: Integrated fidry/cpu-core-counter for reliable CPU thread detection, replacing risky shell_exec calls.
+- **Neon HUD Metrics**: Added a neon-cyan Cores indicator to the metrics bar for real-time hardware visibility.
+- **Typed Config Getters**: Added getInt() and getFloat() to the Config service to eliminate manual casting.
+
+### Changed
+- **Kernel & DI Isolation**: Migrated all container registrations to static fn to prevent implicit $this binding and memory leaks.
+- **Instance Isolation**: Implemented a full reset of cached singletons in WorkerStart to ensure total isolation between worker processes.
+- **Graceful Termination**: Replaced blocking usleep with coroutine-aware Co::sleep in WorkerStop for safer process shutdown.
+- **Kernel Refactoring**: Decoupled Kernel from raw Environment state; it now only operates on the validated Options DTO.
+
+### UI/UX & Performance
+- **Static Metadata Offloading**: Planned the migration of cpuCores and workerNum from the real-time stream to a one-time init handshake packet.
+- **DI Performance**: Optimized container factory closures for better memory footprint during high-concurrency worker spawning.

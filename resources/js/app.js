@@ -299,7 +299,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // Basic metrics
         document.getElementById("memory-usage").textContent = system.memory_mb + 'Mb'
         document.getElementById("connection-count").textContent = system.connections;
-        document.getElementById("cpu-load").textContent = system.cpu_percent + '%';
+        document.getElementById("cpu-usage").textContent = system.cpu_usage + '%';
+
+        // TODO - move it outta here
+        document.getElementById("static-cpu-cores").textContent = system.cpu_cores;
 
         // Queue info: "usage / max"
         const queueEl = document.getElementById("queue-info");
@@ -313,6 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         handleLODLogic(parseInt(queue.usage, 10));
+
+        // TODO: get rid of workers
         handleWorkerHeatmapInit(system.workers);
     };
 

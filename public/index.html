@@ -53,13 +53,19 @@
                             </div>
 
                             <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU Load</span>
-                                <b id="cpu-load" class="block font-mono text-sm text-red-400 min-w-[50px]">--%</b>
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU</span>
+                                <!-- Increase min-w to 60px to prevent layout jitter -->
+                                <b id="cpu-usage" class="block font-mono text-sm text-red-400 min-w-[60px] text-right">--%</b>
                             </div>
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Ping</span>
                                 <b id="latency-display" class="block font-mono text-sm text-orange-400 min-w-[55px]">--ms</b>
+                            </div>
+
+                            <div class="text-xs">
+                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Cores</span>
+                                <b id="static-cpu-cores" class="block font-mono text-sm text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]">--</b>
                             </div>
                         </div>
 

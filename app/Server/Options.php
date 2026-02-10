@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Server;
+
+/**
+ * Atomic Flow Engine Options
+ *
+ * Immutable Data Transfer Object for system-wide configuration.
+ */
+readonly class Options
+{
+    public function __construct(
+        // Server Infrastructure
+        public string $serverHost,
+        public int $serverPort,
+        public int $workerNum,
+        public int $dispatchMode,
+        public int $socketBufferMb,
+
+        // Logging
+        public string $logLevel,
+
+        // Shared Memory & Queues
+        public int $wsTableSize,
+        public int $queueCapacity,
+
+        // Task Engine
+        public int $workerConcurrency,
+        public int $taskSemaphoreLimit,
+        public float $taskLockTimeoutSec,
+        public int $taskRetryDelaySec,
+        public int $taskMaxRetries,
+
+        // Real-time
+        public int $metricsIntervalMs,
+        public int $shutdownTimeoutSec,
+    ) {
+    }
+}
