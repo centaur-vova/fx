@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\Config;
+use App\ConfigLoader;
 use App\Container;
 use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
@@ -36,25 +36,25 @@ class Kernel
     public function __construct(private readonly string $basePath)
     {
         // Load config from .env
-        $rawConfig = Config::fromEnv($this->basePath);
+        $loader = ConfigLoader::fromEnv($this->basePath);
 
         // Options
         $options = new Options(
-            serverHost:         $rawConfig->get('SERVER_HOST', '0.0.0.0'),
-            logLevel:           $rawConfig->get('LOG_LEVEL', 'info'),
-            serverPort:         $rawConfig->getInt('SERVER_PORT', 9501),
-            workerNum:          $rawConfig->getInt('SERVER_WORKER_NUM', 4),
-            dispatchMode:       $rawConfig->getInt('SERVER_DISPATCH_MODE', 2),
-            socketBufferMb:     $rawConfig->getInt('SOCKET_BUFFER_SIZE_MB', 64),
-            wsTableSize:        $rawConfig->getInt('WS_TABLE_SIZE', 1024),
-            queueCapacity:      $rawConfig->getInt('QUEUE_CAPACITY', 10000),
-            workerConcurrency:  $rawConfig->getInt('WORKER_CONCURRENCY', 10),
-            taskSemaphoreLimit: $rawConfig->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
-            taskLockTimeoutSec: $rawConfig->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
-            taskRetryDelaySec:  $rawConfig->getInt('TASK_RETRY_DELAY_SEC', 5),
-            taskMaxRetries:     $rawConfig->getInt('TASK_MAX_RETRIES', 3),
-            metricsIntervalMs:  $rawConfig->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
-            shutdownTimeoutSec: $rawConfig->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
+            serverHost:         $loader->get('SERVER_HOST', '0.0.0.0'),
+            logLevel:           $loader->get('LOG_LEVEL', 'info'),
+            serverPort:         $loader->getInt('SERVER_PORT', 9501),
+            workerNum:          $loader->getInt('SERVER_WORKER_NUM', 4),
+            dispatchMode:       $loader->getInt('SERVER_DISPATCH_MODE', 2),
+            socketBufferMb:     $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
+            wsTableSize:        $loader->getInt('WS_TABLE_SIZE', 1024),
+            queueCapacity:      $loader->getInt('QUEUE_CAPACITY', 10000),
+            workerConcurrency:  $loader->getInt('WORKER_CONCURRENCY', 10),
+            taskSemaphoreLimit: $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
+            taskLockTimeoutSec: $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
+            taskRetryDelaySec:  $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
+            taskMaxRetries:     $loader->getInt('TASK_MAX_RETRIES', 3),
+            metricsIntervalMs:  $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
+            shutdownTimeoutSec: $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
         );
 
         // Assign options to object state

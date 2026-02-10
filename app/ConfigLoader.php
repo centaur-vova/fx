@@ -6,7 +6,7 @@ namespace App;
 
 use Dotenv\Dotenv;
 
-class Config
+class ConfigLoader
 {
     /**
      * @param array<string, mixed> $repository

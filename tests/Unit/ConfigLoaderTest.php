@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\Config;
+use App\ConfigLoader;
 use PHPUnit\Framework\TestCase;
 
-class ConfigTest extends TestCase
+class ConfigLoaderTest extends TestCase
 {
     public function test_it_correctly_manages_data(): void
     {
-        $config = new Config([
+        $config = new ConfigLoader([
             'TEST_KEY' => '123',
             'STRING' => 'hello',
         ]);
