@@ -43,6 +43,8 @@ RUN php /usr/local/bin/composer dump-autoload --optimize --no-dev --classmap-aut
 # --- Stage 2: Production runtime ---
 FROM php:8.4-alpine
 
+ARG APP_VERSION
+
 # Install shared libraries required by Swoole
 RUN apk add --no-cache libstdc++ libgcc brotli-libs
 

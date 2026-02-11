@@ -15,7 +15,7 @@ class TaskController
     public function __construct(
         private readonly TaskService $taskService,
         private readonly MessageHub $wsHub,
-        private string $appVersion,
+        private readonly string $appVersion,
     ) {
     }
 

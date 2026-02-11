@@ -314,11 +314,16 @@ class Kernel
             $this
                 ->container
                 ->get(LoggerInterface::class)
-                ->info('Atomic Flow Server: Ready to process', [
-                    'url' => "http://{$host}:{$port}",
-                    'version' => '1.0.0',
-                    'worker_num' => $server->setting['worker_num'] ?? 0,
-                ]);
+                ->info(
+                    "\n" .
+                    " ┌──────────────────────────────────────────┐\n" .
+                    " │  FAST.AF :: ATOMIC PIPELINE ENGINE       │\n" .
+                    " │  NODE ID : root@l3373.xyz                │\n" .
+                    ' │  KERNEL  : ' . str_pad($this->options->appVersion, 30) . "│\n" .
+                    " └──────────────────────────────────────────┘\n" .
+                    " » STATUS : READY TO FLOW\n" .
+                    " » LISTEN : http://{$host}:{$port}\n"
+                );
         });
     }
 }
