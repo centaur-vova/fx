@@ -1,0 +1,45 @@
+#!/usr/bin/php
+<?php
+
+/**
+ * Git commit-msg hook to enforce Conventional Commits.
+ * Usage: Place in .githooks/commit-msg and ensure chmod +x is set.
+ */
+
+// Git passes the path to the temporary commit message file as the first argument
+$commitMsgFile = $argv[1];
+
+if (!file_exists($commitMsgFile)) {
+    echo "[Error] Commit message file not found.\n";
+    exit(1);
+}
+
+$message = trim(file_get_contents($commitMsgFile));
+
+/**
+ * Pattern breakdown:
+ * ^(type)            - Starts with one of the allowed types
+ * (\(.+\))?          - Optional (scope) in parentheses
+ * !?                 - Optional ! for breaking changes
+ * :                  - Mandatory colon
+ * \s                 - Mandatory space
+ * .{5,}              - Description must be at least 5 characters long
+ */
+$pattern = '/^(feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/i';
+
+echo "[Commit-msg] Checking message for Conventional Commits standard...\n";
+
+if (!preg_match($pattern, $message)) {
+    echo "\n[Commit-msg Error] Your message does not match the sacred format!\n";
+    echo "Current message: \"$message\"\n\n";
+    echo "Standard format: <type>(optional scope): <description>\n";
+    echo "Examples:\n";
+    echo "  feat: add queue limit logic\n";
+    echo "  ui(css): update yellow alert color\n";
+    echo "  fix!: repair critical websocket leak\n\n";
+    echo "Allowed types: feat, fix, perf, ui, chore, docs, refactor, style, test\n";
+    exit(1);
+}
+
+echo "[Commit-msg] The scroll is worthy. Proceeding...\n";
+exit(0);
