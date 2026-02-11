@@ -304,6 +304,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **CI/CD Pipeline**: Updated deploy.yml to generate the version manifest before pushing to the VPS.
 - **Zero-Runtime Overhead**: Replaced live git calls with a static PHP require for version retrieval, ensuring maximum performance and security.
 
+#### Infrastructure & CI/CD
+- **Docker Build-Args**: Migrated versioning to `ARG APP_VERSION`. The `version.php` manifest is now generated on-the-fly during the Docker build stage, eliminating the need for Git history or manual file copying inside the container.
+- **Stateless Versioning**: Decoupled version generation from the GitHub Actions runner. Metadata is now "baked" directly into the PHP runtime as a static string.
+
 ### UI/UX & Performance
 - **Payload Optimization**: Reduced the size of the high-frequency JSON stream by ~40% by offloading static data to the welcome event.
 - **Browser Resource Recovery**: Fixed a memory leak where the HUD continued rendering "ghost" tasks after server shutdown.

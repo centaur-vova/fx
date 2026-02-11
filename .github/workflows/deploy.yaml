@@ -2,7 +2,7 @@ name: Continuous Deployment
 
 on:
   push:
-    branches: [ main ] # Main branch only
+    branches: [main] # Main branch only
 
 jobs:
   build-and-push:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-            fetch-depth: 0
+          fetch-depth: 0
       - name: Generate Version File
         run: |
           GIT_TAG=$(git describe --tags --abbrev=0 || echo "v1.0.0")
@@ -34,6 +34,8 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}-atomic
 
   deploy-vps:
     name: Pull & Restart on VPS

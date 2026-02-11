@@ -1,3 +1,5 @@
+ARG APP_VERSION=v1.0.0-atomic
+
 # --- Stage 1: Build stage ---
 FROM php:8.4-alpine AS builder
 
@@ -52,12 +54,13 @@ WORKDIR /app
 
 # Selective copy: exclude node_modules and build caches by copying only artifacts
 # This helps keep the final image size optimized
-COPY --from=builder /app/version.php ./version.php
 COPY --from=builder /app/vendor ./vendor
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/app ./app
 COPY --from=builder /app/server.php ./server.php
 COPY --from=builder /app/composer.json ./composer.json
+
+RUN echo "<?php return '$APP_VERSION';" > ./version.php
 
 # Only set permissions for public assets, no .env file generation here
 RUN chmod -R 755 public/
