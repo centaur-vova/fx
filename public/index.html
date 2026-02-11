@@ -97,18 +97,31 @@
                 </div>
 
                 <!-- PIPELINE HUD -->
-                <div id="canvas-hud" class="absolute bottom-4 left-0 right-0 z-30 pointer-events-none select-none px-6">
+                <div id="canvas-hud" class="absolute bottom-4 left-0 right-0 z-30 select-none px-6">
                     <div class="flex justify-between items-end">
+
                         <!-- SHAPES LEGEND -->
                         <div id="hud-shapes" class="flex gap-3">
                             <!-- Injected via JS -->
                         </div>
 
-                        <!-- ENGINE RULES -->
-                        <div class="text-[9px] font-mono text-gray-500 uppercase tracking-tighter leading-tight text-right opacity-60">
-                            <div class="mb-1 text-blue-500 font-bold">» ENGINE: STRICT SHARED-MEMORY LIMITS (SWOOLE ATOMIC)</div>
-                            <div>To prevent starvation: exactly N tasks for Type-N workers.</div>
-                            <div>Visual LOD: 500+ active tasks = "Star Dust" mode (60FPS).</div>
+                        <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                            <!-- RENDER TOGGLE -->
+                            <label class="flex items-center gap-2 cursor-pointer group select-none">
+                                <input type="checkbox" id="render-toggle" checked class="hidden peer">
+                                <!-- INDICATOR -->
+                                <div class="w-2 h-2 rounded-full border border-gray-600 peer-checked:bg-green-500 peer-checked:border-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)] transition-all"></div>
+                                <span class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter group-hover:text-gray-300 transition-colors">
+                                    Visual Engine: <span class="peer-checked:text-green-500">Active</span>
+                                </span>
+                            </label>
+
+                            <!-- ENGINE RULES -->
+                            <div class="text-[9px] font-mono text-gray-500 uppercase tracking-tighter leading-tight text-right opacity-60">
+                                <div class="mb-1 text-blue-500 font-bold">» ENGINE: STRICT SHARED-MEMORY LIMITS (SWOOLE ATOMIC)</div>
+                                <div>To prevent starvation: exactly N tasks for Type-N workers.</div>
+                                <div>Visual LOD: 500+ active tasks = "Star Dust" mode (60FPS).</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,35 +139,46 @@
             </div>
 
 
-            <!-- CONTROLS & MONITOR -->
-            <div class="grid grid-cols-12 gap-3 items-stretch">
-                <!-- Left: Controls -->
-                <div class="col-span-4 bg-white p-4 rounded-xl border border-gray-200 flex flex-col gap-4">
-                    <div class="slider-group">
-                        <label class="text-xs font-bold text-gray-500 block mb-2 uppercase">Max Concurrent: <span id="max-concurrent-display">2</span></label>
-                        <input type="range" id="max-concurrent-slider" class="w-full cursor-pointer" min="1" max="10" value="2" />
+            <!-- Grid: Controls (4) + Terminal (8) -->
+            <div class="grid grid-cols-12 gap-4">
+
+                <!-- LEFT: CONTROLS (Injection Panel) -->
+                <div class="col-span-4 bg-[#111111] p-4 rounded-xl border border-[#222222] flex flex-col gap-4 shadow-2xl">
+                    <div class="slider-group w-full"> <!-- Added w-full -->
+                        <label class="flex justify-between items-center text-[10px] font-mono font-black text-gray-500 uppercase mb-2 tracking-widest">
+                            <span>Concurrent Limit</span>
+                            <span id="max-concurrent-display" class="text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]">2</span>
+                        </label>
+                        <!-- Added block w-full -->
+                        <input type="range" id="max-concurrent-slider" class="block w-full cursor-pointer" min="1" max="10" value="2" />
                     </div>
+
                     <div class="grid grid-cols-2 gap-2 flex-grow">
-                        <button class="task-button py-2" data-count="1">1 Task</button>
-                        <button class="task-button py-2" data-count="5">5 Tasks</button>
-                        <button class="task-button py-2" data-count="20">20 Tasks</button>
-                        <button class="task-button py-2" data-count="50">50 Tasks</button>
-                        <button class="task-button bg-orange-600 hover:bg-orange-700 text-white py-2" data-count="100">100 Tasks</button>
-                        <button class="task-button bg-red-600 hover:bg-red-700 text-white py-2 font-black" data-count="500">500 Tasks</button>
+                        <button class="task-button" data-count="1">1 Task</button>
+                        <button class="task-button" data-count="10">10 Tasks</button>
+                        <button class="task-button" data-count="50">50 Tasks</button>
+                        <button class="task-button" data-count="100">100 Tasks</button>
+                        <button class="task-button task-button-warning" data-count="1000">1k Batch</button>
+                        <button class="task-button task-button-danger" data-count="5000">5k Overload</button>
                     </div>
                 </div>
 
-                <!-- Right: Terminal -->
-                <div class="col-span-8 bg-gray-900 rounded-xl overflow-hidden flex flex-col border border-gray-800 shadow-2xl min-h-[220px]">
-                    <div class="p-2 bg-gray-800 text-[10px] text-gray-400 flex justify-between items-center border-b border-gray-700 shrink-0 select-none">
+                <!-- RIGHT: TERMINAL (Neon Log Mode) -->
+                <div class="col-span-8 bg-[#0a0a0a] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl min-h-[220px]">
+                    <!-- Terminal Header -->
+                    <div class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold tracking-widest">TERMINAL LOG</span>
+                            <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]"></div>
+                            <span class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase">SYSTEM.TERMINAL_LOG</span>
                         </div>
+                        <div class="text-[8px] font-mono text-gray-600 uppercase tracking-widest">v1.0-atomic</div>
                     </div>
 
+                    <!-- Log Panel -->
                     <div class="relative flex-1">
-                        <div id="log-panel" class="absolute inset-0 p-3 font-mono text-[9px] overflow-y-auto leading-relaxed space-y-0.5">
-                            <!-- Logs appear here -->
+                        <div id="log-panel" class="absolute inset-0 p-3 font-mono text-[9px] overflow-y-auto leading-relaxed scrollbar-dark">
+                            <!-- Logs styled with green text for active events -->
+                            <div class="text-green-500/50 mb-1">[SYS] Connection established. Socket ready.</div>
                         </div>
                     </div>
                 </div>

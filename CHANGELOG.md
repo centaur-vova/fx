@@ -291,6 +291,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Welcome Handshake**: Introduced WelcomeMessage DTO to transmit static system topology (CPU cores, worker count, queue capacity) once per connection.
 - **Flat Metrics Protocol**: Unified SystemStats and TaskService data into a single flattened Metrics DTO, significantly reducing real-time frame overhead.
 - **HUD Zero-State**: Implemented a complete UI reset on WebSocket disconnect, including state.tasks.clear(), innerHTML clearing for the worker heatmap, and data-default restoration for all metrics.
+- **Stealth Mode (Headless)**: Integrated a Visual Engine toggle in the HUD. Disabling Canvas rendering allows the UI to monitor extreme server loads (100k+ RPS) without browser-side bottlenecks.
 
 ### Changed
  - **DTO Architecture**: Reorganized all WebSocket-related DTOs into a dedicated App\DTO\WebSockets\Messages namespace for better domain isolation.
@@ -302,3 +303,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Payload Optimization**: Reduced the size of the high-frequency JSON stream by ~40% by offloading static data to the welcome event.
 - **Browser Resource Recovery**: Fixed a memory leak where the HUD continued rendering "ghost" tasks after server shutdown.
 - **UI Consistency**: Added data-default attributes to HUD elements for accurate "offline" state visualization.
+- **Dark Neon UI**: Complete interface overhaul. Deep black (#0a0a0a) background paired with high-contrast toxic green accents for a cyberpunk aesthetic.
+- **Injection Panel**: Re-engineered the control deck with neon sliders and status-coded batch buttons (1k/5k).
+- **System Terminal**: Redesigned the log panel as a monospace console with a pulsing "Reactor Status" indicator.
+- **Session Auto-Reset**: Implemented a full UI state reset (Canvas, Heatmap, Metrics) upon WebSocket disconnection to prevent stale data visualization.

@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         reconnectAttempts: 0,
         pingTimer: null,
         isLogPanelDisabled: false,
+        renderEnabled: true,
 
         // {"worker_num":12,"cpu_cores":12,"queue_capacity":10000, ...}
         system: null,
@@ -122,8 +123,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return status === 'completed' || status === 'retries_failed';
     }
 
+    // Toggle render
+    const toggle = document.getElementById('render-toggle');
+    state.renderEnabled = toggle.checked;
+    toggle.addEventListener('change', (e) => {
+        state.renderEnabled = e.target.checked;
+
+        if (!state.renderEnabled) {
+            // Clear canvas if disabled
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    });
+
     // Animation Loop
     const render = () => {
+        requestAnimationFrame(render);
+
+        if (!state.renderEnabled) return;
+
         ctx.clearRect(0, 0, state.width, state.height);
         const now = Date.now();
 
@@ -142,8 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Enable/disable log panel depending the current task count
         syncLogPanelState();
-
-        requestAnimationFrame(render);
     };
     requestAnimationFrame(render);
 
@@ -156,6 +171,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (state.isLogPanelDisabled !== logPanelShouldBeDisabled) {
             state.isLogPanelDisabled = logPanelShouldBeDisabled;
+
+            // Clear log panel when enabled back
+            if (!state.isLogPanelDisabled) {
+                DOM.log.innerHTML = '';
+            }
 
             // Use classList.toggle for clean state management
             DOM.log.classList.toggle('log-panel-disabled', state.isLogPanelDisabled);
