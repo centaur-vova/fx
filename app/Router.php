@@ -10,7 +10,7 @@ use Swoole\Http\Response;
 
 class Router
 {
-    /** @var array<string, array> Map: "METHOD|/path" => [Controller, Method] */
+    /** @var array<string, array{0: object|string, 1: string}> Map: "METHOD|/path" => [Controller, Method] */
     private array $routes = [];
 
     public function __construct(private readonly TaskController $taskController)
@@ -78,6 +78,10 @@ class Router
         $response->header('Content-Type', 'application/json');
     }
 
+    /**
+     * @param Request $request
+     * @return array<string, mixed>
+     */
     private function getJsonPayload(Request $request): array
     {
         $raw = $request->getContent();

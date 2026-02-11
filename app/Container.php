@@ -9,7 +9,10 @@ use Psr\Container\ContainerInterface;
 
 class Container implements ContainerInterface
 {
+    /** @var array<string, callable> */
     private array $definitions = [];
+
+    /** @var array<string, mixed> */
     private array $instances = [];
 
     public function set(string $id, callable $definition): void

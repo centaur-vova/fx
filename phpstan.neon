@@ -1,5 +1,5 @@
 parameters:
-    level: 5
+    level: 6
     paths:
         - app
     # Swoole constants & classes sometimes need a boost

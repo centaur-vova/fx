@@ -14,6 +14,9 @@ class MessageHub
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function broadcast(array $payload): void
     {
         $data = [
@@ -33,6 +36,9 @@ class MessageHub
         }
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function localBroadcast(array $payload): void
     {
         $json = json_encode($payload);

@@ -6,5 +6,8 @@ namespace App\Contracts\Websockets;
 
 interface Broadcaster
 {
+    /**
+     * @param array<string, mixed>|\JsonSerializable $data
+     */
     public function broadcast(string $event, array|\JsonSerializable $data): void;
 }

@@ -11,6 +11,8 @@ use Traversable;
 
 /**
  * WebSocket connection pool
+ *
+ * @implements \IteratorAggregate<int, mixed>
  */
 class ConnectionPool implements IteratorAggregate, Countable
 {
@@ -76,6 +78,9 @@ class ConnectionPool implements IteratorAggregate, Countable
         return $this->connections->del((string) $fd);
     }
 
+    /**
+     * @return \Traversable<int, mixed>
+     */
     public function getIterator(): Traversable
     {
         foreach ($this->connections as $fdKey => $conn) {

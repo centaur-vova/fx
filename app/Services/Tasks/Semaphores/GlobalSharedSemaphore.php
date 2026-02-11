@@ -15,6 +15,9 @@ use Swoole\Coroutine as Co;
  */
 class GlobalSharedSemaphore implements TaskSemaphore
 {
+    /**
+     * @param array<int, Atomic> $atomics
+     */
     public function __construct(private array $atomics)
     {
     }

@@ -9,6 +9,7 @@ use App\WebSocket\ConnectionPool;
 
 class SystemMonitor
 {
+    /** @var array<string, mixed> */
     private array $lastUsage;
     private float $lastTime;
 
@@ -16,8 +17,15 @@ class SystemMonitor
         private readonly ConnectionPool $connectionPool,
         private readonly int $cpuCores,
     ) {
-        $this->lastUsage = getrusage();
-        $this->lastTime = microtime(true);
+        $usage = getrusage();
+        if ($usage === false) {
+            throw new \RuntimeException('Failed to get system resource usage');
+        }
+
+        $lastTime = microtime(true);
+
+        $this->lastUsage = $usage;
+        $this->lastTime = $lastTime;
     }
 
     /**

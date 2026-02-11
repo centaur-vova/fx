@@ -9,6 +9,10 @@ use JsonSerializable;
 
 readonly class WsMessage implements Arrayable, JsonSerializable
 {
+    /**
+     * @param string $event
+     * @param array<string, mixed>|Arrayable $data
+     */
     public function __construct(
         public string $event,
         public array|Arrayable $data = [],
@@ -49,6 +53,9 @@ readonly class WsMessage implements Arrayable, JsonSerializable
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function jsonSerialize(): array
     {
         return $this->toArray();

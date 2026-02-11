@@ -36,7 +36,7 @@ class EventHandler
         $this->router->handle($request, $response);
     }
 
-    public function onOpen(Server $server, $request): void
+    public function onOpen(Server $server, Request $request): void
     {
         // Add new connection to the pool
         $this->connectionPool->add((int) $request->fd);

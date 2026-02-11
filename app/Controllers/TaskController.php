@@ -23,7 +23,6 @@ class TaskController
         try {
             $this->taskService->createBatch($count, $delay, $maxConcurrent);
             return ApiResponse::ok("{$count} task(s) queued");
-
         } catch (QueueFullException $e) {
             return ApiResponse::error($e->getMessage());
         }

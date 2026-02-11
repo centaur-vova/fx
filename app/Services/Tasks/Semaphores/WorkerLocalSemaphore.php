@@ -10,7 +10,7 @@ use Swoole\Coroutine as Co;
 
 class WorkerLocalSemaphore implements TaskSemaphore
 {
-    /** @var Co\Channel[] */
+    /** @var array<int, Co\Channel<mixed>> */
     private array $channels = [];
 
     public function __construct(private readonly int $maxLimit)
@@ -26,6 +26,7 @@ class WorkerLocalSemaphore implements TaskSemaphore
         $channel = $this->channels[$limit];
 
         return new readonly class ($channel) implements SemaphorePermit {
+            /** @param \Co\Channel<mixed> $channel */
             public function __construct(private Co\Channel $channel)
             {
             }
