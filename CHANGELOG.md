@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
+
+## [v1.1.3] - 2026-02-11
 ### Added
 - Git hooks for `pre-commit` (PHPStan, Tests) and `commit-msg` (Conventional Commits).
 - Auto-configuration for Git hooks in `composer.json`.
