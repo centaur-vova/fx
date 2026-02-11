@@ -12,6 +12,7 @@ final readonly class WelcomeMessage implements Arrayable
         public int $workerNum,
         public int $cpuCores,
         public int $queueCapacity,
+        public string $appVersion,
     ) {
     }
 
@@ -21,6 +22,7 @@ final readonly class WelcomeMessage implements Arrayable
             'worker_num' => $this->workerNum,
             'cpu_cores' => $this->cpuCores,
             'queue_capacity' => $this->queueCapacity,
+            'app_version' => $this->appVersion,
         ];
     }
 }

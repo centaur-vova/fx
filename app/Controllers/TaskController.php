@@ -15,6 +15,7 @@ class TaskController
     public function __construct(
         private readonly TaskService $taskService,
         private readonly MessageHub $wsHub,
+        private string $appVersion,
     ) {
     }
 
@@ -31,6 +32,7 @@ class TaskController
     public function health(): HealthResponse
     {
         return new HealthResponse(
+            appVersion: $this->appVersion,
             status: 'ok',
             phpVersion: PHP_VERSION,
             memoryMb: round(memory_get_usage(false) / 1024 / 1024, 2),

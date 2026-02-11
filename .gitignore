@@ -32,6 +32,7 @@
 Thumbs.db
 
 # === Build & Assets ===
+version.php
 /public/dist
 /public/storage
 /public/hot

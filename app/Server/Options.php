@@ -14,6 +14,9 @@ use App\DTO\WebSockets\Messages\WelcomeMessage;
 readonly class Options
 {
     public function __construct(
+        // App version
+        public string $appVersion,
+
         // Server Infrastructure
         public string $serverHost,
         public int $serverPort,
