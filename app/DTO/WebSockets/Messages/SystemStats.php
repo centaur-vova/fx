@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Monitoring;
+namespace App\DTO\WebSockets\Messages;
 
 use App\Contracts\Support\Arrayable;
 use JsonSerializable;
@@ -16,8 +16,6 @@ final readonly class SystemStats implements Arrayable, JsonSerializable
         public int $connections,
         public float $memoryMb,
         public float $cpuUsage,
-        public int $workers,
-        public int $cpuCores,
     ) {
     }
 
@@ -30,8 +28,6 @@ final readonly class SystemStats implements Arrayable, JsonSerializable
             'connections' => $this->connections,
             'memory_mb' => $this->memoryMb,
             'cpu_usage' => $this->cpuUsage,
-            'workers' => $this->workers,
-            'cpu_cores' => $this->cpuCores,
         ];
     }
 

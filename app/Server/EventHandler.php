@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\DTO\Common\Metrics;
+use App\DTO\WebSockets\Messages\Metrics;
+use App\DTO\WebSockets\Messages\WelcomeMessage;
 use App\DTO\WebSockets\WsMessage;
 use App\Router;
 use App\Services\Monitoring\SystemMonitor;
@@ -25,6 +26,7 @@ class EventHandler
         private readonly SystemMonitor $systemMonitor,
         private readonly LoggerInterface $logger,
         private readonly TaskService $taskService,
+        private readonly WelcomeMessage $welcomeMessage,
         private readonly int $metricsUpdateIntervalMs,
     ) {
     }
@@ -36,7 +38,11 @@ class EventHandler
 
     public function onOpen(Server $server, $request): void
     {
+        // Add new connection to the pool
         $this->connectionPool->add((int) $request->fd);
+
+        // Send details about work count etc
+        $this->sendWelcomeMessage($server, $request->fd);
 
         $this->startMetricsStream($server, $request->fd);
     }
@@ -78,6 +84,14 @@ class EventHandler
         $this->connectionPool->remove($fd);
     }
 
+    private function sendWelcomeMessage(Server $server, int $fd): void
+    {
+        $this->send($server, $fd, new WsMessage(
+            event: 'welcome',
+            data: $this->welcomeMessage,
+        ));
+    }
+
     private function startMetricsStream(Server $server, int $fd): void
     {
         $interval = $this->metricsUpdateIntervalMs;
@@ -89,9 +103,16 @@ class EventHandler
                 return;
             }
 
+            // Collect system stats
+            $systemStats = $this->systemMonitor->capture();
+            // No of active tasks
+            $taskNum = $this->taskService->getTaskNum();
+
             $data = new Metrics(
-                queue: $this->taskService->getQueueStats(),
-                system: $this->systemMonitor->capture(),
+                taskNum:     $taskNum,
+                connections: $systemStats->connections,
+                memoryMb:    $systemStats->memoryMb,
+                cpuUsage:    $systemStats->cpuUsage,
             );
 
             $this->send($server, $fd, new WsMessage(

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use App\DTO\WebSockets\Messages\WelcomeMessage;
+
 /**
  * Atomic Flow Engine Options
  *
@@ -36,6 +38,12 @@ readonly class Options
         // Real-time
         public int $metricsIntervalMs,
         public int $shutdownTimeoutSec,
+
+        // Hardware
+        public int $cpuCores,
+
+        // DTOs
+        public WelcomeMessage $welcomeMessage,
     ) {
     }
 }

@@ -285,3 +285,20 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ### UI/UX & Performance
 - **Static Metadata Offloading**: Planned the migration of cpuCores and workerNum from the real-time stream to a one-time init handshake packet.
 - **DI Performance**: Optimized container factory closures for better memory footprint during high-concurrency worker spawning.
+
+## - 2026-02-11
+### Added
+- **Welcome Handshake**: Introduced WelcomeMessage DTO to transmit static system topology (CPU cores, worker count, queue capacity) once per connection.
+- **Flat Metrics Protocol**: Unified SystemStats and TaskService data into a single flattened Metrics DTO, significantly reducing real-time frame overhead.
+- **HUD Zero-State**: Implemented a complete UI reset on WebSocket disconnect, including state.tasks.clear(), innerHTML clearing for the worker heatmap, and data-default restoration for all metrics.
+
+### Changed
+ - **DTO Architecture**: Reorganized all WebSocket-related DTOs into a dedicated App\DTO\WebSockets\Messages namespace for better domain isolation.
+- **Naming Standardization**: Unified variable naming across the engine (PHP) and HUD (JS): workers -> workerNum, activeTasks -> taskNum.
+- **SystemMonitor Refactoring**: Decoupled SystemMonitor from business logic; it now acts as a pure hardware/OS metrics provider.
+- **TaskService Optimization**: Added getTaskNum() for high-speed atomic counter access during metrics broadcasting.
+
+### UI/UX & Performance
+- **Payload Optimization**: Reduced the size of the high-frequency JSON stream by ~40% by offloading static data to the welcome event.
+- **Browser Resource Recovery**: Fixed a memory leak where the HUD continued rendering "ghost" tasks after server shutdown.
+- **UI Consistency**: Added data-default attributes to HUD elements for accurate "offline" state visualization.

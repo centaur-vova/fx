@@ -8,8 +8,7 @@ use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
-use App\DTO\Tasks\QueueStats;
-use App\DTO\Tasks\TaskStatusUpdate;
+use App\DTO\WebSockets\Messages\TaskStatusUpdate;
 use App\Exceptions\Tasks\QueueFullException;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
@@ -35,7 +34,7 @@ class TaskService
     /**
      * @throws QueueFullException
      */
-    public function createBatch(int $count, int $delay, int $maxConcurrent): array
+    public function createBatch(int $count, int $delay, int $maxConcurrent): void
     {
         // Try reserving tasks in the atomic
         $this->tryReserve($count);
@@ -43,7 +42,6 @@ class TaskService
         $taskIds = [];
         for ($i = 0; $i < $count; $i++) {
             $taskId = $this->generateTaskId();
-            $taskIds[] = $taskId;
 
             $this->notify(TaskStatusUpdate::queued($taskId, $maxConcurrent));
 
@@ -57,7 +55,6 @@ class TaskService
                 ]);
             });
         }
-        return $taskIds;
     }
 
     public function processTask(int $workerId, string $taskId, int $mc, int $attempt = 0): void
@@ -96,7 +93,7 @@ class TaskService
                     Co::sleep(mt_rand(800, 1300) / 1000);
 
                     $progress = $step * 25;
-                    $this->notify(TaskStatusUpdate::processingProgress($taskId, $mc, $progress)
+                    $this->notify(TaskStatusUpdate::progress($taskId, $mc, $progress)
                         ->withMessage($progress . '%'));
                 }
 
@@ -114,12 +111,9 @@ class TaskService
         }
     }
 
-    public function getQueueStats(): QueueStats
+    public function getTaskNum(): int
     {
-        return new QueueStats(
-            usage: $this->taskCounter->get(),
-            max: $this->queueCapacity,
-        );
+        return $this->taskCounter->get();
     }
 
     public function shutdown(): void
@@ -134,7 +128,7 @@ class TaskService
 
     private function notify(TaskStatusUpdate $taskStatusUpdate): void
     {
-        $this->broadcaster->broadcast('task.status.changed', $taskStatusUpdate);
+        $this->broadcaster->broadcast('status.changed', $taskStatusUpdate);
     }
 
     /**

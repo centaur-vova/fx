@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Monitoring;
 
-use App\DTO\Monitoring\SystemStats;
+use App\DTO\WebSockets\Messages\SystemStats;
 use App\WebSocket\ConnectionPool;
 
 class SystemMonitor
@@ -14,8 +14,7 @@ class SystemMonitor
 
     public function __construct(
         private readonly ConnectionPool $connectionPool,
-        private readonly int $workers,
-        private readonly int $cpuCores, // TODO
+        private readonly int $cpuCores,
     ) {
         $this->lastUsage = getrusage();
         $this->lastTime = microtime(true);
@@ -43,14 +42,13 @@ class SystemMonitor
         $this->lastUsage = $currentUsage;
         $this->lastTime = $currentTime;
 
+        $connections = $this->connectionPool->count();
+        $memoryMb = round(memory_get_usage() / 1024 / 1024, 2);
+
         return new SystemStats(
-            // TODO: move workers/cpuCores somewhere - dont send it here
-            workers: $this->workers,
-            cpuCores: $this->cpuCores,
-            // Monitor data
             cpuUsage: $cpuUsage,
-            connections: $this->connectionPool->count(),
-            memoryMb: round(memory_get_usage() / 1024 / 1024, 2),
+            connections: $connections,
+            memoryMb: $memoryMb,
         );
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\DTO\Tasks;
 
-use App\DTO\Tasks\TaskStatusUpdate;
+use App\DTO\WebSockets\Messages\TaskStatusUpdate;
 use PHPUnit\Framework\TestCase;
 
 class TaskStatusUpdateTest extends TestCase

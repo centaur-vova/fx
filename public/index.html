@@ -39,33 +39,35 @@
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Queue</span>
-                                <b id="queue-info" class="block font-mono text-sm text-yellow-500 min-w-[70px]">0 / 0</b>
+                                <b id="queue-info" class="block font-mono text-sm text-yellow-500 min-w-[70px]">
+                                    <span id="task-num" data-default="0">0</span> / <span id="queue-capacity" data-default="0">0</span>
+                                </b>
                             </div>
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Memory</span>
-                                <b id="memory-usage" class="block font-mono text-sm text-blue-400 min-w-[70px]">--MB</b>
+                                <b id="memory-usage" data-default="--MB" class="block font-mono text-sm text-blue-400 min-w-[70px]">--MB</b>
                             </div>
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Clients</span>
-                                <b id="connection-count" class="block font-mono text-sm text-purple-400 min-w-[40px]">0</b>
+                                <b id="connection-count" data-default="0" class="block font-mono text-sm text-purple-400 min-w-[40px]">0</b>
                             </div>
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU</span>
                                 <!-- Increase min-w to 60px to prevent layout jitter -->
-                                <b id="cpu-usage" class="block font-mono text-sm text-red-400 min-w-[60px] text-right">--%</b>
+                                <b id="cpu-usage" data-default="--%" class="block font-mono text-sm text-red-400 min-w-[60px] text-right">--%</b>
                             </div>
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Ping</span>
-                                <b id="latency-display" class="block font-mono text-sm text-orange-400 min-w-[55px]">--ms</b>
+                                <b id="latency-display" data-default="--ms" class="block font-mono text-sm text-orange-400 min-w-[55px]">--ms</b>
                             </div>
 
                             <div class="text-xs">
                                 <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Cores</span>
-                                <b id="static-cpu-cores" class="block font-mono text-sm text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]">--</b>
+                                <b id="cpu-cores" data-default="--" class="block font-mono text-sm text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]">--</b>
                             </div>
                         </div>
 

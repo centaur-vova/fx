@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const state = {
         tasks: new Map(),
-        workers: null,
         mc: 2,
         ws: null,
         scale: 1,
@@ -12,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
         reconnectAttempts: 0,
         pingTimer: null,
         isLogPanelDisabled: false,
+
+        // {"worker_num":12,"cpu_cores":12,"queue_capacity":10000, ...}
+        system: null,
     };
 
     const PING_INTERVAL_MS = 3000;
@@ -27,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
         queued: 0.125,
         check_lock: 0.375,
         lock_acquired: 0.625,
-        processing_progress: 0.625,
+        progress: 0.625,
         completed: 0.875,
         retries_failed: 0.875, // same as completed
         lock_failed: 0.125,
@@ -157,9 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Use classList.toggle for clean state management
             DOM.log.classList.toggle('log-panel-disabled', state.isLogPanelDisabled);
-
-            // Optional: Debug log to track transitions
-            // console.log(`[UI] Terminal state changed. Overloaded: ${state.isOverloaded}`);
         }
     };
 
@@ -248,6 +247,15 @@ document.addEventListener("DOMContentLoaded", () => {
             // Clear tasks
             state.tasks.clear();
 
+            // Reset worker heatmap
+            document.getElementById("worker-heatmap").innerHTML = '';
+
+            // Reset metrics
+            const metrics = document.querySelectorAll('[data-default]');
+            metrics.forEach(el => {
+                el.textContent = el.dataset.default;
+            });
+
             // Linear backoff: try to reconnect every 3 seconds
             // You can make it exponential if needed: Math.min(30000, (state.reconnectAttempts ** 2) * 1000)
             setTimeout(() => {
@@ -264,14 +272,30 @@ document.addEventListener("DOMContentLoaded", () => {
         state.ws.onmessage = (e) => {
             try {
                 const msg = JSON.parse(e.data);
-                if (msg.event === "task.status.changed") handleUpdateTasks(msg.data);
-                if (msg.event === "metrics.update") handleUpdateMetrics(msg.data);
-                if (msg.event === "pong") handleUpdateLatency(msg.data);
+                const payload = msg.data;
+
+                switch (msg.event) {
+                    case 'welcome':
+                        handleWelcome(payload);
+                        break;
+
+                    case 'status.changed':
+                        handleUpdateTasks(payload);
+                        break;
+
+                    case 'metrics.update':
+                        handleUpdateMetrics(payload);
+                        break;
+
+                    case 'pong':
+                        handleUpdateLatency(payload);
+                        break;
+                }
             } catch (err) {
                 console.error("Malformed message received", err);
             }
         };
-    };
+    }
 
     const updateWsStatus = (online) => {
         const dot = document.getElementById("ws-status-dot");
@@ -297,42 +321,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const handleUpdateMetrics = (data) => {
-        const { queue, system } = data;
-
         // Basic metrics
-        document.getElementById("memory-usage").textContent = system.memory_mb + 'Mb'
-        document.getElementById("connection-count").textContent = system.connections;
-        document.getElementById("cpu-usage").textContent = system.cpu_usage + '%';
+        document.getElementById("memory-usage").textContent = data.memory_mb + 'MB';
+        document.getElementById("connection-count").textContent = data.connections;
+        document.getElementById("cpu-usage").textContent = data.cpu_usage + '%';
 
-        // TODO - move it outta here
-        document.getElementById("static-cpu-cores").textContent = system.cpu_cores;
-
-        // Queue info: "usage / max"
-        const queueEl = document.getElementById("queue-info");
-        queueEl.textContent = `${data.queue.usage} / ${Math.floor(data.queue.max / 1000)}k`;
-
-        // Critical load coloring
-        if (queue.usage / queue.max > 0.8) {
-            queueEl.classList.replace('text-yellow-500', 'text-red-500');
-        } else {
-            queueEl.classList.replace('text-red-500', 'text-yellow-500');
-        }
-
-        handleLODLogic(parseInt(queue.usage, 10));
-
-        // TODO: get rid of workers
-        handleWorkerHeatmapInit(system.workers);
+        handleUpdateQueueInfo(data.task_num);
+        handleLODLogic(parseInt(data.task_num, 10));
     };
 
-    // Init heatmap bars only once (fixed worker count, not dynamic)
-    const handleWorkerHeatmapInit = (workers) => {
-        // Init bars
-        if (state.workers !== null || !workers) return;
+    const handleUpdateQueueInfo = (taskNum) => {
+        if (!(state.system?.queue_capacity > 0)) {
+            // Welcome message hasn't been received yet for some reason
+            return;
+        }
 
-        state.workers = workers;
+        const queueInfoEl = document.getElementById("queue-info");
+        const taskNumEl = document.getElementById("task-num");
 
+        // Critical load coloring
+        if (taskNum / state.system.queue_capacity > 0.8) {
+            queueInfoEl.classList.replace('text-yellow-500', 'text-red-500');
+        } else {
+            queueInfoEl.classList.replace('text-red-500', 'text-yellow-500');
+        }
+
+        taskNumEl.textContent = taskNum;
+    }
+
+    // Init state.system
+    const handleWelcome = (data) => {
+        state.system = data;
+
+        // CPU cores
+        document.getElementById("cpu-cores").textContent = state.system.cpu_cores;
+        // Queue capacity
+        document.getElementById("queue-capacity").textContent = `${Math.floor(state.system.queue_capacity / 1000)}k`;
+
+        // Init heatmap based on worker_num
         const heatmap = document.getElementById("worker-heatmap");
-        for (let i = 0; i < workers; i++) {
+        for (let i = 0; i < state.system.worker_num; i++) {
             const bar = document.createElement('div');
             // Added 'worker-bar' class for CSS animation targeting
             bar.className = "worker-bar w-3 h-1 bg-[#222] rounded-full";
@@ -342,9 +370,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const handleWorkerHeatmap = (activeWorker, isFailed = false) => {
-        if (typeof activeWorker === 'undefined' || !state.workers) return;
+        workerNum = state.system?.worker_num;
 
-        const workerIndex = activeWorker >= state.workers ? activeWorker - state.workers : activeWorker;
+        if (typeof activeWorker === 'undefined' || workerNum === null) return;
+
+        const workerIndex = activeWorker >= workerNum ? activeWorker - workerNum : activeWorker;
         const activeBar = document.querySelector(`#worker-heatmap [data-worker="${workerIndex}"]`);
 
         if (activeBar) {
@@ -407,10 +437,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ count, max_concurrent: state.mc }),
             });
 
-            const data = await response.json();
+            const { success, message } = await response.json();
 
             // Check both HTTP status and your API's success flag
-            showToast(count, response.ok && data.success, data.message);
+            showToast(count, response.ok && success, message);
 
         } catch (error) {
             // Handle network errors or parsing errors

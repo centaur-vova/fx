@@ -10,9 +10,10 @@ use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Controllers\TaskController;
+use App\DTO\WebSockets\Messages\WelcomeMessage;
 use App\Router;
 use App\Services\Monitoring\SystemMonitor;
-use App\Services\Tasks\Semaphores\{GlobalSharedSemaphore};
+use App\Services\Tasks\Semaphores\GlobalSharedSemaphore;
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
 use App\Support\Monitoring\SwooleAtomicCounter;
@@ -38,16 +39,30 @@ class Kernel
         // Load config from .env
         $loader = ConfigLoader::fromEnv($this->basePath);
 
+        /**
+         * Detect available CPU cores for worker scaling.
+         * PHP 8.4 fluent instantiation style.
+         */
+        $cpuCores = max(1, new CpuCoreCounter()->getCount());
+
+        $workerNum = $loader->getInt('SERVER_WORKER_NUM', 4);
+        $queueCapacity = $loader->getInt('QUEUE_CAPACITY', 10000);
+
+        // Message to send to clients onopen
+        $welcomeMessage = new WelcomeMessage(
+            workerNum: $workerNum,
+            cpuCores: $cpuCores,
+            queueCapacity: $queueCapacity,
+        );
+
         // Options
         $options = new Options(
             serverHost:         $loader->get('SERVER_HOST', '0.0.0.0'),
             logLevel:           $loader->get('LOG_LEVEL', 'info'),
             serverPort:         $loader->getInt('SERVER_PORT', 9501),
-            workerNum:          $loader->getInt('SERVER_WORKER_NUM', 4),
             dispatchMode:       $loader->getInt('SERVER_DISPATCH_MODE', 2),
             socketBufferMb:     $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
             wsTableSize:        $loader->getInt('WS_TABLE_SIZE', 1024),
-            queueCapacity:      $loader->getInt('QUEUE_CAPACITY', 10000),
             workerConcurrency:  $loader->getInt('WORKER_CONCURRENCY', 10),
             taskSemaphoreLimit: $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
             taskLockTimeoutSec: $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
@@ -55,6 +70,10 @@ class Kernel
             taskMaxRetries:     $loader->getInt('TASK_MAX_RETRIES', 3),
             metricsIntervalMs:  $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
             shutdownTimeoutSec: $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
+            queueCapacity:      $queueCapacity,
+            workerNum:          $workerNum,
+            cpuCores:           $cpuCores,
+            welcomeMessage:     $welcomeMessage,
         );
 
         // Assign options to object state
@@ -116,12 +135,6 @@ class Kernel
         $tasksAtomic = new Atomic(0);
 
         /**
-         * Detect available CPU cores for worker scaling.
-         * PHP 8.4 fluent instantiation style.
-         */
-        $cpuCores = max(1, new CpuCoreCounter()->getCount());
-
-        /**
          * Pre-allocate Shared Memory Semaphores.
          * The index $i represents the 'max_concurrency' level.
          *
@@ -139,7 +152,6 @@ class Kernel
         // Register shared infrastructure primitives
         $c->set('shared.table.connections', static fn () => $connectionsTable);
         $c->set('shared.atomic.tasks', static fn () => $tasksAtomic);
-        $c->set('shared.cpu_cores', static fn () => $cpuCores);
         $c->set('shared.semaphores.atomics', static fn () => $semaphoreAtomics);
 
         // Logger
@@ -155,8 +167,7 @@ class Kernel
             SystemMonitor::class,
             static fn ($c) => new SystemMonitor(
                 connectionPool: $c->get(ConnectionPool::class),
-                workers: $options->workerNum,
-                cpuCores: $cpuCores,
+                cpuCores: $options->cpuCores,
             )
         );
 
@@ -186,6 +197,7 @@ class Kernel
                 $c->get(SystemMonitor::class),
                 $c->get(LoggerInterface::class),
                 $c->get(TaskService::class),
+                $options->welcomeMessage,
                 $options->metricsIntervalMs,
             );
         });

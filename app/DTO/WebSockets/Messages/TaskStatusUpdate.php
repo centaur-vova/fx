@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Tasks;
+namespace App\DTO\WebSockets\Messages;
 
 use JsonSerializable;
 
@@ -11,7 +11,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
     public const string EVENT_QUEUED = 'queued';
     public const string EVENT_PROCESSING = 'processing';
     public const string EVENT_CHECK_LOCK = 'check_lock';
-    public const string EVENT_PROCESSING_PROGRESS = 'processing_progress';
+    public const string EVENT_PROGRESS = 'progress';
     public const string EVENT_COMPLETED = 'completed';
     public const string EVENT_LOCK_ACQUIRED = 'lock_acquired';
     public const string EVENT_LOCK_FAILED = 'lock_failed';
@@ -42,9 +42,9 @@ final readonly class TaskStatusUpdate implements JsonSerializable
         return new self($id, self::EVENT_CHECK_LOCK, "Limit: {$mc}", $mc);
     }
 
-    public static function processingProgress(string $id, int $mc, int $percent): self
+    public static function progress(string $id, int $mc, int $percent): self
     {
-        return new self($id, self::EVENT_PROCESSING_PROGRESS, 'Progress', $mc, $percent);
+        return new self($id, self::EVENT_PROGRESS, 'Progress', $mc, $percent);
     }
 
     public static function completed(string $id, int $mc, int $worker): self
