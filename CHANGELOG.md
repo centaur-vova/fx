@@ -292,12 +292,17 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Flat Metrics Protocol**: Unified SystemStats and TaskService data into a single flattened Metrics DTO, significantly reducing real-time frame overhead.
 - **HUD Zero-State**: Implemented a complete UI reset on WebSocket disconnect, including state.tasks.clear(), innerHTML clearing for the worker heatmap, and data-default restoration for all metrics.
 - **Stealth Mode (Headless)**: Integrated a Visual Engine toggle in the HUD. Disabling Canvas rendering allows the UI to monitor extreme server loads (100k+ RPS) without browser-side bottlenecks.
+- **Dynamic Versioning**: System now automatically extracts the latest Git tag and bakes it into version.php during the build process.
+- **Handshake Synchronization**: The engine version is now part of the initial WebSocket welcome event, ensuring the HUD always reflects the current server build.
+- **Headless Versioning**: Version metadata is now available in the /health API response for automated monitoring.
 
 ### Changed
  - **DTO Architecture**: Reorganized all WebSocket-related DTOs into a dedicated App\DTO\WebSockets\Messages namespace for better domain isolation.
 - **Naming Standardization**: Unified variable naming across the engine (PHP) and HUD (JS): workers -> workerNum, activeTasks -> taskNum.
 - **SystemMonitor Refactoring**: Decoupled SystemMonitor from business logic; it now acts as a pure hardware/OS metrics provider.
 - **TaskService Optimization**: Added getTaskNum() for high-speed atomic counter access during metrics broadcasting.
+- **CI/CD Pipeline**: Updated deploy.yml to generate the version manifest before pushing to the VPS.
+- **Zero-Runtime Overhead**: Replaced live git calls with a static PHP require for version retrieval, ensuring maximum performance and security.
 
 ### UI/UX & Performance
 - **Payload Optimization**: Reduced the size of the high-frequency JSON stream by ~40% by offloading static data to the welcome event.

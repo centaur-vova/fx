@@ -373,6 +373,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const handleWelcome = (data) => {
         state.system = data;
 
+        // App version
+        document.getElementById("app-version").textContent = state.system.app_version;
         // CPU cores
         document.getElementById("cpu-cores").textContent = state.system.cpu_cores;
         // Queue capacity

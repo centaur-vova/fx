@@ -52,6 +52,7 @@ WORKDIR /app
 
 # Selective copy: exclude node_modules and build caches by copying only artifacts
 # This helps keep the final image size optimized
+COPY --from=builder /app/version.php ./version.php
 COPY --from=builder /app/vendor ./vendor
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/app ./app

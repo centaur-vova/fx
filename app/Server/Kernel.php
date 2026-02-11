@@ -45,6 +45,11 @@ class Kernel
          */
         $cpuCores = max(1, new CpuCoreCounter()->getCount());
 
+        // App version
+        $versionPath = __DIR__ . '/../../version.php';
+        $appVersion = file_exists($versionPath) ? require $versionPath : 'local';
+
+        // System settings
         $workerNum = $loader->getInt('SERVER_WORKER_NUM', 4);
         $queueCapacity = $loader->getInt('QUEUE_CAPACITY', 10000);
 
@@ -53,10 +58,12 @@ class Kernel
             workerNum: $workerNum,
             cpuCores: $cpuCores,
             queueCapacity: $queueCapacity,
+            appVersion: $appVersion,
         );
 
         // Options
         $options = new Options(
+            appVersion:         (string) $appVersion,
             serverHost:         $loader->get('SERVER_HOST', '0.0.0.0'),
             logLevel:           $loader->get('LOG_LEVEL', 'info'),
             serverPort:         $loader->getInt('SERVER_PORT', 9501),
@@ -188,7 +195,11 @@ class Kernel
         ));
 
         $c->set(EventHandler::class, static function ($c) use ($options): EventHandler {
-            $taskController = new TaskController($c->get(TaskService::class), $c->get(MessageHub::class));
+            $taskController = new TaskController(
+                taskService: $c->get(TaskService::class),
+                wsHub: $c->get(MessageHub::class),
+                appVersion: $options->appVersion,
+            );
             $router = new Router($taskController);
 
             return new EventHandler(
