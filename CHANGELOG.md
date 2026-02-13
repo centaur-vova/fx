@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 
+### Added
+- **Reactive State Management:** Integrated [Alpine.js](https://alpinejs.dev) to manage the application state.
+- **Modular JS Architecture:** Decoupled logic into `state.js` (reactive store) and `config.js` (static constants).
+- **SCSS Support:** Migrated styles to SCSS with [Native Nesting](https://developer.mozilla.org) and Tailwind 4 integration.
+- **Adaptive Canvas LOD:** High-performance "Star Dust" mode for 500+ active tasks.
+- **Smart UI Indicators:** Dynamic color-coded metrics (Ping/CPU) and auto-reset to `--` on disconnect.
+- **Reactor HUD:** Reactive shape legend with real-time highlighting based on `max_concurrent` limit.
+
+### Changed
+- **Build Pipeline:** Switched to a unified PostCSS + [esbuild](https://esbuild.github.io) workflow for lightning-fast bundling.
+- **DOM Logic:** Removed legacy `document.getElementById` calls in favor of Alpine directives.
+- **Injection Controls:** Buttons now automatically enter a `LOCKED` state when `queue_capacity` is reached.
+- **Toasts:** Refactored notification system into a more compact, vertically optimized design.
+
+### Fixed
+- **Canvas Scaling:** Resolved coordinate drift issues using `ResizeObserver`.
+- **Z-Index Hierarchy:** Fixed background zones overlapping the task particles.
+
 ## [v1.1.3] - 2026-02-11
 ### Added
 - Git hooks for `pre-commit` (PHPStan, Tests) and `commit-msg` (Conventional Commits).

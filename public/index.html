@@ -1,204 +1,366 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <title>FAST.Atomic.Flow</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="stylesheet" href="dist/style.min.css" />
-</head>
+  </head>
 
-<body class="screen-height-fit flex flex-col bg-gray-100">
-    <div class="toast" id="reactorToast"></div>
+  <body x-data x-cloak class="flex flex-col bg-gray-100">
+    <div
+      class="toast"
+      :class="$store.app.toast.show && 'show'"
+      :style="`--toast-color: ${$store.app.toast.success ? '#10b981' : '#ef4444'}`"
+      x-html="$store.app.toast.content"
+    ></div>
 
     <div class="flex-grow-1 overflow-hidden p-3">
-        <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
+      <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
+        <!-- HEADER -->
+        <div
+          class="bg-[#111111] rounded-xl shadow-2xl p-4 border border-[#222222]"
+        >
+          <div class="flex justify-between items-center">
+            <!-- LEFT: LOGO (Stay static) -->
+            <a
+              href="./"
+              target="_blank"
+              class="block hover:opacity-80 transition-opacity"
+            >
+              <h1
+                class="text-xl font-black tracking-tighter text-white uppercase italic"
+              >
+                Fast.<span class="text-green-500">AF</span>
+              </h1>
+              <p
+                class="text-[10px] font-mono text-gray-500 uppercase tracking-widest"
+              >
+                High-Load Pipeline Engine
+              </p>
+            </a>
 
-            <!-- HEADER -->
-            <div class="bg-[#111111] rounded-xl shadow-2xl p-4 border border-[#222222]">
-                <div class="flex justify-between items-center">
-                    <!-- LEFT: LOGO (Stay static) -->
-                    <a href="./" target="_blank" class="block hover:opacity-80 transition-opacity">
-                        <h1 class="text-xl font-black tracking-tighter text-white uppercase italic">
-                            Fast.<span class="text-green-500">AF</span>
-                        </h1>
-                        <p class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">High-Load Pipeline Engine</p>
-                    </a>
-
-                    <!-- RIGHT: METRICS (Fixed layout) -->
-                    <div class="flex items-center gap-6">
-                        <!-- Stats Grid: Use flex with fixed widths to prevent shifting -->
-                        <div class="flex gap-6 text-right">
-                            <div class="text-xs pr-6 border-r border-[#222]">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right">Workers</span>
-                                <!-- Bars container -->
-                                <div id="worker-heatmap" class="flex gap-1 justify-end items-center h-[14px]">
-                                    <!-- Bars placeholder -->
-                                </div>
-                            </div>
-
-                            <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Queue</span>
-                                <b id="queue-info" class="block font-mono text-sm text-yellow-500 min-w-[70px]">
-                                    <span id="task-num" data-default="0">0</span> / <span id="queue-capacity" data-default="0">0</span>
-                                </b>
-                            </div>
-
-                            <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Memory</span>
-                                <b id="memory-usage" data-default="--MB" class="block font-mono text-sm text-blue-400 min-w-[70px]">--MB</b>
-                            </div>
-
-                            <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Clients</span>
-                                <b id="connection-count" data-default="0" class="block font-mono text-sm text-purple-400 min-w-[40px]">0</b>
-                            </div>
-
-                            <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">CPU</span>
-                                <!-- Increase min-w to 60px to prevent layout jitter -->
-                                <b id="cpu-usage" data-default="--%" class="block font-mono text-sm text-red-400 min-w-[60px] text-right">--%</b>
-                            </div>
-
-                            <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Ping</span>
-                                <b id="latency-display" data-default="--ms" class="block font-mono text-sm text-orange-400 min-w-[55px]">--ms</b>
-                            </div>
-
-                            <div class="text-xs">
-                                <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase">Cores</span>
-                                <b id="cpu-cores" data-default="--" class="block font-mono text-sm text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]">--</b>
-                            </div>
-                        </div>
-
-                        <!-- Reactor Status: Anchored to the far right -->
-                        <div class="pl-6 border-l border-[#222] min-w-[90px]">
-                            <span class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right">Reactor</span>
-                            <div class="flex items-center gap-2 justify-end">
-                                <div id="ws-status-dot" class="w-1.5 h-1.5 rounded-full bg-red-500 transition-all duration-300"></div>
-                                <b id="ws-status-text" class="text-gray-500 font-mono text-[10px] uppercase">Offline</b>
-                            </div>
-                        </div>
-                    </div>
+            <!-- RIGHT: METRICS (Fixed layout) -->
+            <div class="flex items-center gap-6">
+              <!-- Stats Grid: Use flex with fixed widths to prevent shifting -->
+              <div class="flex gap-6 text-right" x-data>
+                <!-- Workers Heatmap -->
+                <div class="text-xs pr-6 border-r border-[#222]">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right"
+                    >Workers</span
+                  >
+                  <div
+                    id="worker-heatmap"
+                    class="flex gap-1 justify-end items-center h-[14px]"
+                  >
+                    <template x-for="(w, i) in $store.app.workers" :key="i">
+                      <div
+                        class="worker-bar"
+                        :class="{ 'flash-success': w.status === 'success', 'flash-error': w.status === 'error' }"
+                      ></div>
+                    </template>
+                  </div>
                 </div>
+
+                <!-- Queue -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    >Queue</span
+                  >
+                  <b
+                    class="block font-mono text-sm min-w-[70px]"
+                    :class="$store.app.metrics.taskNum / $store.app.system.queue_capacity > 0.8 ? 'text-red-500' : 'text-yellow-500'"
+                  >
+                    <span x-text="$store.app.metrics.taskNum">--</span> /
+                    <span x-text="$store.app.formattedCapacity">--</span>
+                  </b>
+                </div>
+
+                <!-- Memory -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    >Memory</span
+                  >
+                  <b
+                    x-text="$store.app.metrics.memory"
+                    class="block font-mono text-sm text-blue-400 min-w-[70px]"
+                    >--MB</b
+                  >
+                </div>
+
+                <!-- Clients -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    >Clients</span
+                  >
+                  <b
+                    x-text="$store.app.metrics.connections"
+                    class="block font-mono text-sm text-purple-400 min-w-[40px]"
+                    >--</b
+                  >
+                </div>
+
+                <!-- CPU -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    >CPU</span
+                  >
+                  <b
+                    x-text="$store.app.metrics.cpu"
+                    class="block font-mono text-sm text-red-400 min-w-[60px] text-right"
+                    >--%</b
+                  >
+                </div>
+
+                <!-- Ping (Latency) -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    >Ping</span
+                  >
+                  <b
+                    x-text="$store.app.latency + 'ms'"
+                    class="block font-mono text-sm text-orange-400 min-w-[55px]"
+                    >--ms</b
+                  >
+                </div>
+
+                <!-- Cores -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    >Cores</span
+                  >
+                  <b
+                    x-text="$store.app.system.cpu_cores"
+                    class="block font-mono text-sm text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]"
+                    >--</b
+                  >
+                </div>
+              </div>
+
+              <!-- Reactor Status: Anchored to the far right -->
+              <div class="pl-6 border-l border-[#222] min-w-[90px]">
+                <span
+                  class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right"
+                  >Reactor</span
+                >
+                <div
+                  class="status-block flex items-center gap-2 justify-end"
+                  :class="{ 'is-online': $store.app.isOnline }"
+                >
+                  <div class="status-dot"></div>
+                  <b
+                    class="status-text font-mono text-[10px] uppercase"
+                    x-text="$store.app.isOnline ? 'Online' : 'Offline'"
+                  ></b>
+                </div>
+              </div>
             </div>
-
-            <!-- PIPELINE -->
-            <div class="main-section relative overflow-hidden bg-[#0a0a0a] rounded-xl border border-[#222]" style="height: 50vh; width: 100%;">
-
-                <div class="absolute inset-0 flex z-0 opacity-20">
-                    <div style="width: 25%; background: rgba(59, 130, 246, 0.03); border-right: 1px solid rgba(255,255,255,0.05);"></div>
-                    <div style="width: 25%; background: rgba(245, 158, 11, 0.03); border-right: 1px solid rgba(245, 158, 11, 0.1);"></div>
-                    <div style="width: 25%; background: rgba(34, 197, 94, 0.03); border-right: 1px solid rgba(255,255,255,0.05);"></div>
-                    <div style="width: 25%; background: rgba(107, 114, 128, 0.03);"></div>
-                </div>
-
-                <div id="pipeline" class="relative h-full w-full z-10">
-                </div>
-
-                <!-- PIPELINE HUD -->
-                <div id="canvas-hud" class="absolute bottom-4 left-0 right-0 z-30 select-none px-6">
-                    <div class="flex justify-between items-end">
-
-                        <!-- SHAPES LEGEND -->
-                        <div id="hud-shapes" class="flex gap-3">
-                            <!-- Injected via JS -->
-                        </div>
-
-                        <div class="flex flex-col items-end gap-2 pointer-events-auto">
-                            <!-- RENDER TOGGLE -->
-                            <label class="flex items-center gap-2 cursor-pointer group select-none">
-                                <input type="checkbox" id="render-toggle" checked class="hidden peer">
-                                <!-- INDICATOR -->
-                                <div class="w-2 h-2 rounded-full border border-gray-600 peer-checked:bg-green-500 peer-checked:border-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)] transition-all"></div>
-                                <span class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter group-hover:text-gray-300 transition-colors">
-                                    Visual Engine: <span class="peer-checked:text-green-500">Active</span>
-                                </span>
-                            </label>
-
-                            <!-- ENGINE RULES -->
-                            <div class="text-[9px] font-mono text-gray-500 uppercase tracking-tighter leading-tight text-right opacity-60">
-                                <div class="mb-1 text-blue-500 font-bold">» ENGINE: STRICT SHARED-MEMORY LIMITS (SWOOLE ATOMIC)</div>
-                                <div>To prevent starvation: exactly N tasks for Type-N workers.</div>
-                                <div>Visual LOD: 500+ active tasks = "Star Dust" mode (60FPS).</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <template id="hud-item-template">
-                    <div class="hud-item flex flex-col items-center">
-                        <div class="hud-shape-preview w-4 h-4 flex items-center justify-center text-[8px] font-black text-white"></div>
-                    </div>
-                </template>
-
-                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-gray-500 z-20 pointer-events-none" style="left: 12.5%; transform: translateX(-50%);">Queue</div>
-                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-orange-500 z-20 pointer-events-none" style="left: 37.5%; transform: translateX(-50%);">Check Lock</div>
-                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-blue-500 z-20 pointer-events-none" style="left: 62.5%; transform: translateX(-50%);">In Progress</div>
-                <div class="absolute top-6 font-black tracking-widest uppercase zone-label text-green-500 z-20 pointer-events-none" style="left: 87.5%; transform: translateX(-50%);">Complete</div>
-            </div>
-
-
-            <!-- Grid: Controls (4) + Terminal (8) -->
-            <div class="grid grid-cols-12 gap-4">
-
-                <!-- LEFT: CONTROLS (Injection Panel) -->
-                <div class="col-span-4 bg-[#111111] p-4 rounded-xl border border-[#222222] flex flex-col gap-4 shadow-2xl">
-                    <div class="slider-group w-full"> <!-- Added w-full -->
-                        <label class="flex justify-between items-center text-[10px] font-mono font-black text-gray-500 uppercase mb-2 tracking-widest">
-                            <span>Concurrent Limit</span>
-                            <span id="max-concurrent-display" class="text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]">2</span>
-                        </label>
-                        <!-- Added block w-full -->
-                        <input type="range" id="max-concurrent-slider" class="block w-full cursor-pointer" min="1" max="10" value="2" />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2 flex-grow">
-                        <button class="task-button" data-count="1">1 Task</button>
-                        <button class="task-button" data-count="10">10 Tasks</button>
-                        <button class="task-button" data-count="50">50 Tasks</button>
-                        <button class="task-button" data-count="100">100 Tasks</button>
-                        <button class="task-button task-button-warning" data-count="1000">1k Batch</button>
-                        <button class="task-button task-button-danger" data-count="5000">5k Overload</button>
-                    </div>
-                </div>
-
-                <!-- RIGHT: TERMINAL (Neon Log Mode) -->
-                <div class="col-span-8 bg-[#0a0a0a] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl min-h-[220px]">
-                    <!-- Terminal Header -->
-                    <div class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none">
-                        <div class="flex items-center gap-2">
-                            <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]"></div>
-                            <span class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase">SYSTEM.TERMINAL_LOG</span>
-                        </div>
-                        <div class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"><span id="app-version"></span></div>
-                    </div>
-
-                    <!-- Log Panel -->
-                    <div class="relative flex-1">
-                        <div id="log-panel" class="absolute inset-0 p-3 font-mono text-[9px] overflow-y-auto leading-relaxed scrollbar-dark">
-                            <!-- Logs styled with green text for active events -->
-                            <div class="text-green-500/50 mb-1">[SYS] Connection established. Socket ready.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+
+        <!-- PIPELINE -->
+        <div
+          class="main-section relative overflow-hidden bg-[#0a0a0a] rounded-xl border border-[#222]"
+          style="height: 50vh; width: 100%"
+        >
+          <div class="pipeline-background">
+            <div class="zone-bg zone-queue"></div>
+            <div class="zone-bg zone-lock"></div>
+            <div class="zone-bg zone-work"></div>
+            <div class="zone-bg zone-done"></div>
+          </div>
+
+          <div id="pipeline" class="relative h-full w-full z-10"></div>
+
+          <!-- PIPELINE HUD -->
+          <div
+            id="canvas-hud"
+            class="absolute bottom-4 left-0 right-0 z-30 select-none px-6"
+          >
+            <div class="flex justify-between items-end">
+              <!-- SHAPES LEGEND -->
+              <div id="hud-shapes" class="flex gap-3">
+                <template x-for="i in 10" :key="i">
+                  <div class="hud-item" :data-mc="i">
+                    <div
+                      class="hud-shape-preview"
+                      :class="{ 'is-active': $store.app.mc == i }"
+                      x-text="i"
+                    ></div>
+                  </div>
+                </template>
+              </div>
+
+              <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                <!-- RENDER TOGGLE -->
+                <label
+                  class="flex items-center gap-2 cursor-pointer group select-none"
+                >
+                  <input
+                    type="checkbox"
+                    x-model="$store.app.renderEnabled"
+                    class="hidden peer"
+                  />
+                  <div
+                    class="w-2 h-2 rounded-full border border-gray-600 peer-checked:bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)] transition-all"
+                  ></div>
+                  <span
+                    class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter group-hover:text-gray-300"
+                  >
+                    Visual Engine:
+                    <span
+                      :class="$store.app.renderEnabled ? 'text-green-500' : 'text-red-500'"
+                      x-text="$store.app.renderEnabled ? 'Active' : 'Paused'"
+                    ></span>
+                  </span>
+                </label>
+
+                <!-- ENGINE RULES -->
+                <div
+                  class="text-[9px] font-mono text-gray-500 uppercase tracking-tighter leading-tight text-right opacity-60"
+                >
+                  <div class="mb-1 text-blue-500 font-bold">
+                    » ENGINE: STRICT SHARED-MEMORY LIMITS (SWOOLE ATOMIC)
+                  </div>
+                  <div>
+                    To prevent starvation: exactly N tasks for Type-N workers.
+                  </div>
+                  <div>
+                    Visual LOD: 500+ active tasks = "Star Dust" mode (60FPS).
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <template id="hud-item-template">
+            <div class="hud-item flex flex-col items-center">
+              <div
+                class="hud-shape-preview w-4 h-4 flex items-center justify-center text-[8px] font-black text-white"
+              ></div>
+            </div>
+          </template>
+
+          <!-- Zone labels -->
+          <div class="zone-label label-queue text-gray-500">Queue</div>
+          <div class="zone-label label-lock text-orange-500">Check Lock</div>
+          <div class="zone-label label-work text-blue-500">In Progress</div>
+          <div class="zone-label label-done text-green-500">Complete</div>
+        </div>
+
+        <!-- Grid: Controls (4) + Terminal (8) -->
+        <div class="grid grid-cols-12 gap-4">
+          <!-- LEFT: CONTROLS (Injection Panel) -->
+          <div
+            class="col-span-4 bg-[#111111] p-4 rounded-xl border border-[#222222] flex flex-col gap-4 shadow-2xl"
+          >
+            <div class="slider-group w-full">
+              <label
+                class="flex justify-between items-center text-[10px] font-mono font-black text-gray-500 uppercase mb-2 tracking-widest"
+              >
+                <span>Concurrent Limit</span>
+                <span
+                  x-text="$store.app.mc"
+                  class="text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]"
+                ></span>
+              </label>
+              <input
+                type="range"
+                x-model="$store.app.mc"
+                class="block w-full cursor-pointer"
+                min="1"
+                max="10"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 flex-grow">
+              <button class="task-button" @click="$store.app.createTasks(1)">
+                1 Task
+              </button>
+              <button class="task-button" @click="$store.app.createTasks(10)">
+                10 Tasks
+              </button>
+
+              <button class="task-button" @click="$store.app.createTasks(50)">
+                50 Tasks
+              </button>
+              <button class="task-button" @click="$store.app.createTasks(100)">
+                100 Tasks
+              </button>
+
+              <button
+                class="task-button task-button-warning"
+                @click="$store.app.createTasks(1000)"
+                :disabled="$store.app.system.queue_capacity < 1000"
+              >
+                1k Batch
+              </button>
+              <button
+                class="task-button task-button-danger"
+                @click="$store.app.createTasks(5000)"
+                :disabled="$store.app.system.queue_capacity < 5000"
+              >
+                5k Overload
+              </button>
+            </div>
+          </div>
+
+          <!-- RIGHT: TERMINAL (Neon Log Mode) -->
+          <div
+            class="col-span-8 bg-[#0a0a0a] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl min-h-[220px]"
+          >
+            <!-- Terminal Header -->
+            <div
+              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none"
+            >
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]"
+                ></div>
+                <span
+                  class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
+                  >SYSTEM.TERMINAL_LOG</span
+                >
+              </div>
+              <div
+                class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
+              >
+                <span id="app-version"></span>
+              </div>
+            </div>
+
+            <!-- Log Panel -->
+            <div class="relative flex-1">
+              <div
+                id="log-panel"
+                :class="{ 'log-panel-disabled': $store.app.isLogPanelDisabled }"
+                class="absolute inset-0 p-3 font-mono text-[9px] overflow-y-auto"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <template id="semaphore-template">
-        <div class="semaphore-item p-2 bg-gray-50 rounded border">
-            <div class="flex justify-between text-xs mb-1">
-                <b class="key"></b>
-                <span class="val"></span>
-            </div>
-            <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-                <div class="progress-fill h-full bg-blue-500"></div>
-            </div>
+      <div class="semaphore-item p-2 bg-gray-50 rounded border">
+        <div class="flex justify-between text-xs mb-1">
+          <b class="key"></b>
+          <span class="val"></span>
         </div>
+        <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
+          <div class="progress-fill h-full bg-blue-500"></div>
+        </div>
+      </div>
     </template>
 
     <script src="dist/app.min.js"></script>
-</body>
-
+  </body>
 </html>

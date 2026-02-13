@@ -1,20 +1,20 @@
 {
-    "dependencies": {
-        "@tailwindcss/postcss": "^4.1.18",
-        "postcss": "^8.5.6",
-        "postcss-cli": "^11.0.1",
-        "tailwindcss": "^4.1.18"
-    },
     "type": "module",
     "scripts": {
-        "build:css": "postcss resources/css/style.css -o public/dist/style.css",
+        "build:css": "postcss resources/css/style.scss -o public/dist/style.css",
         "minify:css": "esbuild public/dist/style.css --minify --outfile=public/dist/style.min.css",
         "build:js": "esbuild resources/js/app.js --bundle --minify --outfile=public/dist/app.min.js",
         "clean:css": "rimraf public/dist/style.css",
         "build": "npm run build:css && npm run minify:css && npm run build:js && npm run clean:css"
     },
     "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.18",
+        "alpinejs": "^3.15.8",
         "esbuild": "^0.27.2",
-        "rimraf": "^6.1.2"
+        "postcss": "^8.5.6",
+        "postcss-cli": "^11.0.1",
+        "postcss-scss": "^4.0.9",
+        "rimraf": "^6.1.2",
+        "tailwindcss": "^4.1.18"
     }
 }
