@@ -15,11 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Smart UI Indicators:** Dynamic color-coded metrics (Ping/CPU) and auto-reset to `--` on disconnect.
 - **Reactor HUD:** Reactive shape legend with real-time highlighting based on `max_concurrent` limit.
 
+### Fixed
+- **System Monitoring:** Refactored CPU usage calculation. Switched from process-level `getrusage()` to global `/proc/stat` metrics, providing a true representation of the entire system load rather than just the individual process.
+- **Metric Accuracy:** Implemented delta-based Jiffies calculation (Active/Total time diff) to eliminate spikes and provide a smooth, accurate CPU percentage.
+
 ### Changed
 - **Build Pipeline:** Switched to a unified PostCSS + [esbuild](https://esbuild.github.io) workflow for lightning-fast bundling.
 - **DOM Logic:** Removed legacy `document.getElementById` calls in favor of Alpine directives.
 - **Injection Controls:** Buttons now automatically enter a `LOCKED` state when `queue_capacity` is reached.
 - **Toasts:** Refactored notification system into a more compact, vertically optimized design.
+- **SystemMonitor Refactoring:** Simplified the `SystemMonitor` class by removing manual microtime tracking and core-count dependency, relying on global kernel statistics instead.
 
 ### Fixed
 - **Canvas Scaling:** Resolved coordinate drift issues using `ResizeObserver`.

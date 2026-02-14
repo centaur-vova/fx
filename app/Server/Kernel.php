@@ -172,10 +172,7 @@ class Kernel
         $c->set(MessageHub::class, static fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
         $c->set(
             SystemMonitor::class,
-            static fn ($c) => new SystemMonitor(
-                connectionPool: $c->get(ConnectionPool::class),
-                cpuCores: $options->cpuCores,
-            )
+            static fn ($c) => new SystemMonitor($c->get(ConnectionPool::class))
         );
 
         $c->set(WsEventBroadcaster::class, static fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
