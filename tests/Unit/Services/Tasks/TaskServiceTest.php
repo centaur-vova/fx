@@ -9,6 +9,7 @@ use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
 use App\Exceptions\Tasks\QueueFullException;
+use App\Services\Tasks\ProcessorFactory;
 use App\Services\Tasks\TaskService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -53,6 +54,7 @@ class TaskServiceTest extends TestCase
             semaphore: $this->createStub(TaskSemaphore::class),
             broadcaster: $this->createStub(Broadcaster::class),
             delayStrategy: $this->createStub(TaskDelayStrategy::class),
+            processorFactory: $this->createStub(ProcessorFactory::class),
             logger: $this->createStub(LoggerInterface::class),
             queueCapacity: 5,
             maxRetries: 3,
@@ -61,6 +63,6 @@ class TaskServiceTest extends TestCase
         );
 
         $this->expectException(QueueFullException::class);
-        $service->createBatch(10, 0, 2);
+        $service->createBatch(10, 0, 2, 'observation');
     }
 }

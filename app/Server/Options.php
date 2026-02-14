@@ -37,6 +37,7 @@ readonly class Options
         public float $taskLockTimeoutSec,
         public int $taskRetryDelaySec,
         public int $taskMaxRetries,
+        public int $stressMinTaskNum,
 
         // Real-time
         public int $metricsIntervalMs,

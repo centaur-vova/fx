@@ -1,5 +1,3 @@
-// resources/js/state.js
-
 const getDefaults = () => ({
     latency: '--',
     metrics: {

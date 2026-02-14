@@ -23,6 +23,7 @@ class TaskService
         private readonly Broadcaster $broadcaster,
         private readonly TaskDelayStrategy $delayStrategy,
         private readonly TaskCounter $taskCounter,
+        private readonly ProcessorFactory $processorFactory,
         private readonly LoggerInterface $logger,
         private readonly int $queueCapacity,
         private readonly int $maxRetries,
@@ -34,12 +35,11 @@ class TaskService
     /**
      * @throws QueueFullException
      */
-    public function createBatch(int $count, int $delay, int $maxConcurrent): void
+    public function createBatch(int $count, int $delay, int $maxConcurrent, string $mode): void
     {
         // Try reserving tasks in the atomic
         $this->tryReserve($count);
 
-        $taskIds = [];
         for ($i = 0; $i < $count; $i++) {
             $taskId = $this->generateTaskId();
 
@@ -47,20 +47,21 @@ class TaskService
 
             $timerDelay = ($this->delayStrategy)($i, $delay);
 
-            Timer::after($timerDelay, function () use ($taskId, $maxConcurrent): void {
+            Timer::after($timerDelay, function () use ($taskId, $maxConcurrent, $mode): void {
                 // Instead of pushing to local Channel, we push to Global Task Pool
                 $this->server->task([
                     'id' => $taskId,
                     'mc' => $maxConcurrent,
+                    'mode' => $mode,
                 ]);
             });
         }
     }
 
-    public function processTask(int $workerId, string $taskId, int $mc, int $attempt = 0): void
+    public function processTask(int $workerId, string $taskId, int $mc, string $mode, int $attempt = 0): void
     {
         try {
-            $this->logger->info('Task processing attempt', ['id' => $taskId, 'mc' => $mc, 'attempt' => $attempt]);
+            $this->logger->info('Task processing attempt', ['id' => $taskId, 'mc' => $mc, 'mode' => $mode, 'attempt' => $attempt]);
 
             $permit = $this->semaphore->forLimit($mc);
             $this->notify(TaskStatusUpdate::checkLock($taskId, $mc));
@@ -81,7 +82,7 @@ class TaskService
                 Co::sleep($this->retryDelaySec);
 
                 // Recursive retry inside the coroutine
-                $this->processTask($workerId, $taskId, $mc, ++$attempt);
+                $this->processTask($workerId, $taskId, $mc, $mode, ++$attempt);
                 return;
             }
 
@@ -89,13 +90,13 @@ class TaskService
             try {
                 $this->notify(TaskStatusUpdate::lockAcquired($taskId, $mc));
 
-                for ($step = 1; $step <= 4; $step++) {
-                    Co::sleep(mt_rand(800, 1300) / 1000);
+                $processor = $this->processorFactory->get($mode);
 
-                    $progress = $step * 25;
+                $processor->execute(function (int $progress) use ($taskId, $mc): void {
                     $this->notify(TaskStatusUpdate::progress($taskId, $mc, $progress)
                         ->withMessage($progress . '%'));
-                }
+                    Co::sleep(0.001);
+                });
 
                 $this->notify(TaskStatusUpdate::completed($taskId, $mc, $workerId));
             } finally {

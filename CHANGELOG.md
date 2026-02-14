@@ -6,7 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
-
 ### Added
 - **Reactive State Management:** Integrated [Alpine.js](https://alpinejs.dev) to manage the application state.
 - **Modular JS Architecture:** Decoupled logic into `state.js` (reactive store) and `config.js` (static constants).
@@ -14,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Adaptive Canvas LOD:** High-performance "Star Dust" mode for 500+ active tasks.
 - **Smart UI Indicators:** Dynamic color-coded metrics (Ping/CPU) and auto-reset to `--` on disconnect.
 - **Reactor HUD:** Reactive shape legend with real-time highlighting based on `max_concurrent` limit.
+- **Multi-Engine Architecture:** Introduced two distinct execution engines. The system now automatically switches between Observation and Stress modes based on the task volume.
+  - Precision Engine: Designed for monitoring and debugging. Simulates real-world delays with randomized processing times.
+  - High-Load Engine: Designed for performance benchmarking. Executes heavy SHA-256 hashing iterations (
+per step) to saturate CPU cores.
+- **Dynamic Configuration:** Added STRESS_MIN_TASK_NUM to environment variables to control the threshold for engine switching.
 
 ### Fixed
 - **System Monitoring:** Refactored CPU usage calculation. Switched from process-level `getrusage()` to global `/proc/stat` metrics, providing a true representation of the entire system load rather than just the individual process.
@@ -25,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Injection Controls:** Buttons now automatically enter a `LOCKED` state when `queue_capacity` is reached.
 - **Toasts:** Refactored notification system into a more compact, vertically optimized design.
 - **SystemMonitor Refactoring:** Simplified the `SystemMonitor` class by removing manual microtime tracking and core-count dependency, relying on global kernel statistics instead.
+- **Processor Factory:** Implemented a factory pattern to handle task processor instantiation, decoupling business logic from execution strategies.
+- **Kernel & Di:** Updated the DI container to support the new factory and processors.
 
 ### Fixed
 - **Canvas Scaling:** Resolved coordinate drift issues using `ResizeObserver`.

@@ -9,7 +9,7 @@ use App\WebSocket\ConnectionPool;
 
 class SystemMonitor
 {
-    /** @var array<int, int>|null */
+    /** @var array{total: int, active: int}|null */
     private ?array $lastCpuStats = null;
 
     public function __construct(private readonly ConnectionPool $connectionPool)
@@ -41,8 +41,8 @@ class SystemMonitor
         }
 
         $lines = explode("\n", $stat);
-        $cpuLine = str_replace("cpu  ", "", $lines[0]);
-        $values = array_map('intval', explode(" ", $cpuLine));
+        $cpuLine = str_replace('cpu  ', '', $lines[0]);
+        $values = array_map(intval(...), explode(' ', $cpuLine));
 
         // Array map: 0:user, 1:nice, 2:system, 3:idle, 4:iowait, 5:irq, 6:softirq
         $idle = $values[3] + $values[4];
@@ -68,5 +68,4 @@ class SystemMonitor
         // Percentage of total time spent in active states
         return round(($diffActive / $diffTotal) * 100, 2);
     }
-
 }

@@ -13,6 +13,7 @@ use App\Controllers\TaskController;
 use App\DTO\WebSockets\Messages\WelcomeMessage;
 use App\Router;
 use App\Services\Monitoring\SystemMonitor;
+use App\Services\Tasks\ProcessorFactory;
 use App\Services\Tasks\Semaphores\GlobalSharedSemaphore;
 use App\Services\Tasks\Strategies\DemoDelayStrategy;
 use App\Services\Tasks\TaskService;
@@ -77,6 +78,7 @@ class Kernel
             taskMaxRetries:     $loader->getInt('TASK_MAX_RETRIES', 3),
             metricsIntervalMs:  $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
             shutdownTimeoutSec: $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
+            stressMinTaskNum:   $loader->getInt('STRESS_MIN_TASK_NUM', 1000),
             queueCapacity:      $queueCapacity,
             workerNum:          $workerNum,
             cpuCores:           $cpuCores,
@@ -166,6 +168,7 @@ class Kernel
         $c->set(LoggerInterface::class, static fn ($c) => $c->get(StdoutLogger::class));
 
         // Services
+        $c->set(ProcessorFactory::class, static fn ($c) => new ProcessorFactory());
         $c->set(ConnectionPool::class, static fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
         $c->set(TaskCounter::class, static fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
         $c->set(TaskSemaphore::class, static fn ($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics')));
@@ -184,6 +187,7 @@ class Kernel
             broadcaster: $c->get(WsEventBroadcaster::class),
             delayStrategy: $c->get(TaskDelayStrategy::class),
             taskCounter: $c->get(TaskCounter::class),
+            processorFactory: $c->get(ProcessorFactory::class),
             logger: $c->get(StdoutLogger::class),
             queueCapacity: $options->queueCapacity,
             maxRetries: $options->taskMaxRetries,
@@ -196,6 +200,7 @@ class Kernel
                 taskService: $c->get(TaskService::class),
                 wsHub: $c->get(MessageHub::class),
                 appVersion: $options->appVersion,
+                stressMinTaskNum: $options->stressMinTaskNum,
             );
             $router = new Router($taskController);
 
@@ -228,7 +233,8 @@ class Kernel
                     $taskService->processTask(
                         $server->worker_id,
                         $data['id'],
-                        $data['mc']
+                        $data['mc'],
+                        $data['mode'],
                     );
 
                     $task->finish(['status' => 'ok']);

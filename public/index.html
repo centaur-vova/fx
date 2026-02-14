@@ -297,17 +297,17 @@
 
               <button
                 class="task-button task-button-warning"
+                @click="$store.app.createTasks(500)"
+                :disabled="$store.app.system.queue_capacity < 500"
+              >
+                500 Tasks
+              </button>
+              <button
+                class="task-button task-button-danger"
                 @click="$store.app.createTasks(1000)"
                 :disabled="$store.app.system.queue_capacity < 1000"
               >
                 1k Batch
-              </button>
-              <button
-                class="task-button task-button-danger"
-                @click="$store.app.createTasks(5000)"
-                :disabled="$store.app.system.queue_capacity < 5000"
-              >
-                5k Overload
               </button>
             </div>
           </div>
@@ -332,7 +332,10 @@
               <div
                 class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
               >
-                <span id="app-version"></span>
+                <span
+                  id="app-version"
+                  x-html="$store.app.system.app_version"
+                ></span>
               </div>
             </div>
 
