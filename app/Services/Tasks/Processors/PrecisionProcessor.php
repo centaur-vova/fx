@@ -12,7 +12,7 @@ use Swoole\Coroutine as Co;
  */
 class PrecisionProcessor implements Processor
 {
-    public const STEPS = 4;
+    public const int STEPS = 4;
 
     public function execute(?callable $onProgress = null): string
     {
