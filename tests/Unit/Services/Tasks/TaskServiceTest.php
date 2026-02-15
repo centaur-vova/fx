@@ -8,7 +8,7 @@ use App\Contracts\Monitoring\TaskCounter;
 use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
-use App\Exceptions\Tasks\QueueFullException;
+use App\Exceptions\Task\QueueFullException;
 use App\Services\Tasks\ProcessorFactory;
 use App\Services\Tasks\TaskService;
 use PHPUnit\Framework\TestCase;

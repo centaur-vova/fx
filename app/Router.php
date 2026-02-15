@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\Controllers\TaskController;
+use App\DTO\Http\Requests\CreateTasks;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 
@@ -51,16 +52,14 @@ class Router
                 $payload = $this->getJsonPayload($request);
 
                 if ($path === '/api/tasks/create') {
-                    $result = $controller->$action(
-                        (int) ($payload['count'] ?? 1),
-                        (int) ($payload['delay'] ?? 0),
-                        (int) ($payload['max_concurrent'] ?? 2)
-                    );
+                    $dto = CreateTasks::fromArray($payload);
+                    $result = $controller->$action($dto);
                 } else {
                     $result = $controller->$action();
                 }
 
-                $response->end(json_encode($result));
+                $json = json_encode($result);
+                $response->end(is_string($json) ? $json : '{}');
             } catch (\Throwable $e) {
                 $this->sendError($response, $e->getMessage(), 500);
             }
@@ -85,12 +84,20 @@ class Router
     private function getJsonPayload(Request $request): array
     {
         $raw = $request->getContent();
-        return $raw ? (json_decode($raw, true) ?? []) : [];
+        if (!$raw) {
+            return [];
+        }
+
+        $data = json_decode($raw, true);
+
+        return is_array($data) ? $data : [];
     }
 
     private function sendError(Response $response, string $msg, int $code): void
     {
+        $errorPayload = json_encode(['error' => $msg]);
+
         $response->status($code);
-        $response->end(json_encode(['error' => $msg]));
+        $response->end(is_string($errorPayload) ? $errorPayload : '{"error":"Unknown encoding error"}');
     }
 }

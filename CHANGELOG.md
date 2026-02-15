@@ -18,10 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org).
   - High-Load Engine: Designed for performance benchmarking. Executes heavy SHA-256 hashing iterations (
 per step) to saturate CPU cores.
 - **Dynamic Configuration:** Added STRESS_MIN_TASK_NUM to environment variables to control the threshold for engine switching.
-
-### Fixed
-- **System Monitoring:** Refactored CPU usage calculation. Switched from process-level `getrusage()` to global `/proc/stat` metrics, providing a true representation of the entire system load rather than just the individual process.
-- **Metric Accuracy:** Implemented delta-based Jiffies calculation (Active/Total time diff) to eliminate spikes and provide a smooth, accurate CPU percentage.
+- **PHPStan Level 9 Compliance**: Achieved maximum strictness in static analysis.
+- **Type-Safe Container**: Implemented Generics (@template) for `Container::get()` with runtime `instanceof` validation.
+- **Strict DTO Factories**: Added `CreateTasks::fromArray()` with explicit scalar type narrowing.
+- **Custom Exceptions**: Implemented `NotFoundException` in `Task` and `WebSocket` namespaces for granular error handling.
 
 ### Changed
 - **Build Pipeline:** Switched to a unified PostCSS + [esbuild](https://esbuild.github.io) workflow for lightning-fast bundling.
@@ -31,10 +31,17 @@ per step) to saturate CPU cores.
 - **SystemMonitor Refactoring:** Simplified the `SystemMonitor` class by removing manual microtime tracking and core-count dependency, relying on global kernel statistics instead.
 - **Processor Factory:** Implemented a factory pattern to handle task processor instantiation, decoupling business logic from execution strategies.
 - **Kernel & Di:** Updated the DI container to support the new factory and processors.
+- **Refactored Logger**: Tightened `log()` contract with `is_scalar` type guards to prevent mixed-to-string casting issues.
+- **Optimized ConnectionPool**: Implemented type narrowing in `getIterator()` to handle `Swoole\Table` mixed values safely.
+- **Hardened MessageHub**: Added string type guards for `json_encode` results to ensure Swoole-compatible payloads.
+- **Namespace Polish**: Renamed exception directories to singular form (`Task`, `WebSocket`) per PSR-4 best practices.
 
 ### Fixed
 - **Canvas Scaling:** Resolved coordinate drift issues using `ResizeObserver`.
 - **Z-Index Hierarchy:** Fixed background zones overlapping the task particles.
+- **System Monitoring:** Refactored CPU usage calculation. Switched from process-level `getrusage()` to global `/proc/stat` metrics, providing a true representation of the entire system load rather than just the individual process.
+- **Metric Accuracy:** Implemented delta-based Jiffies calculation (Active/Total time diff) to eliminate spikes and provide a smooth, accurate CPU percentage.
+- **Mixed-to-Int Casting**: Fixed over 30 type-safety issues in task injection logic.
 
 ## [v1.1.3] - 2026-02-11
 ### Added

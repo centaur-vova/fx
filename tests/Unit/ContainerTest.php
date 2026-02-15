@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Container;
+use App\Exceptions\Container\ServiceNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
@@ -33,8 +34,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Service not found in container: missing');
+        $this->expectException(ServiceNotFoundException::class);
+        $this->expectExceptionMessage('Service not found: missing');
 
         $container->get('missing');
     }

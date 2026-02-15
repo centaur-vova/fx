@@ -16,8 +16,8 @@ class ConfigLoaderTest extends TestCase
             'STRING' => 'hello',
         ]);
 
-        $this->assertEquals('123', $config->get('TEST_KEY'));
+        $this->assertEquals('123', $config->getString('TEST_KEY'));
         $this->assertSame(123, $config->getInt('TEST_KEY'));
-        $this->assertEquals('default', $config->get('MISSING', 'default'));
+        $this->assertEquals('default', $config->getString('MISSING', 'default'));
     }
 }

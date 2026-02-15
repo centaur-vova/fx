@@ -35,18 +35,26 @@ class ConfigLoader
         return new self(array_merge($fileData, $_ENV));
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function getString(string $key, string $default = ''): string
     {
-        return $this->repository[$key] ?? $default;
+        $val = $this->raw($key, $default);
+        return is_scalar($val) ? (string) $val : $default;
     }
 
     public function getInt(string $key, int $default = 0): int
     {
-        return (int) ($this->get($key, $default));
+        $val = $this->raw($key, $default);
+        return is_scalar($val) ? (int) $val : $default;
     }
 
-    public function getFloat(string $key, float $default = 0): float
+    public function getFloat(string $key, float $default = 0.0): float
     {
-        return (float) ($this->get($key, $default));
+        $val = $this->raw($key, $default);
+        return is_scalar($val) ? (float) $val : $default;
+    }
+
+    private function raw(string $key, mixed $default = null): mixed
+    {
+        return $this->repository[$key] ?? $default;
     }
 }

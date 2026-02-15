@@ -42,6 +42,11 @@ class MessageHub
     public function localBroadcast(array $payload): void
     {
         $json = json_encode($payload);
+
+        if (!is_string($json)) {
+            return;
+        }
+
         foreach ($this->connectionPool as $fd => $row) {
             $fd = (int) $fd;
 

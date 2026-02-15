@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App;
 
-use Exception;
+use App\Exceptions\Container\ServiceNotFoundException;
 use Psr\Container\ContainerInterface;
+use TypeError;
 
 class Container implements ContainerInterface
 {
@@ -20,17 +21,29 @@ class Container implements ContainerInterface
         $this->definitions[$id] = $definition;
     }
 
+    /**
+     * @template T of object
+     * @param class-string<T> $id
+     * @return T
+     */
     public function get(string $id): mixed
     {
-        if (isset($this->instances[$id])) {
-            return $this->instances[$id];
+        $instance = $this->instances[$id] ?? null;
+
+        if ($instance === null) {
+            $definition = $this->definitions[$id] ?? throw new ServiceNotFoundException("Service not found: $id");
+            $instance = $this->instances[$id] = $definition($this);
         }
 
-        if (!isset($this->definitions[$id])) {
-            throw new Exception("Service not found in container: $id");
+        // PHPStan L9
+        if (class_exists($id) || interface_exists($id)) {
+            if (!$instance instanceof $id) {
+                throw new TypeError("Container error: [$id] is not an instance of expected type");
+            }
+            return $instance;
         }
 
-        return $this->instances[$id] = ($this->definitions[$id])($this);
+        return $instance;
     }
 
     public function has(string $id): bool

@@ -21,7 +21,9 @@ class StdoutLogger extends AbstractLogger
 
     public function log($level, \Stringable|string $message, array $context = []): void
     {
-        $currentLevelWeight = $this->levels[(string)$level] ?? 6;
+        $levelString = is_scalar($level) ? (string) $level : 'info';
+
+        $currentLevelWeight = $this->levels[$levelString] ?? 6;
         $minLevelWeight = $this->levels[$this->minLevel] ?? 6;
 
         if ($currentLevelWeight > $minLevelWeight) {
@@ -36,7 +38,7 @@ class StdoutLogger extends AbstractLogger
             "[%s.%s] [%s] %s %s\n",
             $date,
             $ms,
-            strtoupper((string)$level),
+            strtoupper($levelString),
             $message,
             $context ? json_encode($context, JSON_UNESCAPED_UNICODE) : ''
         );

@@ -53,8 +53,10 @@ class ConnectionPool implements IteratorAggregate, Countable
         if ($this->connections->exist($fdKey)) {
             $conn = $this->connections->get($fdKey);
 
-            $conn[self::COL_LAST_PING] = time();
-            $this->connections->set($fdKey, $conn);
+            if (is_array($conn)) {
+                $conn[self::COL_LAST_PING] = time();
+                $this->connections->set($fdKey, $conn);
+            }
             return true;
         }
         return false;
@@ -84,6 +86,12 @@ class ConnectionPool implements IteratorAggregate, Countable
     public function getIterator(): Traversable
     {
         foreach ($this->connections as $fdKey => $conn) {
+            // Narrowing types to keep PHP Satan in his cage.
+            if (!is_array($conn) || !is_scalar($fdKey)) {
+                continue;
+            }
+
+            /** @var array<string, scalar> $conn */
             yield (int) $fdKey => [
                 self::COL_FD => (int) $conn[self::COL_FD],
                 self::COL_CONNECTED_AT => (int) $conn[self::COL_CONNECTED_AT],

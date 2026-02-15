@@ -26,7 +26,10 @@ use Fidry\CpuCoreCounter\CpuCoreCounter;
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Coroutine as Co;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Swoole\Server\Task;
+use Swoole\WebSocket\Frame;
 use Swoole\WebSocket\Server;
 
 class Kernel
@@ -65,8 +68,8 @@ class Kernel
         // Options
         $options = new Options(
             appVersion:         (string) $appVersion,
-            serverHost:         $loader->get('SERVER_HOST', '0.0.0.0'),
-            logLevel:           $loader->get('LOG_LEVEL', 'info'),
+            serverHost:         $loader->getString('SERVER_HOST', '0.0.0.0'),
+            logLevel:           $loader->getString('LOG_LEVEL', 'info'),
             serverPort:         $loader->getInt('SERVER_PORT', 9501),
             dispatchMode:       $loader->getInt('SERVER_DISPATCH_MODE', 2),
             socketBufferMb:     $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
@@ -295,10 +298,10 @@ class Kernel
         });
 
         // WebSocket Event Handlers
-        $this->server->on('request', fn ($req, $res) => $this->container->get(EventHandler::class)->onRequest($req, $res));
-        $this->server->on('open', fn ($s, $req) => $this->container->get(EventHandler::class)->onOpen($s, $req));
-        $this->server->on('message', fn ($s, $f) => $this->container->get(EventHandler::class)->onMessage($s, $f));
-        $this->server->on('close', fn ($s, $fd) => $this->container->get(EventHandler::class)->onClose($s, $fd));
+        $this->server->on('request', fn (Request $req, Response $res) => $this->container->get(EventHandler::class)->onRequest($req, $res));
+        $this->server->on('open', fn (Server $s, Request $req) => $this->container->get(EventHandler::class)->onOpen($s, $req));
+        $this->server->on('message', fn (Server $s, Frame $f) => $this->container->get(EventHandler::class)->onMessage($s, $f));
+        $this->server->on('close', fn (Server $s, int $fd) => $this->container->get(EventHandler::class)->onClose($s, $fd));
 
         // IPC for Global Broadcast
         $this->server->on('pipeMessage', function ($server, $srcWorkerId, $message): void {

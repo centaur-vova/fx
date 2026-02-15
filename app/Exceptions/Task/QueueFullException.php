@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Exceptions\Tasks;
+namespace App\Exceptions\Task;
 
 use RuntimeException;
 

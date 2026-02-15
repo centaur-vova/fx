@@ -127,7 +127,13 @@ class EventHandler
      */
     private function send(Server $server, int $fd, WsMessage $wsMessage): void
     {
-        $result = $server->push($fd, json_encode($wsMessage));
+        $payload = json_encode($wsMessage);
+
+        if (!is_string($payload)) {
+            return;
+        }
+
+        $result = $server->push($fd, $payload);
         if ($result === false) {
             $this->logger->warning('WS: push failed', [
                 'fd' => $fd,

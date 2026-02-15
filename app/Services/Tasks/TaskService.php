@@ -9,7 +9,7 @@ use App\Contracts\Tasks\TaskDelayStrategy;
 use App\Contracts\Tasks\TaskSemaphore;
 use App\Contracts\Websockets\Broadcaster;
 use App\DTO\WebSockets\Messages\TaskStatusUpdate;
-use App\Exceptions\Tasks\QueueFullException;
+use App\Exceptions\Task\QueueFullException;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Timer;
