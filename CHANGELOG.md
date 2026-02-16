@@ -22,6 +22,9 @@ per step) to saturate CPU cores.
 - **Type-Safe Container**: Implemented Generics (@template) for `Container::get()` with runtime `instanceof` validation.
 - **Strict DTO Factories**: Added `CreateTasks::fromArray()` with explicit scalar type narrowing.
 - **Custom Exceptions**: Implemented `NotFoundException` in `Task` and `WebSocket` namespaces for granular error handling.
+- **Business Validation Layer**: implemented `InvalidTaskBatchException` to enforce engine safety limits.
+- **Strict Batch Limits**: added `TASK_MAX_BATCH_SIZE` configuration to prevent CPU/RAM exhaustion.
+- **Engine Hardening**: implemented mandatory range validation for `count` and `maxConcurrent` in `TaskController`.
 
 ### Changed
 - **Build Pipeline:** Switched to a unified PostCSS + [esbuild](https://esbuild.github.io) workflow for lightning-fast bundling.
@@ -35,6 +38,10 @@ per step) to saturate CPU cores.
 - **Optimized ConnectionPool**: Implemented type narrowing in `getIterator()` to handle `Swoole\Table` mixed values safely.
 - **Hardened MessageHub**: Added string type guards for `json_encode` results to ensure Swoole-compatible payloads.
 - **Namespace Polish**: Renamed exception directories to singular form (`Task`, `WebSocket`) per PSR-4 best practices.
+- **Simplified DTO**: removed `delay` from `CreateTasks` request; the engine now forces zero-delay for stability.
+- **Refactored TaskService**: simplified `createBatch` signature by removing obsolete delay parameters.
+- **Cleaned Configuration**: removed legacy `WORKER_CONCURRENCY` and `DEFAULT_WORKER_POOL` in favor of explicit `TASK_` prefixed limits.
+- **Strategy Update**: refactored `TaskDelayStrategy` to remove unused base delay, relying on jitter-based distribution.
 
 ### Fixed
 - **Canvas Scaling:** Resolved coordinate drift issues using `ResizeObserver`.
@@ -42,6 +49,7 @@ per step) to saturate CPU cores.
 - **System Monitoring:** Refactored CPU usage calculation. Switched from process-level `getrusage()` to global `/proc/stat` metrics, providing a true representation of the entire system load rather than just the individual process.
 - **Metric Accuracy:** Implemented delta-based Jiffies calculation (Active/Total time diff) to eliminate spikes and provide a smooth, accurate CPU percentage.
 - **Mixed-to-Int Casting**: Fixed over 30 type-safety issues in task injection logic.
+- **Input Sanitization**: secured task creation against negative or zero values for count and concurrency.
 
 ## [v1.1.3] - 2026-02-11
 ### Added

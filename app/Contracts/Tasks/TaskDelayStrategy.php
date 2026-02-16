@@ -6,5 +6,5 @@ namespace App\Contracts\Tasks;
 
 interface TaskDelayStrategy
 {
-    public function __invoke(int $iteration, int $baseDelaySeconds): int;
+    public function __invoke(int $iteration): int;
 }

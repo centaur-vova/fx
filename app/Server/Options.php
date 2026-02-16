@@ -32,7 +32,7 @@ readonly class Options
         public int $queueCapacity,
 
         // Task Engine
-        public int $workerConcurrency,
+        public int $taskMaxBatchSize,
         public int $taskSemaphoreLimit,
         public float $taskLockTimeoutSec,
         public int $taskRetryDelaySec,

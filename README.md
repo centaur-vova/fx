@@ -75,7 +75,7 @@ The system is configured via environment variables. Below is the comprehensive l
 ### Task Engine Concurrency
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| WORKER_CONCURRENCY | int | 10 | Number of concurrent coroutines per task worker. |
+| TASK_MAX_BATCH_SIZE | int | 5000 | Max tasks per single batch request. |
 | TASK_SEMAPHORE_MAX_LIMIT| int| 10 | Pre-allocated shared memory slots for concurrency limits. |
 | TASK_LOCK_TIMEOUT_SEC | float | 4.0 | Maximum duration to wait for a semaphore lock. |
 | TASK_RETRY_DELAY_SEC | float | 5.0 | Delay (Co::sleep) before retrying task after a lock failure. |

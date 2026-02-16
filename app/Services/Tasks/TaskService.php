@@ -35,7 +35,7 @@ class TaskService
     /**
      * @throws QueueFullException
      */
-    public function createBatch(int $count, int $delay, int $maxConcurrent, string $mode): void
+    public function createBatch(int $count, int $maxConcurrent, string $mode): void
     {
         // Try reserving tasks in the atomic
         $this->tryReserve($count);
@@ -45,7 +45,7 @@ class TaskService
 
             $this->notify(TaskStatusUpdate::queued($taskId, $maxConcurrent));
 
-            $timerDelay = ($this->delayStrategy)($i, $delay);
+            $timerDelay = ($this->delayStrategy)($i);
 
             Timer::after($timerDelay, function () use ($taskId, $maxConcurrent, $mode): void {
                 // Instead of pushing to local Channel, we push to Global Task Pool

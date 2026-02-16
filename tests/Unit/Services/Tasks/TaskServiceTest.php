@@ -63,6 +63,6 @@ class TaskServiceTest extends TestCase
         );
 
         $this->expectException(QueueFullException::class);
-        $service->createBatch(10, 0, 2, 'observation');
+        $service->createBatch(10, 0, 'observation');
     }
 }

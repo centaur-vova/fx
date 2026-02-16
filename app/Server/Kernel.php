@@ -74,7 +74,7 @@ class Kernel
             dispatchMode:       $loader->getInt('SERVER_DISPATCH_MODE', 2),
             socketBufferMb:     $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
             wsTableSize:        $loader->getInt('WS_TABLE_SIZE', 1024),
-            workerConcurrency:  $loader->getInt('WORKER_CONCURRENCY', 10),
+            taskMaxBatchSize:   $loader->getInt('TASK_MAX_BATCH_SIZE', 5000),
             taskSemaphoreLimit: $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
             taskLockTimeoutSec: $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
             taskRetryDelaySec:  $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
@@ -204,6 +204,8 @@ class Kernel
                 wsHub: $c->get(MessageHub::class),
                 appVersion: $options->appVersion,
                 stressMinTaskNum: $options->stressMinTaskNum,
+                taskMaxBatchSize: $options->taskMaxBatchSize,
+                taskSemaphoreLimit: $options->taskSemaphoreLimit,
             );
             $router = new Router($taskController);
 
