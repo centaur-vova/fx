@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
+
+## [v1.2.0] - 2026-02-16
 ### Added
 - **Reactive State Management:** Integrated [Alpine.js](https://alpinejs.dev) to manage the application state.
 - **Modular JS Architecture:** Decoupled logic into `state.js` (reactive store) and `config.js` (static constants).
