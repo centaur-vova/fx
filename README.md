@@ -117,7 +117,7 @@ To maintain strict process isolation and prevent "zombie" state inheritance from
 
 ### Quality Assurance
 The project enforces strict code quality through a pre-defined toolchain:
-- **PHPStan**: Static analysis (Level 5+) for asynchronous logic validation.
+- **PHPStan**: Static analysis (Level 9) for asynchronous logic validation.
 - **Rector**: Automated refactoring and PHP 8.4 compatibility checks.
 - **PHP-CS-Fixer**: Enforcement of project-wide coding standards.
 
