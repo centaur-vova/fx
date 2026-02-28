@@ -4,125 +4,212 @@
     <a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yaml/badge.svg" alt="Tests"></a>&nbsp;<a href="https://github.com/phpstan/phpstan"><img src="https://img.shields.io/badge/PHPStan-level%209-gold?style=flat&logo=php" alt="PHPStan Level 9"></a>&nbsp;<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
 </p>
 
+🌐 **Демо:** **[https://fast.af.l3373.xyz](https://fast.af.l3373.xyz/)**
+
+📖 **English version:** [README.en.md](README.en.md)
+
 ---
 
-🌐 **Live Demo:** **[https://fast.af.l3373.xyz](https://fast.af.l3373.xyz/)**
+**Визуализация работы семафоров в многопоточной среде на PHP + Swoole**
 
-A high-performance, real-time task orchestration engine powered by PHP 8.4 and Swoole 6.0. This system is designed to handle massive parallel workloads with sub-millisecond telemetry and strict memory management.
+https://github.com/user-attachments/assets/47a4e663-7120-42a9-b957-9c39d13bcc88
 
-## Technical Specifications
 
-- Runtime: PHP 8.4 (ZTS optional but not required)
-- Engine: Swoole 6.0.0+ (Coroutine support enabled)
-- Concurrency: Multi-process Task Worker Pool
-- Communication: Unix Socket IPC / WebSockets (JSON)
-- State Management: Swoole Atomic / Shared Memory Tables
-- Memory Footprint: ~3.8MB idle baseline
+## О проекте
 
-## Core Architecture
+Это демонстрационный проект, который наглядно показывает, как работают семафоры и атомарные счетчики в многопроцессных приложениях. Вся логика написана на PHP 8.4 с использованием Swoole 6.0, а интерфейс в реальном времени отображает каждый шаг выполнения задач.
 
-### Hybrid Execution Model
-The engine leverages a dual-layer processing strategy to maximize throughput:
-1. **Worker Layer (L1)**: Handles incoming HTTP/WebSocket traffic and manages connection persistence.
-2. **Task Layer (L2)**: A dedicated pool of Task Workers for CPU-bound logic, utilizing coroutine-based internal retries to prevent process starvation.
+**Простыми словами**: вы можете в реальном времени увидеть, как задачи с разными приоритетами конкурируют за ресурсы и как семафоры регулируют этот процесс.
 
-### Stateless Service Design
-All core services, including `TaskService` and `SystemMonitor`, are designed to be stateless. Process affinity is managed via dynamic context injection, allowing the engine to scale horizontally across CPU cores without shared-state bottlenecks.
+## Как это работает
 
-### Shared Memory Semaphores
-Concurrency control is implemented using custom semaphores backed by Swoole Atomic primitives. This ensures that `max_concurrent` limits are enforced across the entire process pool with zero race conditions.
+### Основные элементы интерфейса
 
-## Installation
+1. **Ползунок Concurrent Limit (1-10)** — выбираете максимальное количество задач одного типа, которые могут выполняться одновременно
+2. **Кнопки создания задач** — запускаете пакеты задач (1, 10, 50, 100, 500, 1000)
+3. **Цветные квадратики с цифрами** — это ваши задачи:
+   - Цвет соответствует выбранному лимиту (1-синий, 2-голубой, 3-бирюзовый и т.д.)
+   - Цифра внутри квадрата — значение max_concurrent для этой задачи
+4. **Зоны движения (слева направо)**:
+   - Queue (Очередь) — задача ожидает обработки
+   - Check Lock (Проверка семафора) — попытка захватить семафор
+   - In Progress (Выполняется) — семафор захвачен, задача в работе
+   - Complete (Завершено) — задача выполнена (или ошибка после всех попыток)
+5. **Worker Heatmap (полоски сверху)** — визуализация активности воркеров:
+   - Зеленая вспышка — задача успешно выполнена
+   - Красная вспышка — задача провалилась после всех попыток
 
-### Prerequisites
-- PHP 8.4 or higher
+## Что происходит под капотом
+
+Когда вы создаете задачи, система:
+1. Помещает их в общую очередь (QUEUE_CAPACITY)
+2. Каждый воркер пытается захватить задачу и соответствующий семафор
+3. Семафор работает на основе атомарного счетчика в разделяемой памяти (Swoole Atomic)
+4. Если счетчик меньше лимита — задача выполняется, счетчик увеличивается
+5. Если лимит достигнут — задача возвращается в очередь и пробует снова (до TASK_MAX_RETRIES раз)
+6. После выполнения счетчик уменьшается ($atomic->sub(1))
+
+## Ключевая демонстрационная возможность
+
+Система поддерживает одновременную работу задач с разными лимитами параллельности:
+
+**Пример**:
+- Запускаем 100 задач с max_concurrent = 4 (зелёные квадраты)
+- Затем запускаем 100 задач с max_concurrent = 6 (желтые квадраты)
+
+**Наблюдаем**:
+
+- В зоне "In Progress" одновременно находится не более 4 зелёных квадратов
+- И одновременно не более 6 желтых квадратов
+- Итого 10 задач выполняются параллельно, при этом они не влияют на лимиты друг друга
+
+Это наглядная демонстрация работы независимых семафоров для разных типов задач.
+
+## Архитектура
+
+### Гибридная модель выполнения
+
+1. **Worker Layer (L1)** — принимает HTTP/WebSocket трафик, управляет соединениями
+2. **Task Layer (L2)** — пул воркеров для выполнения задач с поддержкой корутин и повторных попыток
+
+### Управление состоянием
+
+- **Swoole Atomic** — атомарные счетчики для синхронизации между процессами
+- **Shared Memory Tables** — разделяемые таблицы для хранения состояния соединений
+- **Unix Socket IPC** — межпроцессное взаимодействие
+
+### Визуализация
+
+- **Canvas + Alpine.js** — отрисовка до 2000+ объектов без потери производительности
+- **Адаптивный LOD** (Level of Detail):
+   - < 50 задач — крупные квадраты с цифрами
+   - 50-500 задач — квадраты помельче
+   - &gt; 500 задач — режим "Star Dust" (точки) для сохранения 60 FPS
+
+## Технические характеристики
+
+- **Runtime:** PHP 8.4
+- **Engine:** Swoole 6.0.0+ (корутины, многопроцессность)
+- **Потребление памяти:** ~3.8 MB в простое
+- **Максимальный размер очереди:** 10 000 задач (настраивается)
+- **Лимиты параллельности:** от 1 до 10 (настраивается через конфиг)
+- **Количество воркеров:** настраивается через `SERVER_WORKER_NUM` (по умолчанию 4)
+
+## Быстрый старт
+
+### Требования
+
+- PHP 8.4 или выше
 - Swoole Extension 6.0.0+
 - Composer 2.x
 
-### Standard Setup
-1. Clone the repository and enter the directory.
-2. Execute dependency installation:
-   ```bash
-   cp .env.example .env
-   make install && make build
-   make run
-   ```
+### Установка
 
-## Environment Configuration
+```bash
+git clone https://github.com/shmandalf/atomic-flow.git
+cd atomic-flow
+cp .env.example .env
+make install && make build
+make run
+```
 
-The system is configured via environment variables. Below is the comprehensive list of parameters governing the reactor's behavior.
+После запуска откройте http://localhost:9501 в браузере.
 
-### Server Infrastructure
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| SERVER_HOST | string | 0.0.0.0 | Bind address. 0.0.0.0 is recommended for Docker environments. |
-| SERVER_PORT | int | 9501 | Port for HTTP and WebSocket traffic. |
-| SERVER_WORKER_NUM | int | 6 | Total number of Swoole worker processes. |
-| SERVER_DISPATCH_MODE| int | 2 | 2 (Fixed/FD-based) is enforced for WebSocket connection stability. |
-| SOCKET_BUFFER_SIZE_MB| int | 64 | TCP/UDP socket buffer allocation in Megabytes. |
+## Конфигурация
 
-### Logging
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| LOG_LEVEL | string | warning | Internal PSR-3 logger threshold (debug, info, warning, error). |
+### Серверная инфраструктура
 
-### Shared Memory & Queues
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| WS_TABLE_SIZE | int | 1024 | Size of the `Swoole\Table` for connection tracking (must be power of 2). |
-| QUEUE_CAPACITY | int | 10000 | Global capacity of the task queue governed by the Atomic counter. |
+| Параметр | Тип | По умолчанию | Описание |
+| --------- | ------ | ------- | -------------------------------------------------------------- |
+| SERVER_HOST           | string | 0.0.0.0 | IP-адрес для прослушивания входящих соединений. Рекомендуется 0.0.0.0 для Docker-окружений. |
+| SERVER_PORT           | int    | 9501    | Порт для HTTP и WebSocket соединений. |
+| SERVER_WORKER_NUM     | int    | 4       | Количество воркеров Swoole (процессов для обработки запросов). |
+| SERVER_DISPATCH_MODE  | int    | 2       | Режим распределения соединений между воркерами. Режим 2 (Fixed/FD-based) обеспечивает стабильность WebSocket. |
+| SOCKET_BUFFER_SIZE_MB | int    | 64      | Размер буфера сокетов в мегабайтах. |
 
-### Task Engine Concurrency
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| TASK_MAX_BATCH_SIZE | int | 5000 | Max tasks per single batch request. |
-| TASK_SEMAPHORE_MAX_LIMIT| int| 10 | Pre-allocated shared memory slots for concurrency limits. |
-| TASK_LOCK_TIMEOUT_SEC | float | 4.0 | Maximum duration to wait for a semaphore lock. |
-| TASK_RETRY_DELAY_SEC | float | 5.0 | Delay (Co::sleep) before retrying task after a lock failure. |
-| TASK_MAX_RETRIES | int | 3 | Maximum number of rescheduling attempts before task failure. |
+### Логирование
 
-### Real-time & Monitoring
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| METRICS_UPDATE_INTERVAL_MS| int | 1000 | Frequency of WebSocket system telemetry broadcasts. |
-| GRACEFUL_SHUTDOWN_TIMEOUT_SEC| int | 5 | Max time to wait for active tasks to drain during SIGTERM. |
+| Параметр  | Тип   | По умолчанию | Описание                                                    |
+| --------- | ------ | ------- | -------------------------------------------------------------- |
+| LOG_LEVEL | string | info    | Уровень детализации логов (debug, info, warning, error). |
 
-## System Lifecycle
+### Разделяемая память и очереди
 
-### Graceful Shutdown Logic
-The reactor implements a strict multi-stage shutdown protocol to prevent data loss during deployments or scaling:
+| Параметр | Тип | По умолчанию | Описание |
+| --------- | ------ | ------- | -------------------------------------------------------------- |
+| WS_TABLE_SIZE  | int  | 1024    | Размер таблицы Swoole\Table для отслеживания WebSocket-соединений (должно быть степенью двойки). |
+| QUEUE_CAPACITY | int  | 10000   | Вместимость глобальной очереди задач, управляемой атомарным счетчиком. |
 
-1. **Interruption Signal**: Upon receiving `SIGTERM` or `SIGINT`, the Manager process instructs all workers to stop accepting incoming task injections.
-2. **Consumer Drain**: Task Workers continue processing their current coroutine stack. New tasks are no longer popped from the global system queue.
-3. **Atomic Validation**: The system polls the `TaskCounter` (Swoole Atomic) until it reaches zero.
-4. **Process Exit**: Once the counter is cleared or the `GRACEFUL_SHUTDOWN_TIMEOUT_SEC` is reached, processes terminate cleanly.
+### Параллельность выполнения задач
 
-### IPC & Message Hub
-Inter-process communication is handled via `pipeMessage`. When a task update or system metric is generated in a specific worker, the `MessageHub` broadcasts the payload across the entire worker pool to ensure all connected WebSocket clients receive real-time updates regardless of their process affinity.
+| Параметр | Тип | По умолчанию | Описание |
+| -------- | --- | ------------ | -------- |
+| TASK_MAX_BATCH_SIZE      | int   | 5000    | Максимальное количество задач в одном пакетном запросе. |
+| TASK_SEMAPHORE_MAX_LIMIT | int   | 10      | Количество предварительно выделенных слотов в разделяемой памяти для ограничения параллельности (значения от 1 до 10). |
+| TASK_LOCK_TIMEOUT_SEC    | float | 4.0     | Максимальное время ожидания захвата семафора (в секундах). |
+| TASK_RETRY_DELAY_SEC     | int   | 5       | Задержка перед повторной попыткой выполнения задачи после неудачного захвата семафора (в секундах). |
+| TASK_MAX_RETRIES         | int   | 3       | Максимальное количество попыток выполнения задачи перед фиксацией ошибки. |
 
-## Worker Scoped Containers
+### Мониторинг в реальном времени
 
-To maintain strict process isolation and prevent "zombie" state inheritance from the Master/Manager processes, the engine utilizes a Worker-Scoped Container pattern:
+| Параметр | Тип | По умолчанию | Описание |
+| -------- | --- | ------------ | -------- |
+| METRICS_UPDATE_INTERVAL_MS    | int  | 1000    | Частота отправки телеметрии системы через WebSocket (в миллисекундах). |
+| GRACEFUL_SHUTDOWN_TIMEOUT_SEC | int  | 5       | Время ожидания завершения активных задач при получении сигнала SIGTERM (в секундах). |
 
-1. **Pre-fork Boot**: Global infrastructure (Config, Atomic Primitives, Shared Tables) is initialized in the Master process.
-2. **Post-fork Initialization**: Within the `onWorkerStart` event, the DI Container resets its internal instance cache.
-3. **Live Server Injection**: The active `Swoole\Server` instance for the specific process is injected into the container.
-4. **Stateless Services**: High-level services (e.g., `TaskService`, `EventHandler`) are re-instantiated within each worker. This ensures that `$server->worker_id` and other process-level telemetry remain 100% accurate without cross-process leakage.
+### Нагрузочное тестирование
 
-## Monitoring & Quality Gate
+| Параметр | Тип | По умолчанию | Описание |
+| -------- | --- | ------------ | -------- |
+| STRESS_MIN_TASK_NUM | int  | 1000    | Порог переключения режимов симуляции. При количестве задач меньше этого значения используется "медленный" алгоритм (задачи выполняются дольше для наглядности). При превышении порога задачи обрабатываются быстро для проверки пропускной способности. |
 
-### Real-Time HUD
-- **Worker Heatmap**: GPU-accelerated visualization of load distribution across the task worker pool.
-- **Failure Visualization**: Distinct visual alerts for lock timeouts and exhausted retry attempts.
+## Жизненный цикл системы
 
-### Quality Assurance
-The project enforces strict code quality through a pre-defined toolchain:
-- **PHPStan**: Static analysis (Level 9) for asynchronous logic validation.
-- **Rector**: Automated refactoring and PHP 8.4 compatibility checks.
-- **PHP-CS-Fixer**: Enforcement of project-wide coding standards.
+### Корректное завершение
 
-Run `make check` to execute the full quality gate or `composer fix-all` to apply automatic fixes.
+При получении сигналов `SIGTERM` или `SIGINT` система:
+
+1. Прекращает принимать новые задачи
+2. Дожидается завершения текущих задач
+3. Проверяет атомарный счетчик активных задач
+4. Завершает процессы после очистки очереди или по истечении `GRACEFUL_SHUTDOWN_TIMEOUT_SEC`
+
+## Мониторинг и качество кода
+
+### Интерфейс в реальном времени
+
+- Worker Heatmap — визуализация загрузки воркеров
+- Метрики — память, CPU, количество соединений, размер очереди
+- Визуальные подсказки — цветовая индикация загрузки (>80% очереди — красный)
+- Ping Latency — реальная задержка WebSocket-соединения
+
+### Качество кода
+
+Проект поддерживается на высоком уровне качества:
+- PHPStan — статический анализ (уровень 9)
+- Rector — автоматическое обновление кода под PHP 8.4
+- PHP-CS-Fixer — единый стиль кодирования
+
+Запуск проверок:
+```bash
+make check
+```
+или
+```bash
+composer fix-all
+```
+
+## Что демонстрирует этот проект
+
+1. **Понимание многопоточности** — работа с реальными параллельными процессами в PHP
+2. **Знание Swoole** — корутины, атомарные операции, разделяемая память
+3. **Архитектурные паттерны** — пул воркеров, семафоры, graceful shutdown
+4. **Оптимизация UI** — отрисовка больших данных без потери производительности
+5. **Полный стек** — от бэкенда на PHP до фронтенда на Canvas + Alpine.js
+
+## Лицензия
+MIT License
 
 ---
 
-*Developed with a passion for high-performance backend systems.*
+_Developed with a passion for high-performance backend systems._
