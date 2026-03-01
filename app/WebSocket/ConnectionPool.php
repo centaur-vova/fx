@@ -64,8 +64,6 @@ class ConnectionPool implements IteratorAggregate, Countable
 
     public function add(int $fd): bool
     {
-        $this->connections->set((string)$fd, [self::COL_FD => $fd]);
-
         $this->connections->set((string) $fd, [
             self::COL_FD => $fd,
             self::COL_CONNECTED_AT => time(),
