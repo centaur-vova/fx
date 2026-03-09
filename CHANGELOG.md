@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
+### Changed
+- **Architectural Refactoring:** Standardized directory and namespace naming by shifting from plurals to singular nouns across the `app` structure.
+- **Directory Cleanup:** Renamed `Websockets` to `WebSocket`, `Services` to `Service`, `Controllers` to `Controller`, and consolidated `DTO` sub-directories to comply with PSR standards.
+- **Namespace Synchronization:** Updated all class definitions and imports to reflect the new singular naming pattern for better maintainability.
 
 ## [v1.2.0] - 2026-02-16
 ### Added

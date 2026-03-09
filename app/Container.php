@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App;
 
-use App\Exceptions\Container\ServiceNotFoundException;
+use App\Exception\Container\ServiceNotFoundException;
 use Psr\Container\ContainerInterface;
 use TypeError;
 

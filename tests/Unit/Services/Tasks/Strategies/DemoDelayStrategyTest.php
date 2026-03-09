@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Services\Tasks\Strategies;
+namespace Tests\Unit\Service\Task\Strategy;
 
-use App\Services\Tasks\Strategies\DemoDelayStrategy;
+use App\Service\Task\Strategy\DemoDelayStrategy;
 use PHPUnit\Framework\TestCase;
 
 class DemoDelayStrategyTest extends TestCase

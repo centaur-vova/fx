@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\WebSocket;
 
-use App\Contracts\Websockets\Broadcaster;
+use App\Contract\WebSocket\Broadcaster;
 
 class WsEventBroadcaster implements Broadcaster
 {

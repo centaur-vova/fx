@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Services\Tasks;
+namespace Tests\Unit\Service\Task;
 
-use App\Contracts\Monitoring\TaskCounter;
-use App\Contracts\Tasks\TaskDelayStrategy;
-use App\Contracts\Tasks\TaskSemaphore;
-use App\Contracts\Websockets\Broadcaster;
-use App\Exceptions\Task\QueueFullException;
-use App\Services\Tasks\ProcessorFactory;
-use App\Services\Tasks\TaskService;
+use App\Contract\Monitoring\TaskCounter;
+use App\Contract\Task\TaskDelayStrategy;
+use App\Contract\Task\TaskSemaphore;
+use App\Contract\WebSocket\Broadcaster;
+use App\Exception\Task\QueueFullException;
+use App\Service\Task\Processor\ProcessorFactory;
+use App\Service\Task\TaskService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Swoole\WebSocket\Server;

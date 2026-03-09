@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\DTO\WebSockets\Messages\Metrics;
-use App\DTO\WebSockets\Messages\WelcomeMessage;
-use App\DTO\WebSockets\WsMessage;
+use App\DTO\WebSocket\Message\Metrics;
+use App\DTO\WebSocket\Message\WelcomeMessage;
+use App\DTO\WebSocket\WsMessage;
 use App\Router;
-use App\Services\Monitoring\SystemMonitor;
-use App\Services\Tasks\TaskService;
+use App\Service\Monitoring\SystemMonitor;
+use App\Service\Task\TaskService;
 use App\WebSocket\ConnectionPool;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
