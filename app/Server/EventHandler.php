@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use App\Contract\Monitoring\TaskCounter;
+use App\DTO\WebSocket\Message\InternalEnvelope;
 use App\DTO\WebSocket\Message\Metrics;
 use App\DTO\WebSocket\Message\WelcomeMessage;
 use App\DTO\WebSocket\WsMessage;
 use App\Router;
 use App\Service\Monitoring\SystemMonitor;
-use App\Service\Task\TaskService;
 use App\WebSocket\ConnectionPool;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
@@ -25,7 +26,7 @@ class EventHandler
         private readonly ConnectionPool $connectionPool,
         private readonly SystemMonitor $systemMonitor,
         private readonly LoggerInterface $logger,
-        private readonly TaskService $taskService,
+        private readonly TaskCounter $taskCounter,
         private readonly WelcomeMessage $welcomeMessage,
         private readonly int $metricsUpdateIntervalMs,
     ) {
@@ -38,13 +39,19 @@ class EventHandler
 
     public function onOpen(Server $server, Request $request): void
     {
+        $fd = (int) $request->fd;
+        $workerId = (int) $server->worker_id;
+
         // Add new connection to the pool
-        $this->connectionPool->add((int) $request->fd);
+        $this->connectionPool->add($fd, $workerId);
 
-        // Send details about work count etc
-        $this->sendWelcomeMessage($server, $request->fd);
+        $this->logger->info('Client connected', [
+            'fd' => $fd,
+            'worker' => $workerId,
+        ]);
 
-        $this->startMetricsStream($server, $request->fd);
+        $this->sendWelcomeMessage($server, $fd);
+        $this->startMetricsStream($server, $fd);
     }
 
     /**
@@ -74,7 +81,7 @@ class EventHandler
 
         switch ($wsMessage->event) {
             case 'ping':
-                $this->send($server, $frame->fd, new WsMessage('pong', $wsMessage->data));
+                $this->send($server, $frame->fd, InternalEnvelope::wrap('pong', $wsMessage->data));
                 break;
         }
     }
@@ -82,14 +89,15 @@ class EventHandler
     public function onClose(Server $server, int $fd): void
     {
         $this->connectionPool->remove($fd);
+
+        $this->logger->info('Client disconnected', [
+            'fd' => $fd,
+        ]);
     }
 
     private function sendWelcomeMessage(Server $server, int $fd): void
     {
-        $this->send($server, $fd, new WsMessage(
-            event: 'welcome',
-            data: $this->welcomeMessage,
-        ));
+        $this->send($server, $fd, InternalEnvelope::wrap('welcome', $this->welcomeMessage));
     }
 
     private function startMetricsStream(Server $server, int $fd): void
@@ -106,7 +114,7 @@ class EventHandler
             // Collect system stats
             $systemStats = $this->systemMonitor->capture();
             // No of active tasks
-            $taskNum = $this->taskService->getTaskNum();
+            $taskNum = $this->taskCounter->get();
 
             $data = new Metrics(
                 taskNum:     $taskNum,
@@ -115,31 +123,18 @@ class EventHandler
                 cpuUsage:    $systemStats->cpuUsage,
             );
 
-            $this->send($server, $fd, new WsMessage(
-                event: 'metrics.update',
-                data: $data,
-            ));
+            $this->send($server, $fd, InternalEnvelope::wrap('metrics.update', $data));
         });
     }
 
     /**
      * Send a standardized payload to the client.
      */
-    private function send(Server $server, int $fd, WsMessage $wsMessage): void
+    private function send(Server $server, int $fd, InternalEnvelope $envelope): void
     {
-        $payload = json_encode($wsMessage);
+        $payload = $envelope->getFinalPayload();
+        $opcode = $envelope->getOpcode();
 
-        if (!is_string($payload)) {
-            return;
-        }
-
-        $result = $server->push($fd, $payload);
-        if ($result === false) {
-            $this->logger->warning('WS: push failed', [
-                'fd' => $fd,
-                'event' => $wsMessage->event,
-                'error_code' => swoole_last_error(),
-            ]);
-        }
+        $server->push($fd, $payload, $opcode);
     }
 }

@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Service\Task;
 
 use App\Contract\Monitoring\TaskCounter;
+use App\Contract\Support\EventBus;
 use App\Contract\Task\TaskDelayStrategy;
 use App\Contract\Task\TaskSemaphore;
-use App\Contract\WebSocket\Broadcaster;
+use App\DTO\WebSocket\Event\TaskStatusChangedEvent;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
 use App\Exception\Task\QueueFullException;
 use App\Service\Task\Processor\ProcessorFactory;
@@ -21,11 +22,11 @@ class TaskService
     public function __construct(
         private readonly Server $server,
         private readonly TaskSemaphore $semaphore,
-        private readonly Broadcaster $broadcaster,
         private readonly TaskDelayStrategy $delayStrategy,
         private readonly TaskCounter $taskCounter,
         private readonly ProcessorFactory $processorFactory,
         private readonly LoggerInterface $logger,
+        private readonly EventBus $bus,
         private readonly int $queueCapacity,
         private readonly int $maxRetries,
         private readonly int $retryDelaySec,
@@ -59,11 +60,9 @@ class TaskService
         }
     }
 
-    public function processTask(int $workerId, string $taskId, int $mc, string $mode, int $attempt = 0): void
+    public function processTask(int $workerId, int $taskId, int $mc, string $mode, int $attempt = 0): void
     {
         try {
-            $this->logger->info('Task processing attempt', ['id' => $taskId, 'mc' => $mc, 'mode' => $mode, 'attempt' => $attempt]);
-
             $permit = $this->semaphore->forLimit($mc);
             $this->notify(TaskStatusUpdate::checkLock($taskId, $mc));
 
@@ -113,24 +112,22 @@ class TaskService
         }
     }
 
-    public function getTaskNum(): int
-    {
-        return $this->taskCounter->get();
-    }
-
     public function shutdown(): void
     {
         $this->semaphore->close();
     }
 
-    private function generateTaskId(): string
+    private function generateTaskId(): int
     {
-        return sprintf('%s-%d', bin2hex(random_bytes(4)), time());
+        $time = time(); // 4 bytes
+        $random = random_int(0, 0xFFFFFFFF); // 4 random bytes
+
+        return ($time << 32) | $random;
     }
 
-    private function notify(TaskStatusUpdate $taskStatusUpdate): void
+    private function notify(TaskStatusUpdate $update): void
     {
-        $this->broadcaster->broadcast('status.changed', $taskStatusUpdate);
+        $this->bus->dispatch(new TaskStatusChangedEvent($update));
     }
 
     /**

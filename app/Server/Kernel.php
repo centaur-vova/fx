@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Server;
 
 use App\ConfigLoader;
-use App\Container;
 use App\Contract\Monitoring\TaskCounter;
+use App\Contract\Support\EventBus;
 use App\Contract\Task\TaskDelayStrategy;
 use App\Contract\Task\TaskSemaphore;
 use App\Controller\TaskController;
+use App\DTO\WebSocket\Event\TaskStatusChangedEvent;
+use App\DTO\WebSocket\Message\InternalEnvelope;
 use App\DTO\WebSocket\Message\WelcomeMessage;
 use App\Router;
 use App\Service\Monitoring\SystemMonitor;
@@ -17,12 +19,21 @@ use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use App\Service\Task\Strategy\DemoDelayStrategy;
 use App\Service\Task\TaskService;
+use App\Support\InternalBus;
 use App\Support\Monitoring\SwooleAtomicCounter;
 use App\Support\StdoutLogger;
 use App\WebSocket\ConnectionPool;
 use App\WebSocket\MessageHub;
-use App\WebSocket\WsEventBroadcaster;
+use DI\Container;
+use DI\ContainerBuilder;
+
+use function DI\create;
+use function DI\factory;
+use function DI\get;
+
 use Fidry\CpuCoreCounter\CpuCoreCounter;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\EventDispatcher\ListenerProviderInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Coroutine as Co;
@@ -37,6 +48,7 @@ class Kernel
     private readonly Container $container;
     private readonly Server $server;
     private readonly Options $options;
+    private readonly LoggerInterface $logger;
 
     public function __construct(private readonly string $basePath)
     {
@@ -116,6 +128,10 @@ class Kernel
         ]);
 
         $this->container = $this->bootContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $this->container->get(LoggerInterface::class);
+        $this->logger = $logger;
     }
 
     public function run(): void
@@ -132,13 +148,6 @@ class Kernel
          */
         $server = $this->server;
         $options = $this->options;
-
-        // Create container
-        $c = new Container();
-
-        // Global shared instances
-        $c->set(Server::class, static fn () => $server);
-        $c->set(Options::class, static fn () => $options);
 
         // WebSocket Connections storage
         $connectionsTable = ConnectionPool::configureAndCreateTable($options->wsTableSize);
@@ -161,64 +170,104 @@ class Kernel
             $semaphoreAtomics[$i] = new Atomic(0);
         }
 
-        // Register shared infrastructure primitives
-        $c->set('shared.table.connections', static fn () => $connectionsTable);
-        $c->set('shared.atomic.tasks', static fn () => $tasksAtomic);
-        $c->set('shared.semaphores.atomics', static fn () => $semaphoreAtomics);
+        /**
+         * DI container setup
+         */
+        $c = new ContainerBuilder()
+            ->useAutowiring(true)
+            ->addDefinitions([
+                Server::class => $server,
+                Options::class => $options,
 
-        // Logger
-        $c->set(StdoutLogger::class, static fn ($c) => new StdoutLogger($options->logLevel));
-        $c->set(LoggerInterface::class, static fn ($c) => $c->get(StdoutLogger::class));
+                // Config options (explicit)
+                'options.app_version' => $options->appVersion,
+                'options.queue_capacity' => $options->queueCapacity,
+                'options.task_max_retries' => $options->taskMaxRetries,
+                'options.task_retry_delay_sec' => $options->taskRetryDelaySec,
+                'options.task_lock_timeout_sec' => $options->taskLockTimeoutSec,
+                'options.stress_min_task_num' => $options->stressMinTaskNum,
+                'options.task_max_batch_size' => $options->taskMaxBatchSize,
+                'options.task_semaphore_limit' => $options->taskSemaphoreLimit,
 
-        // Services
-        $c->set(ProcessorFactory::class, static fn ($c) => new ProcessorFactory());
-        $c->set(ConnectionPool::class, static fn ($c) => new ConnectionPool($c->get('shared.table.connections')));
-        $c->set(TaskCounter::class, static fn ($c) => new SwooleAtomicCounter($c->get('shared.atomic.tasks')));
-        $c->set(TaskSemaphore::class, static fn ($c) => new GlobalSharedSemaphore($c->get('shared.semaphores.atomics')));
-        $c->set(MessageHub::class, static fn ($c) => new MessageHub($c->get(Server::class), $c->get(ConnectionPool::class)));
-        $c->set(
-            SystemMonitor::class,
-            static fn ($c) => new SystemMonitor($c->get(ConnectionPool::class))
-        );
+                // Передаем уже созданную таблицу (Shared Memory)
+                'shared.table.connections' => $connectionsTable,
+                'shared.atomic.tasks' => $tasksAtomic,
+                'shared.semaphores.atomics' => $semaphoreAtomics,
 
-        $c->set(WsEventBroadcaster::class, static fn ($c) => new WsEventBroadcaster($c->get(MessageHub::class)));
-        $c->set(TaskDelayStrategy::class, static fn ($c) => new DemoDelayStrategy());
+                // Logger
+                StdoutLogger::class => create()
+                    ->constructor(fn (Options $opt) => $opt->logLevel),
+                LoggerInterface::class => create(StdoutLogger::class),
 
-        $c->set(TaskService::class, static fn ($c) => new TaskService(
-            server: $c->get(Server::class),
-            semaphore: $c->get(TaskSemaphore::class),
-            broadcaster: $c->get(WsEventBroadcaster::class),
-            delayStrategy: $c->get(TaskDelayStrategy::class),
-            taskCounter: $c->get(TaskCounter::class),
-            processorFactory: $c->get(ProcessorFactory::class),
-            logger: $c->get(StdoutLogger::class),
-            queueCapacity: $options->queueCapacity,
-            maxRetries: $options->taskMaxRetries,
-            retryDelaySec: $options->taskRetryDelaySec,
-            lockTimeoutSec: $options->taskLockTimeoutSec,
-        ));
+                // Services
+                MessageHub::class => create()
+                    ->constructor(
+                        get(Server::class),
+                        get(ConnectionPool::class),
+                    )
+                    ->lazy(),
 
-        $c->set(EventHandler::class, static function ($c) use ($options): EventHandler {
-            $taskController = new TaskController(
-                taskService: $c->get(TaskService::class),
-                wsHub: $c->get(MessageHub::class),
-                appVersion: $options->appVersion,
-                stressMinTaskNum: $options->stressMinTaskNum,
-                taskMaxBatchSize: $options->taskMaxBatchSize,
-                taskSemaphoreLimit: $options->taskSemaphoreLimit,
-            );
-            $router = new Router($taskController);
+                // ConnectionPool
+                ConnectionPool::class => create()->constructor(get('shared.table.connections')),
 
-            return new EventHandler(
-                $router,
-                $c->get(ConnectionPool::class),
-                $c->get(SystemMonitor::class),
-                $c->get(LoggerInterface::class),
-                $c->get(TaskService::class),
-                $options->welcomeMessage,
-                $options->metricsIntervalMs,
-            );
-        });
+                // Misc
+                TaskCounter::class => create(SwooleAtomicCounter::class)
+                    ->constructor(get('shared.atomic.tasks')),
+                TaskSemaphore::class => create(GlobalSharedSemaphore::class)
+                    ->constructor(get('shared.semaphores.atomics')),
+
+                TaskDelayStrategy::class => create(DemoDelayStrategy::class),
+
+                SystemMonitor::class => create(SystemMonitor::class)
+                    ->constructor(get(ConnectionPool::class)),
+
+                // EventBus
+                EventBus::class => create(InternalBus::class),
+                EventDispatcherInterface::class => get(EventBus::class),
+                ListenerProviderInterface::class => get(EventBus::class),
+
+                // Task Service
+                TaskService::class => create()
+                    ->constructor(
+                        get(Server::class),
+                        get(TaskSemaphore::class),
+                        get(TaskDelayStrategy::class),
+                        get(TaskCounter::class),
+                        get(ProcessorFactory::class),
+                        get(LoggerInterface::class),
+                        get(EventBus::class),
+                        get('options.queue_capacity'),
+                        get('options.task_max_retries'),
+                        get('options.task_retry_delay_sec'),
+                        get('options.task_lock_timeout_sec'),
+                    ),
+
+                TaskController::class => create()
+                    ->constructor(
+                        get(TaskService::class),
+                        get(MessageHub::class),
+                        get('options.app_version'),
+                        get('options.stress_min_task_num'),
+                        get('options.task_max_batch_size'),
+                        get('options.task_semaphore_limit'),
+                    ),
+
+                Router::class => create()
+                    ->constructor(get(TaskController::class)),
+
+                // Event Handler
+                EventHandler::class => create()
+                    ->constructor(
+                        get(Router::class),
+                        get(ConnectionPool::class),
+                        get(SystemMonitor::class),
+                        get(LoggerInterface::class),
+                        get(TaskCounter::class),
+                        factory(fn (Options $opt) => $opt->welcomeMessage),
+                        factory(fn (Options $opt) => $opt->metricsIntervalMs)
+                    ),
+            ])
+            ->build();
 
         return $c;
     }
@@ -244,7 +293,7 @@ class Kernel
 
                     $task->finish(['status' => 'ok']);
                 } catch (\Throwable $e) {
-                    $this->container->get(LoggerInterface::class)->error('Task execution failed', [
+                    $this->logger->error('Task execution failed', [
                         'error' => $e->getMessage(),
                         'worker_id' => $server->worker_id,
                         'trace' => $e->getTraceAsString(),
@@ -261,20 +310,21 @@ class Kernel
         // Worker Lifecycle
         $this->server->on('WorkerStart', function ($server, $workerId): void {
             // Re-bind the server instance to the current worker context
-            $this->container->set(Server::class, static fn () => $server);
+            $this->container->set(Server::class, $server);
 
-            /**
-             * IMPORTANT: Clear cached singletons to ensure each worker
-             * starts with fresh, isolated service instances.
-             */
-            $this->container->forget(EventHandler::class);
-            $this->container->forget(TaskService::class);
-            $this->container->forget(SystemMonitor::class);
-            $this->container->forget(MessageHub::class);
+            /** @var EventBus $bus */
+            $bus = $this->container->get(EventDispatcherInterface::class);
+            /** @var MessageHub $messageHub */
+            $messageHub = $this->container->get(MessageHub::class);
+
+            $bus->listen(TaskStatusChangedEvent::class, static function ($event) use ($messageHub): void {
+                $messageHub->broadcast(InternalEnvelope::wrap('status.changed', $event->update));
+            });
         });
 
         // Graceful shutdown
         $this->server->on('WorkerStop', function ($server, $workerId): void {
+            /** @var TaskCounter $taskCounter */
             $taskCounter = $this->container->get(TaskCounter::class);
             $timeout = $this->options->shutdownTimeoutSec;
             $start = microtime(true);
@@ -293,25 +343,55 @@ class Kernel
             }
 
             $duration = round(microtime(true) - $start, 2);
-            $this
-                ->container
-                ->get(LoggerInterface::class)
-                ->info("[System] Worker #$workerId stopped after {$duration}s. Active tasks: " . $taskCounter->get());
+
+            $this->logger->info("[System] Worker #$workerId stopped after {$duration}s. Active tasks: " . $taskCounter->get());
         });
 
         // WebSocket Event Handlers
-        $this->server->on('request', fn (Request $req, Response $res) => $this->container->get(EventHandler::class)->onRequest($req, $res));
-        $this->server->on('open', fn (Server $s, Request $req) => $this->container->get(EventHandler::class)->onOpen($s, $req));
-        $this->server->on('message', fn (Server $s, Frame $f) => $this->container->get(EventHandler::class)->onMessage($s, $f));
-        $this->server->on('close', fn (Server $s, int $fd) => $this->container->get(EventHandler::class)->onClose($s, $fd));
+        $this->server->on(
+            'request',
+            function (Request $req, Response $res): void {
+                /** @var EventHandler $handler */
+                $handler = $this->container->get(EventHandler::class);
+                $handler->onRequest($req, $res);
+            }
+        );
+        $this->server->on(
+            'open',
+            function (Server $s, Request $req): void {
+                /** @var EventHandler $handler */
+                $handler = $this->container->get(EventHandler::class);
+                $handler->onOpen($s, $req);
+            }
+        );
+        $this->server->on(
+            'message',
+            function (Server $s, Frame $f): void {
+                /** @var EventHandler $handler */
+                $handler = $this->container->get(EventHandler::class);
+                $handler->onMessage($s, $f);
+            }
+        );
+        $this->server->on(
+            'close',
+            function (Server $s, int $fd): void {
+                /** @var EventHandler $handler */
+                $handler = $this->container->get(EventHandler::class);
+                $handler->onClose($s, $fd);
+            }
+        );
 
         // IPC for Global Broadcast
         $this->server->on('pipeMessage', function ($server, $srcWorkerId, $message): void {
-            $data = json_decode($message, true);
+            $envelope = InternalEnvelope::fromSerialized((string) $message);
 
-            if (is_array($data) && isset($data['action']) && $data['action'] === 'broadcast_ws') {
-                $this->container->get(MessageHub::class)->localBroadcast($data['payload']);
+            if ($envelope === null) {
+                return;
             }
+
+            /** @var MessageHub $hub */
+            $hub = $this->container->get(MessageHub::class);
+            $hub->localBroadcast($envelope);
         });
 
         // On start
@@ -320,8 +400,7 @@ class Kernel
             $port = $this->options->serverPort;
 
             $this
-                ->container
-                ->get(LoggerInterface::class)
+                ->logger
                 ->info(
                     "\n" .
                     " ┌──────────────────────────────────────────┐\n" .

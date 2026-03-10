@@ -1,13 +1,13 @@
 export const COLORS = {
-    1:  '#6366f1', // Indigo
-    2:  '#3b82f6', // Blue
-    3:  '#06b6d4', // Cyan
-    4:  '#10b981', // Emerald
-    5:  '#84cc16', // Lime
-    6:  '#eab308', // Yellow
-    7:  '#f97316', // Orange
-    8:  '#f43f5e', // Rose
-    9:  '#ef4444', // Red
+    1: '#6366f1', // Indigo
+    2: '#3b82f6', // Blue
+    3: '#06b6d4', // Cyan
+    4: '#10b981', // Emerald
+    5: '#84cc16', // Lime
+    6: '#eab308', // Yellow
+    7: '#f97316', // Orange
+    8: '#f43f5e', // Rose
+    9: '#ef4444', // Red
     10: '#a855f7'  // Purple
 };
 export const COORDS = {
@@ -20,9 +20,6 @@ export const COORDS = {
     lock_failed: 0.125,
 };
 
-export const PING_INTERVAL_MS = 3000;
-export const TASKS_LOG_THRESHOLD = 300;
-
 // Welcome/branding message
 export const BRAND_LOGO = `
     ███████╗ █████╗ ███████╗████████╗     █████╗ ███████╗
@@ -31,3 +28,44 @@ export const BRAND_LOGO = `
     ██╔══╝  ██╔══██║╚════██║   ██║       ██╔══██║██╔══╝
     ██║     ██║  ██║███████║   ██║    ██╗██║  ██║██║
     ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝    ╚═╝╚═╝  ╚═╝╚═╝     `;
+
+// WebSocket Protocol
+export const WS = {
+    EVENT: {
+        WELCOME: 'welcome',
+        STATUS_CHANGED: 'status.changed',
+        METRICS_UPDATE: 'metrics.update',
+        PONG: 'pong'
+    },
+    BINARY_TYPE: {
+        STATUS_UPDATE: 0x02,
+        METRICS: 0x03 // reserved
+    },
+    PING_INTERVAL_MS: 3000
+};
+
+export const TASK = {
+    // Binary id mappings
+    STATUS_MAP: {
+        1: 'queued',
+        2: 'processing',
+        3: 'check_lock',
+        4: 'progress',
+        5: 'completed',
+        6: 'lock_acquired',
+        7: 'lock_failed',
+        8: 'retries_failed'
+    },
+    // Human readable labels
+    LABELS: {
+        queued: 'In queue',
+        processing: 'Started',
+        check_lock: 'Checking semaphore',
+        progress: 'In progress',
+        completed: 'Done',
+        lock_acquired: 'Accepted',
+        lock_failed: 'Timeout',
+        retries_failed: 'Max retries reached'
+    },
+    LOG_THRESHOLD: 300
+};

@@ -6,10 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com),
 and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
+### Added
+- **PHP-DI Integration**: Switched to a robust PSR-11 container with Autowiring and Lazy Injection support.
+- **Proxy Manager**: Added `ocramius/proxy-manager` to handle Ghost Objects for circular dependencies.
+- **Binary Frame v2**: New 13-byte structure for `StatusUpdate` (Type, Status, TaskID, MC, Progress, Worker).
+
 ### Changed
 - **Architectural Refactoring:** Standardized directory and namespace naming by shifting from plurals to singular nouns across the `app` structure.
 - **Directory Cleanup:** Renamed `Websockets` to `WebSocket`, `Services` to `Service`, `Controllers` to `Controller`, and consolidated `DTO` sub-directories to comply with PSR standards.
 - **Namespace Synchronization:** Updated all class definitions and imports to reflect the new singular naming pattern for better maintainability.
+- **Architecture**: Decoupled `EventHandler` and `TaskController` from TaskService during the boot phase to prevent Master-process deadlocks.
+- **Routing**: `Router` now resolves `TaskController` on-demand, significantly reducing worker initialization time.
+- **IPC Protocol**: Removed the `broadcast_ws` action filter in `onPipeMessage`, allowing all internal envelopes to reach the `localBroadcast` method.
+
+## Fixed
+- **Circular Dependency**: Resolved the infinite loop between `MessageHub` -> `TaskService` -> `EventBus` -> `MessageHub` using `->lazy`().
+- **Worker Isolation**: Fixed the "blind worker" issue where the owner worker couldn't see its own connections due to container re-initialization.
 
 ## [v1.2.0] - 2026-02-16
 ### Added

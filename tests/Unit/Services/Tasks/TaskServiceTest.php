@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Service\Task;
 
 use App\Contract\Monitoring\TaskCounter;
+use App\Contract\Support\EventBus;
 use App\Contract\Task\TaskDelayStrategy;
 use App\Contract\Task\TaskSemaphore;
-use App\Contract\WebSocket\Broadcaster;
 use App\Exception\Task\QueueFullException;
 use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\TaskService;
@@ -52,9 +52,9 @@ class TaskServiceTest extends TestCase
             taskCounter: $taskCounter,
             server: $this->createStub(Server::class),
             semaphore: $this->createStub(TaskSemaphore::class),
-            broadcaster: $this->createStub(Broadcaster::class),
             delayStrategy: $this->createStub(TaskDelayStrategy::class),
             processorFactory: $this->createStub(ProcessorFactory::class),
+            bus: $this->createStub(EventBus::class),
             logger: $this->createStub(LoggerInterface::class),
             queueCapacity: 5,
             maxRetries: 3,

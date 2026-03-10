@@ -16,9 +16,10 @@ use Traversable;
  */
 class ConnectionPool implements IteratorAggregate, Countable
 {
-    private const string COL_FD = 'fd';
-    private const string COL_CONNECTED_AT = 'connected_at';
-    private const string COL_LAST_PING = 'last_ping';
+    public const string COL_FD = 'fd';
+    public const string COL_CONNECTED_AT = 'connected_at';
+    public const string COL_LAST_PING = 'last_ping';
+    public const string COL_WORKER_ID = 'worker_id';
 
     public static function configureAndCreateTable(int $size): Table
     {
@@ -27,6 +28,7 @@ class ConnectionPool implements IteratorAggregate, Countable
         $table->column(self::COL_FD, Table::TYPE_INT, 4);
         $table->column(self::COL_CONNECTED_AT, Table::TYPE_INT, 8);
         $table->column(self::COL_LAST_PING, Table::TYPE_INT, 8);
+        $table->column(self::COL_WORKER_ID, Table::TYPE_INT, 4);
         $table->create();
 
         return $table;
@@ -62,10 +64,11 @@ class ConnectionPool implements IteratorAggregate, Countable
         return false;
     }
 
-    public function add(int $fd): bool
+    public function add(int $fd, int $workerId): bool
     {
         $this->connections->set((string) $fd, [
             self::COL_FD => $fd,
+            self::COL_WORKER_ID => $workerId,
             self::COL_CONNECTED_AT => time(),
             self::COL_LAST_PING => time(),
         ]);
@@ -92,6 +95,7 @@ class ConnectionPool implements IteratorAggregate, Countable
             /** @var array<string, scalar> $conn */
             yield (int) $fdKey => [
                 self::COL_FD => (int) $conn[self::COL_FD],
+                self::COL_WORKER_ID => (int) $conn[self::COL_WORKER_ID],
                 self::COL_CONNECTED_AT => (int) $conn[self::COL_CONNECTED_AT],
                 self::COL_LAST_PING => (int) $conn[self::COL_LAST_PING],
             ];
