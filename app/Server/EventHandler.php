@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Server;
 
 use App\Contract\Monitoring\TaskCounter;
-use App\DTO\WebSocket\Message\InternalEnvelope;
 use App\DTO\WebSocket\Message\Metrics;
 use App\DTO\WebSocket\Message\WelcomeMessage;
 use App\DTO\WebSocket\WsMessage;
 use App\Router;
 use App\Service\Monitoring\SystemMonitor;
 use App\WebSocket\ConnectionPool;
+use App\WebSocket\Opcode;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -81,7 +81,7 @@ class EventHandler
 
         switch ($wsMessage->event) {
             case 'ping':
-                $this->send($server, $frame->fd, InternalEnvelope::wrap('pong', $wsMessage->data));
+                $this->send($server, $frame->fd, WsMessage::wrap('pong', $wsMessage->data));
                 break;
         }
     }
@@ -97,7 +97,7 @@ class EventHandler
 
     private function sendWelcomeMessage(Server $server, int $fd): void
     {
-        $this->send($server, $fd, InternalEnvelope::wrap('welcome', $this->welcomeMessage));
+        $this->send($server, $fd, WsMessage::wrap('welcome', $this->welcomeMessage));
     }
 
     private function startMetricsStream(Server $server, int $fd): void
@@ -116,25 +116,29 @@ class EventHandler
             // No of active tasks
             $taskNum = $this->taskCounter->get();
 
-            $data = new Metrics(
+            $metrics = new Metrics(
                 taskNum:     $taskNum,
                 connections: $systemStats->connections,
                 memoryMb:    $systemStats->memoryMb,
                 cpuUsage:    $systemStats->cpuUsage,
             );
 
-            $this->send($server, $fd, InternalEnvelope::wrap('metrics.update', $data));
+            $this->send($server, $fd, WsMessage::wrap('metrics.update', $metrics));
         });
     }
 
     /**
      * Send a standardized payload to the client.
      */
-    private function send(Server $server, int $fd, InternalEnvelope $envelope): void
+    private function send(Server $server, int $fd, WsMessage $message): void
     {
-        $payload = $envelope->getFinalPayload();
-        $opcode = $envelope->getOpcode();
+        $payload = json_encode($message);
 
-        $server->push($fd, $payload, $opcode);
+        if ($payload === false) {
+            $this->logger->error('Failed to encode WsMessage', ['event' => $message->event]);
+            return;
+        }
+
+        $server->push($fd, $payload, Opcode::TEXT);
     }
 }

@@ -189,7 +189,6 @@ class Kernel
                 'options.task_max_batch_size' => $options->taskMaxBatchSize,
                 'options.task_semaphore_limit' => $options->taskSemaphoreLimit,
 
-                // Передаем уже созданную таблицу (Shared Memory)
                 'shared.table.connections' => $connectionsTable,
                 'shared.atomic.tasks' => $tasksAtomic,
                 'shared.semaphores.atomics' => $semaphoreAtomics,

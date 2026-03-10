@@ -20,6 +20,17 @@ readonly class WsMessage implements Arrayable, JsonSerializable
     }
 
     /**
+     * Generic factory for outgoing messages
+     *
+     * @param string $event
+     * @param array<string, mixed>|Arrayable $data
+     */
+    public static function wrap(string $event, array|Arrayable $data): self
+    {
+        return new self($event, $data);
+    }
+
+    /**
      * Create a DTO from a payload array.
      *
      * We return null instead of throwing Exceptions to avoid overhead

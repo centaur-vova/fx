@@ -70,7 +70,7 @@ class TaskService
             // If the lock is not acquired within this time, we yield and retry later
             if (!$permit->acquire($this->lockTimeoutSec)) {
                 if ($attempt >= $this->maxRetries) {
-                    $this->logger->error('Max retries reached', ['id' => $taskId]);
+                    $this->logger->info('Max retries reached', ['id' => $taskId]);
                     $this->notify(TaskStatusUpdate::retriesFailed($taskId, $mc, $workerId, $this->maxRetries));
                     $this->decrementTaskCount();
                     return;

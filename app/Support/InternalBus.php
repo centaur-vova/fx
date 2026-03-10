@@ -17,7 +17,7 @@ final class InternalBus implements EventBus
     }
 
     /**
-     * Реализация ListenerProviderInterface
+     * ListenerProviderInterface implementation
      * @return iterable<callable>
      */
     public function getListenersForEvent(object $event): iterable
@@ -27,11 +27,10 @@ final class InternalBus implements EventBus
     }
 
     /**
-     * Реализация EventDispatcherInterface
+     * EventDispatcherInterface implementation
      */
     public function dispatch(object $event): object
     {
-        // Перебираем слушателей, которых выдал провайдер (мы сами)
         foreach ($this->getListenersForEvent($event) as $listener) {
             $listener($event);
         }

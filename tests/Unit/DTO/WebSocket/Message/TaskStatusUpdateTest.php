@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\DTO\Tasks;
+namespace Tests\Unit\DTO\WebSocket\Message;
 
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
 use PHPUnit\Framework\TestCase;

@@ -6,12 +6,10 @@ namespace App\DTO\WebSocket\Message;
 
 use App\Contract\Support\Arrayable;
 use App\Contract\WebSocket\BinarySerializable;
+use App\WebSocket\Opcode;
 
 final readonly class InternalEnvelope
 {
-    public const int OPCODE_TEXT = 1;
-    public const int OPCODE_BINARY = 2;
-
     private const int FORMAT_JSON = 1;
     private const int FORMAT_BINARY = 2;
 
@@ -105,8 +103,8 @@ final readonly class InternalEnvelope
     public function getOpcode(): int
     {
         return $this->isBinary()
-            ? self::OPCODE_BINARY
-            : self::OPCODE_TEXT;
+            ? Opcode::BINARY
+            : Opcode::TEXT;
     }
 
     /**
