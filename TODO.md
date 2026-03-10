@@ -11,6 +11,7 @@
 ### 🔴 High Priority
 - [ ] **Real-time Pipeline Monitoring**:
   - [x] Implement a live counter for **Incomplete Tasks** (tasks currently being processed).
+  - [ ] Migrate Timer::tick from onOpen to onWorkerStart to prevent timer leakage.
 - [ ] **Fix Connection Limit Issues**:
   - [ ] Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
   - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.

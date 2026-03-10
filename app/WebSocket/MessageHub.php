@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\WebSocket;
 
+use App\DTO\WebSocket\Message\InternalEnvelope;
 use Swoole\WebSocket\Server;
 
 class MessageHub
@@ -14,46 +15,43 @@ class MessageHub
     ) {
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
-    public function broadcast(array $payload): void
+    public function broadcast(InternalEnvelope $envelope): void
     {
-        $data = [
-            'action' => 'broadcast_ws',
-            'payload' => $payload,
-        ];
-        $message = json_encode($data);
         $currentWorkerId = $this->server->worker_id;
 
         for ($i = 0; $i < $this->server->setting['worker_num']; $i++) {
             if ($i === $currentWorkerId) {
-                $this->localBroadcast($payload);
+                $this->localBroadcast($envelope);
                 continue;
             }
 
-            $this->server->sendMessage($message, $i);
+            $this->server->sendMessage($envelope, $i);
         }
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
-    public function localBroadcast(array $payload): void
+    public function localBroadcast(InternalEnvelope $envelope): void
     {
-        $json = json_encode($payload);
+        $currentWorker = (int) $this->server->worker_id;
+        $data = $envelope->getFinalPayload();
 
-        if (!is_string($json)) {
-            return;
-        }
-
+        /**
+         * @var int $fd
+         * @var mixed $row
+         */
         foreach ($this->connectionPool as $fd => $row) {
-            $fd = (int) $fd;
+            // Level 9: Validate that $row is an array before accessing offsets
+            if (!is_array($row)) {
+                continue;
+            }
 
-            /** @phpstan-ignore-next-line */
-            if ($this->server->getWorkerId($fd) === $this->server->worker_id) {
-                if ($this->server->exists($fd) && $this->server->isEstablished($fd)) {
-                    $this->server->push($fd, $json);
+            $workerId = $row[ConnectionPool::COL_WORKER_ID] ?? -1;
+
+            // Level 9: Check if value is scalar before casting mixed to int
+            if (is_scalar($workerId) && (int) $workerId === $currentWorker) {
+                $fdInt = (int) $fd;
+
+                if ($this->server->exists($fdInt) && $this->server->isEstablished($fdInt)) {
+                    $this->server->push($fdInt, $data, $envelope->getOpcode());
                 }
             }
         }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\DTO\WebSockets\Messages\WelcomeMessage;
+use App\DTO\WebSocket\Message\WelcomeMessage;
 
 /**
  * Atomic Flow Engine Options

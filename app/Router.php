@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App;
 
-use App\Controllers\TaskController;
-use App\DTO\Http\Requests\CreateTasks;
+use App\Controller\TaskController;
+use App\DTO\Http\Request\CreateTasks;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 

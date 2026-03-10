@@ -1,6 +1,14 @@
 import Alpine from 'alpinejs';
 import { state } from './modules/state';
-import { BRAND_LOGO, COLORS, COORDS, TASKS_LOG_THRESHOLD, PING_INTERVAL_MS } from './modules/config';
+import { decodeMessage } from './modules/decoder.js';
+import {
+    WS,
+    TASK,
+    BRAND_LOGO,
+    COLORS,
+    COORDS,
+    PING_INTERVAL_MS
+} from './modules/config';
 
 // Init store
 window.Alpine = Alpine;
@@ -81,6 +89,8 @@ const connect = () => {
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     const ws = new WebSocket(wsUrl);
 
+    ws.binaryType = 'arraybuffer';
+
     ws.onopen = () => {
         console.log("%c REACTOR ONLINE ", "background: #064e3b; color: #10b981; font-weight: bold;");
         store.isOnline = true;
@@ -99,23 +109,38 @@ const connect = () => {
     };
 
     ws.onmessage = (e) => {
-        try {
-            const { event, data } = JSON.parse(e.data);
-            switch (event) {
-                case 'welcome': store.system = data; store.initWorkers(data.worker_num); break;
-                case 'status.changed': handleUpdateTasks(data); break;
-                case 'metrics.update': handleMetrics(data); break;
-                case 'pong': store.latency = Math.round(performance.now() - data.ts); break;
-            }
-        } catch (err) { console.error("WS Error", err); }
+        const msg = decodeMessage(e.data);
+        if (!msg) return;
+
+        const { event, data } = msg;
+
+        switch (event) {
+            case WS.EVENT.WELCOME:
+                store.system = data;
+                store.initWorkers(data.worker_num);
+                break;
+
+            case WS.EVENT.STATUS_CHANGED:
+                handleUpdateTasks(data);
+                break;
+
+            case WS.EVENT.METRICS_UPDATE:
+                handleMetrics(data);
+                break;
+
+            case WS.EVENT.PONG:
+                store.latency = Math.round(performance.now() - data.ts);
+                break;
+        }
     };
 };
 
 const handleUpdateTasks = (data) => {
+    console.dir(data);
     const { taskId, worker, mc, status, message } = data;
 
     // Logging
-    if (tasks.size < TASKS_LOG_THRESHOLD) addLog(taskId, mc, status, message);
+    if (tasks.size < TASK.LOG_THRESHOLD) addLog(taskId, mc, status, message);
 
     if (!tasks.has(taskId)) {
         const jitterX = (Math.random() - 0.5) * 0.22;
@@ -147,7 +172,7 @@ const handleMetrics = (data) => {
     else if (total <= 500) { store.scale = 0.5; store.mode = 'normal'; }
     else { store.scale = 0.3; store.mode = 'dot'; }
 
-    store.isLogPanelDisabled = tasks.size > TASKS_LOG_THRESHOLD;
+    store.isLogPanelDisabled = tasks.size > TASK.LOG_THRESHOLD;
 };
 
 // Rendering
@@ -189,7 +214,7 @@ const startPinger = (ws) => {
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ event: 'ping', data: { ts: performance.now() } }));
         }
-    }, PING_INTERVAL_MS);
+    }, WS.PING_INTERVAL_MS);
 };
 const stopPinger = () => { clearInterval(pingTimer); };
 
