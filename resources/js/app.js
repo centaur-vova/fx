@@ -136,7 +136,6 @@ const connect = () => {
 };
 
 const handleUpdateTasks = (data) => {
-    console.dir(data);
     const { taskId, worker, mc, status, message } = data;
 
     // Logging
