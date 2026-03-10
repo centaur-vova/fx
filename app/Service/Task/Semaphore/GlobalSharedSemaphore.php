@@ -35,28 +35,30 @@ class GlobalSharedSemaphore implements TaskSemaphore
 
             public function acquire(float $timeout): bool
             {
-                if (!$this->atomic) {
+                $atomic = $this->atomic;
+                if (!$atomic) {
                     return true;
                 }
 
                 $start = microtime(true);
+
                 // Poll until slot is free or timeout reached
                 while (microtime(true) - $start < $timeout) {
-                    $current = $this->atomic->get();
+                    // Try to take a slot immediately
+                    $current = $atomic->add(1);
 
-                    if ($current < $this->limit) {
-                        // CAS
-                        if ($this->atomic->cmpset($current, $current + 1)) {
-                            // Success
-                            return true;
-                        }
-
-                        // Unlucky this time, try again right away
-                        continue;
+                    // Check if we are within the concurrency limit
+                    if ($current <= $this->limit) {
+                        return true;
                     }
-                    // Yield control to other coroutines
+
+                    // Limit exceeded: immediately release the slot and wait
+                    $atomic->sub(1);
+
+                    // Yield execution to let other coroutines work
                     Co::sleep(0.01);
                 }
+
                 return false;
             }
 

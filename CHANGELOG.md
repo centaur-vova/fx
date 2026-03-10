@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **IPC Optimization**: Switched from manual JSON/Base64 serialization to native object serialization for `InternalEnvelope` and Task payloads between workers.
 - **Retry Mechanism**: Refactored `TaskService::processTask` to use an asynchronous `Timer::after` flow instead of recursive coroutine calls to prevent stack overflow.
 - **Task Distribution**: Implemented random Event Worker selection for task re-queueing to improve load balancing.
+- **GlobalSharedSemaphore**: Refactored the `acquire` logic from a `get/cmpset` spin-lock to a more robust atomic `add/sub` pattern. This eliminates a race condition where multiple workers could read the same state before attempting a swap.
+- **Performance Optimization**: Reduced property lookups in the semaphore's hot loop by caching the Atomic instance into a local variable.
 
 ## Fixed
 - **Circular Dependency**: Resolved the infinite loop between `MessageHub` -> `TaskService` -> `EventBus` -> `MessageHub` using `->lazy`().
