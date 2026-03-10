@@ -8,6 +8,7 @@ use App\Contract\Monitoring\TaskCounter;
 use App\Contract\Support\EventBus;
 use App\Contract\Task\TaskDelayStrategy;
 use App\Contract\Task\TaskSemaphore;
+use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Event\TaskStatusChangedEvent;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
 use App\Exception\Task\QueueFullException;
@@ -51,64 +52,76 @@ class TaskService
 
             Timer::after($timerDelay, function () use ($taskId, $maxConcurrent, $mode): void {
                 // Instead of pushing to local Channel, we push to Global Task Pool
-                $this->server->task([
-                    'id' => $taskId,
-                    'mc' => $maxConcurrent,
-                    'mode' => $mode,
-                ]);
+                $this->server->task(new TaskExecutionPayload(
+                    id: $taskId,
+                    mc: $maxConcurrent,
+                    mode: $mode
+                ));
             });
         }
     }
 
-    public function processTask(int $workerId, int $taskId, int $mc, string $mode, int $attempt = 0): void
+    public function processTask(TaskExecutionPayload $payload, int $workerId): void
     {
         try {
-            $permit = $this->semaphore->forLimit($mc);
-            $this->notify(TaskStatusUpdate::checkLock($taskId, $mc));
+            $permit = $this->semaphore->forLimit($payload->mc);
+            $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc));
 
-            // Use a real timeout from config instead of 0.01
-            // If the lock is not acquired within this time, we yield and retry later
-            if (!$permit->acquire($this->lockTimeoutSec)) {
-                if ($attempt >= $this->maxRetries) {
-                    $this->logger->info('Max retries reached', ['id' => $taskId]);
-                    $this->notify(TaskStatusUpdate::retriesFailed($taskId, $mc, $workerId, $this->maxRetries));
+            /**
+             * Attempt to acquire lock.
+             */
+            if (!$permit->acquire((float) $this->lockTimeoutSec)) {
+                if ($payload->attempt >= $this->maxRetries) {
+                    $this->logger->info('Max retries reached', ['id' => $payload->id]);
+                    $this->notify(TaskStatusUpdate::retriesFailed($payload->id, $payload->mc, $workerId, $this->maxRetries));
                     $this->decrementTaskCount();
                     return;
                 }
 
-                $this->notify(TaskStatusUpdate::lockFailed($taskId, $mc));
+                $this->notify(TaskStatusUpdate::lockFailed($payload->id, $payload->mc));
 
-                // Yield execution to let other coroutines work
-                Co::sleep($this->retryDelaySec);
+                /**
+                 * Re-queue
+                 */
+                Timer::after($this->retryDelaySec * 1000, function () use ($payload): void {
+                    $workerNum = (int) ($this->server->setting['worker_num'] ?? 1);
+                    // Размазываем нагрузку и риски по всем воркерам
+                    $targetWorkerId = random_int(0, $workerNum - 1);
+                    $this->server->sendMessage($payload->incrAttempt(), $targetWorkerId);
+                });
 
-                // Recursive retry inside the coroutine
-                $this->processTask($workerId, $taskId, $mc, $mode, ++$attempt);
                 return;
             }
 
-            // --- LOCK ACQUIRED ---
+            /**
+             * LOCK ACQUIRED - Logic execution block
+             */
             try {
-                $this->notify(TaskStatusUpdate::lockAcquired($taskId, $mc));
+                $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc));
 
-                $processor = $this->processorFactory->get($mode);
+                $processor = $this->processorFactory->get($payload->mode);
 
-                $processor->execute(function (int $progress) use ($taskId, $mc): void {
-                    $this->notify(TaskStatusUpdate::progress($taskId, $mc, $progress)
-                        ->withMessage($progress . '%'));
+                $progressCallback = function (int $progress) use ($payload): void {
+                    $this->notify(
+                        TaskStatusUpdate::progress($payload->id, $payload->mc, $progress)
+                            ->withMessage($progress . '%')
+                    );
                     Co::sleep(0.001);
-                });
+                };
 
-                $this->notify(TaskStatusUpdate::completed($taskId, $mc, $workerId));
+                $processor->execute($progressCallback);
+
+                $this->notify(TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId));
             } finally {
                 $permit->release();
                 $this->decrementTaskCount();
-                $this->logger->debug('Lock released', ['id' => $taskId]);
+                $this->logger->debug('Lock released', ['id' => $payload->id]);
             }
 
         } catch (\Throwable $e) {
-            $this->logger->error('Fatal task error', ['id' => $taskId, 'error' => $e->getMessage()]);
+            $this->logger->error('Fatal task error', ['id' => $payload->id, 'error' => $e->getMessage()]);
+            // Emergency cleanup if something exploded before finally
             $this->decrementTaskCount();
-            // Optionally notify about system error
         }
     }
 

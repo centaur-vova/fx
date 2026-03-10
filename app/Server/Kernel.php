@@ -10,6 +10,7 @@ use App\Contract\Support\EventBus;
 use App\Contract\Task\TaskDelayStrategy;
 use App\Contract\Task\TaskSemaphore;
 use App\Controller\TaskController;
+use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Event\TaskStatusChangedEvent;
 use App\DTO\WebSocket\Message\InternalEnvelope;
 use App\DTO\WebSocket\Message\WelcomeMessage;
@@ -278,19 +279,17 @@ class Kernel
             // Create a coroutine so this Task Worker can handle multiple concurrent tasks
             Co::create(function () use ($server, $task): void {
                 try {
-                    /** @var TaskService $taskService */
-                    $taskService = $this->container->get(TaskService::class);
-                    $data = $task->data;
+                    if ($task->data instanceof TaskExecutionPayload) {
+                        /** @var TaskService $taskService */
+                        $taskService = $this->container->get(TaskService::class);
+                        $taskService->processTask($task->data, $server->worker_id);
+                        return;
+                    }
 
-                    // Execute task logic. Retries are now handled internally via Co::sleep
-                    $taskService->processTask(
-                        $server->worker_id,
-                        $data['id'],
-                        $data['mc'],
-                        $data['mode'],
-                    );
+                    $this->logger->warning('Invalid task payload received', [
+                        'type' => get_debug_type($task->data),
+                    ]);
 
-                    $task->finish(['status' => 'ok']);
                 } catch (\Throwable $e) {
                     $this->logger->error('Task execution failed', [
                         'error' => $e->getMessage(),
@@ -380,17 +379,25 @@ class Kernel
             }
         );
 
-        // IPC for Global Broadcast
+        // IPC
         $this->server->on('pipeMessage', function ($server, $srcWorkerId, $message): void {
-            $envelope = InternalEnvelope::fromSerialized((string) $message);
+            try {
+                match (true) {
+                    // Task Retry
+                    $message instanceof TaskExecutionPayload => $server->task($message),
 
-            if ($envelope === null) {
-                return;
+                    // WebSocket Broadcast
+                    $message instanceof InternalEnvelope =>
+                        (($hub = $this->container->get(MessageHub::class)) instanceof MessageHub)
+                            ? $hub->localBroadcast($message)
+                            : null,
+
+                    default =>
+                        $this->logger->warning('Unknown IPC', ['type' => get_debug_type($message)]),
+                };
+            } catch (\Throwable $e) {
+                $this->logger->error('IPC Error', ['msg' => $e->getMessage()]);
             }
-
-            /** @var MessageHub $hub */
-            $hub = $this->container->get(MessageHub::class);
-            $hub->localBroadcast($envelope);
         });
 
         // On start

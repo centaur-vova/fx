@@ -17,7 +17,6 @@ class MessageHub
 
     public function broadcast(InternalEnvelope $envelope): void
     {
-        $serialized = $envelope->serialize();
         $currentWorkerId = $this->server->worker_id;
 
         for ($i = 0; $i < $this->server->setting['worker_num']; $i++) {
@@ -26,7 +25,7 @@ class MessageHub
                 continue;
             }
 
-            $this->server->sendMessage($serialized, $i);
+            $this->server->sendMessage($envelope, $i);
         }
     }
 
