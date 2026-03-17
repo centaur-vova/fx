@@ -92,7 +92,6 @@ class Kernel
             // Queue
             queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
             queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
-            taskQueueMultiplier:  $loader->getInt('TASK_QUEUE_MULTIPLIER', 15),
             // NATS & broadcast
             natsAckWaitMs:        $loader->getInt('NATS_ACK_WAIT_MS', 30000),
             natsTimeoutSec:       $loader->getInt('NATS_TIMEOUT_SEC', 1),
@@ -102,9 +101,9 @@ class Kernel
             taskQueueSubject:     $loader->getString('NATS_SUBJECT_TASKS', 'task.queue'),
             taskQueueConsumer:    $loader->getString('NATS_CONSUMER_TASKS', 'php-task-consumers'),
             taskQueueStream:      $loader->getString('NATS_STREAM_TASKS', 'tasks'),
-            // KV
-            kvTableSize:          $loader->getInt('KV_TABLE_SIZE'),
-            kvTtlSec:             $loader->getInt('KV_TTL_SEC', 1),
+            // Task Meta (KV)
+            taskMetaCacheSize:    $loader->getInt('TASK_META_CACHE_SIZE', 65536),
+            taskMetaTtlSec:       $loader->getInt('TASK_META_TTL_SEC', 10),
         );
 
         // Assign options to object state

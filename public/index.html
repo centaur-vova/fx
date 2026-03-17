@@ -67,14 +67,12 @@
                 <div class="text-xs">
                   <span
                     class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
-                    >Queue</span
+                    >Buffer</span
                   >
                   <b
-                    class="block font-mono text-sm min-w-[70px]"
-                    :class="$store.app.metrics.taskNum / $store.app.system.queue_capacity > 0.8 ? 'text-red-500' : 'text-yellow-500'"
+                    class="block font-mono text-sm min-w-[70px] text-yellow-500"
                   >
-                    <span x-text="$store.app.metrics.taskNum">--</span> /
-                    <span x-text="$store.app.formattedCapacity">--</span>
+                    <span x-text="$store.app.metrics.taskNum">--</span>
                   </b>
                 </div>
 

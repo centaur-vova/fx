@@ -39,17 +39,6 @@ export const state = {
         content: ''
     },
 
-    // Getter for formatted capacity
-    get formattedCapacity() {
-        const cap = this.system.queue_capacity;
-
-        // If it's not a number (e.g. '--'), just return it
-        if (isNaN(cap)) return cap;
-
-        // Otherwise, do the math
-        return (cap / 1000).toFixed(0) + 'k';
-    },
-
     // Workers
     initWorkers(count) {
         this.workers = Array.from({ length: count }, () => ({ status: '' }));

@@ -198,7 +198,7 @@ function addLog(taskId, mc, status, msg) {
     const entry = document.createElement('div');
     entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
     const time = new Date().toLocaleTimeString([], { hour12: false });
-    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.substring(0, 8)}</span> <span class="text-gray-400">${msg}</span>`;
+    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.slice(-8)}</span> <span class="text-gray-400">${msg}</span>`;
 
     logContainer.appendChild(entry);
     if (logContainer.children.length > 30) logContainer.removeChild(logContainer.firstChild);

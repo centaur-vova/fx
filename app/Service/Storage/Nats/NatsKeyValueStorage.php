@@ -21,7 +21,7 @@ class NatsKeyValueStorage implements KeyValueStorage
 
     public function set(string $key, string $value, ?int $ttl = null): bool
     {
-        // TTL не поддерживается в этом Bucket, игнорируем
+        // TTL ignored
         $this->bucket->put($key, $value);
         return true;
     }
@@ -35,5 +35,10 @@ class NatsKeyValueStorage implements KeyValueStorage
     public function has(string $key): bool
     {
         return $this->bucket->get($key) !== null;
+    }
+
+    public function count(): int
+    {
+        return 0; // TODO - not used
     }
 }

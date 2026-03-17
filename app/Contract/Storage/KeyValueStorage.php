@@ -32,4 +32,9 @@ interface KeyValueStorage
      * Check if key exists
      */
     public function has(string $key): bool;
+
+    /**
+     * Return KV pairs count
+     */
+    public function count(): int;
 }

@@ -40,17 +40,13 @@ class TaskService
         for ($i = 0; $i < $count; $i++) {
             $taskId = $this->generateTaskId();
 
-            $result = $this->taskQueue->push(
+            $this->taskQueue->push(
                 new TaskExecutionPayload(
                     id: $taskId,
                     mc: $maxConcurrent,
                     mode: $mode
                 )
             );
-
-            if ($result) {
-                // $this->notify(TaskStatusUpdate::queued($taskId, $maxConcurrent));
-            }
         }
     }
 
@@ -76,7 +72,7 @@ class TaskService
                  * Re-queue with delay & jitter
                  */
                 $base = $this->retryDelaySec * 1000;
-                $jitter = random_int(0, (int) ($base * 0.3)); // ±30
+                $jitter = random_int(0, (int) ($base * 0.5)); // ±50
                 Timer::after($base + $jitter, function () use ($payload): void {
                     // Republish back into the queue
                     $this->taskQueue->push($payload->incrAttempt());

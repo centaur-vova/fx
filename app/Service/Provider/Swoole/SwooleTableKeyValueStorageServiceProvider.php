@@ -26,8 +26,8 @@ class SwooleTableKeyValueStorageServiceProvider implements ServiceProvider
 
                 $storage = new SwooleTableKeyValueStorage(
                     logger: $logger,
-                    size: $options->kvTableSize ?? 1024,
-                    ttl: $options->kvTtlSec,
+                    size: $options->taskMetaCacheSize ?? 1024,
+                    ttl: $options->taskMetaTtlSec,
                 );
 
                 // Purge expired items

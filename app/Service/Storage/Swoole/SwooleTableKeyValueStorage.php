@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Service\Storage\Swoole;
 
-use App\Contract\Storage\KeyValueStorage;
+use App\Contract\Storage\TtlKeyValueStorage;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Table;
 
-class SwooleTableKeyValueStorage implements KeyValueStorage
+class SwooleTableKeyValueStorage implements TtlKeyValueStorage
 {
     private readonly Table $table;
 
@@ -28,7 +28,7 @@ class SwooleTableKeyValueStorage implements KeyValueStorage
             return null;
         }
 
-        // Проверка TTL
+        // TTL check
         if ($row['expires'] < time()) {
             $this->table->del($key);
             return null;
@@ -64,6 +64,11 @@ class SwooleTableKeyValueStorage implements KeyValueStorage
         }
 
         return true;
+    }
+
+    public function count(): int
+    {
+        return $this->table->count();
     }
 
     public function cleanExpired(): int

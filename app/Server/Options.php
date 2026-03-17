@@ -36,11 +36,10 @@ readonly class Options
         // Queue
         public int $queueCapacity,
         public int $queuePrefetchBatch,
-        public int $taskQueueMultiplier,
 
-        // KV
-        public int $kvTableSize,
-        public int $kvTtlSec,
+        // Task Meta
+        public int $taskMetaCacheSize,
+        public int $taskMetaTtlSec,
 
         // Task Engine
         public int $taskMaxBatchSize,
