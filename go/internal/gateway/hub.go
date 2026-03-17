@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"encoding/json"
+	"errors"
 	"fast-atomic-flow/go/internal/protocol"
 	"log"
 	"math"
@@ -35,6 +36,20 @@ func (h *Hub) Add(conn *websocket.Conn) {
 	h.clientsMu.Lock()
 	h.clients[conn] = &sync.Mutex{}
 	h.clientsMu.Unlock()
+}
+
+func (h *Hub) WriteToConn(conn *websocket.Conn, kind int, payload []byte) error {
+	h.clientsMu.RLock()
+	lock, exists := h.clients[conn]
+	h.clientsMu.RUnlock()
+
+	if !exists {
+		return errors.New("client not found")
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+	return conn.WriteMessage(kind, payload)
 }
 
 func (h *Hub) Remove(conn *websocket.Conn) {
@@ -80,6 +95,16 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 		return
 	}
 
+	// Register connection
+	h.Add(conn)
+	log.Printf("New client. Total: %d", h.Count())
+
+	defer func() {
+		h.Remove(conn)
+		conn.Close()
+		log.Printf("Disconnected. Remaining: %d", h.Count())
+	}()
+
 	// Create and send welcome event
 	welcomeEvent := protocol.NewEvent(
 		"welcome",
@@ -90,17 +115,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 			AppVersion:    h.config.AppVersion,
 		},
 	)
-	conn.WriteMessage(websocket.TextMessage, welcomeEvent.Marshal())
-
-	// Register connection
-	h.Add(conn)
-	log.Printf("New client. Total: %d", h.Count())
-
-	defer func() {
-		h.Remove(conn)
-		conn.Close()
-		log.Printf("Disconnected. Remaining: %d", h.Count())
-	}()
+	h.WriteToConn(conn, websocket.TextMessage, welcomeEvent.Marshal())
 
 	// Loop + pong
 	for {
@@ -119,7 +134,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 			if response != nil {
 				// Send response back
-				conn.WriteMessage(websocket.TextMessage, response)
+				h.WriteToConn(conn, websocket.TextMessage, response)
 			}
 		}
 	}
