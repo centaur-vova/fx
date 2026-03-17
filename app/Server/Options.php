@@ -26,7 +26,7 @@ readonly class Options
         public string $natsHost,
         public int $natsPort,
         public string $natsToken,
-        public int $natsTimeoutSec,
+        public float $natsTimeoutSec,
         public int $natsPingIntervalSec,
         public int $natsAckWaitMs,
 

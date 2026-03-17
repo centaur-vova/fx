@@ -17,7 +17,7 @@ class SwooleTableKeyValueStorageServiceProvider implements ServiceProvider
     public function register(ContainerBuilder $builder): array
     {
         return [
-            KeyValueStorage::class => function (ContainerInterface $container): \App\Service\Storage\Swoole\SwooleTableKeyValueStorage {
+            KeyValueStorage::class => function (ContainerInterface $container): SwooleTableKeyValueStorage {
                 /** @var Options $options */
                 $options = $container->get(Options::class);
 

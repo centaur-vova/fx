@@ -94,7 +94,7 @@ class Kernel
             queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
             // NATS & broadcast
             natsAckWaitMs:        $loader->getInt('NATS_ACK_WAIT_MS', 30000),
-            natsTimeoutSec:       $loader->getInt('NATS_TIMEOUT_SEC', 1),
+            natsTimeoutSec:       $loader->getFloat('NATS_TIMEOUT_SEC', 1.0),
             natsPingIntervalSec:  $loader->getInt('NATS_PING_INTERVAL_SEC', 10),
             // Queue/streams
             broadcastSubject:     $loader->getString('NATS_SUBJECT_BROADCAST', 'ws.broadcast'),
