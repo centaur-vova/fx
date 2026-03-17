@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\DTO\WebSocket\Message\WelcomeMessage;
-
 /**
  * Atomic Flow Engine Options
  *
@@ -24,12 +22,25 @@ readonly class Options
         public int $dispatchMode,
         public int $socketBufferMb,
 
+        // Nats
+        public string $natsHost,
+        public int $natsPort,
+        public string $natsToken,
+        public int $natsTimeoutSec,
+        public int $natsPingIntervalSec,
+        public int $natsAckWaitMs,
+
         // Logging
         public string $logLevel,
 
-        // Shared Memory & Queues
-        public int $wsTableSize,
+        // Queue
         public int $queueCapacity,
+        public int $queuePrefetchBatch,
+        public int $taskQueueMultiplier,
+
+        // KV
+        public int $kvTableSize,
+        public int $kvTtlSec,
 
         // Task Engine
         public int $taskMaxBatchSize,
@@ -43,11 +54,13 @@ readonly class Options
         public int $metricsIntervalMs,
         public int $shutdownTimeoutSec,
 
-        // Hardware
-        public int $cpuCores,
+        // Messaging consumer (group) name
+        public string $taskQueueConsumer,
 
-        // DTOs
-        public WelcomeMessage $welcomeMessage,
+        // Messaging subjects/streams
+        public string $broadcastSubject,
+        public string $taskQueueSubject,
+        public string $taskQueueStream,
     ) {
     }
 }

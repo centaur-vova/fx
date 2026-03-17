@@ -1,0 +1,120 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Service\Queue\Nats;
+
+use App\Contract\Messaging\MessageSerializer;
+use App\Contract\Queue\Consumer;
+use App\Contract\Queue\Queue;
+use Basis\Nats\Client as NatsClient;
+use Basis\Nats\Message\Ack;
+use Basis\Nats\Message\Nak;
+use Basis\Nats\Message\Payload;
+use Basis\Nats\Stream\Stream;
+
+class NatsQueue implements Queue
+{
+    private readonly Stream $stream;
+
+    public function __construct(
+        private readonly NatsClient $client,
+        private readonly MessageSerializer $serializer,
+        private readonly string $streamName,
+    ) {
+        $this->stream = $client->getApi()->getStream($streamName);
+    }
+
+    /**
+     * @param array<string, string|string[]> $headers
+     */
+    public function publish(string $subject, object $data, array $headers = []): bool
+    {
+        $payload = new Payload(
+            body: $this->serializer->serialize($data),
+            headers: $headers
+        );
+
+        try {
+            $this->stream->put($subject, $payload);
+            return true;
+        } catch (\Throwable) {
+            // TODO: log error
+            return false;
+        }
+    }
+
+    public function consume(string $name): Consumer
+    {
+        $consumer = $this->stream->getConsumer($name);
+
+        return new NatsConsumer($consumer);
+    }
+
+    public function count(): int
+    {
+        try {
+            $info = $this->stream->info();
+            return $info->state->messages ?? 0;
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
+    /**
+     * @return array{
+     *     name: string,
+     *     messages?: int,
+     *     bytes?: int,
+     *     first_seq?: int,
+     *     last_seq?: int,
+     *     error?: string
+     * }
+     */
+    public function info(): array
+    {
+        try {
+            $info = $this->stream->info();
+            return [
+                'name' => $this->streamName,
+                'messages' => $info->state->messages ?? 0,
+                'bytes' => $info->state->bytes ?? 0,
+                'first_seq' => $info->state->first_seq ?? 0,
+                'last_seq' => $info->state->last_seq ?? 0,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'name' => $this->streamName,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    public function ack(string $receiptId): bool
+    {
+        // receiptId = replyTo
+        try {
+            $this->client->publish($receiptId, new Ack([
+                'subject' => $receiptId,
+            ]));
+            return true;
+        } catch (\Throwable) {
+            // TODO: log
+            return false;
+        }
+    }
+
+    public function nack(string $receiptId, int $delay = 0): bool
+    {
+        try {
+            $this->client->publish($receiptId, new Nak([
+                'subject' => $receiptId,
+                'delay' => $delay,
+            ]));
+            return true;
+        } catch (\Throwable) {
+            // TODO: log
+            return false;
+        }
+    }
+}

@@ -8,14 +8,17 @@ use App\Controller\TaskController;
 use App\DTO\Http\Request\CreateTasks;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
+use Swoole\Server;
+use Throwable;
 
 class Router
 {
     /** @var array<string, array{0: object|string, 1: string}> Map: "METHOD|/path" => [Controller, Method] */
     private array $routes = [];
 
-    public function __construct(private readonly TaskController $taskController)
-    {
+    public function __construct(
+        private readonly TaskController $taskController,
+    ) {
         $this->registerRoutes();
     }
 
@@ -27,7 +30,7 @@ class Router
         ];
     }
 
-    public function handle(Request $request, Response $response): void
+    public function handle(Request $request, Response $response, Server $server): void
     {
         $path = $request->server['request_uri'] ?? '/';
         // fast return for websockets
@@ -55,12 +58,12 @@ class Router
                     $dto = CreateTasks::fromArray($payload);
                     $result = $controller->$action($dto);
                 } else {
-                    $result = $controller->$action();
+                    $result = $controller->$action($server);
                 }
 
                 $json = json_encode($result);
                 $response->end(is_string($json) ? $json : '{}');
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->sendError($response, $e->getMessage(), 500);
             }
             return;

@@ -5,44 +5,40 @@ declare(strict_types=1);
 namespace App\Server;
 
 use App\ConfigLoader;
-use App\Contract\Monitoring\TaskCounter;
-use App\Contract\Support\EventBus;
-use App\Contract\Task\TaskDelayStrategy;
+use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Task\TaskSemaphore;
 use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
-use App\DTO\WebSocket\Event\TaskStatusChangedEvent;
-use App\DTO\WebSocket\Message\InternalEnvelope;
-use App\DTO\WebSocket\Message\WelcomeMessage;
 use App\Router;
-use App\Service\Monitoring\SystemMonitor;
-use App\Service\Task\Processor\ProcessorFactory;
+use App\Service\Messaging\MappedMessageSerializer;
+use App\Service\Provider\Contract\Bootable;
+use App\Service\Provider\Contract\WorkerStartAware;
+use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
+use App\Service\Provider\Nats\NatsClientProvider;
+use App\Service\Provider\Nats\NatsQueueServiceProvider;
+use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
+use App\Service\Provider\Swoole\SwooleTableKeyValueStorageServiceProvider;
+use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
-use App\Service\Task\Strategy\DemoDelayStrategy;
 use App\Service\Task\TaskService;
-use App\Support\InternalBus;
-use App\Support\Monitoring\SwooleAtomicCounter;
 use App\Support\StdoutLogger;
-use App\WebSocket\ConnectionPool;
-use App\WebSocket\MessageHub;
+
+use function DI\autowire;
+
 use DI\Container;
 use DI\ContainerBuilder;
 
 use function DI\create;
-use function DI\factory;
 use function DI\get;
 
-use Fidry\CpuCoreCounter\CpuCoreCounter;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Psr\EventDispatcher\ListenerProviderInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Coroutine as Co;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
+use Swoole\Http\Server;
 use Swoole\Server\Task;
-use Swoole\WebSocket\Frame;
-use Swoole\WebSocket\Server;
+use Throwable;
 
 class Kernel
 {
@@ -51,16 +47,20 @@ class Kernel
     private readonly Options $options;
     private readonly LoggerInterface $logger;
 
+    private const array PROVIDERS = [
+        // Broadcasting/Queue
+        NatsClientProvider::class,
+        NatsBroadcasterServiceProvider::class,
+        NatsQueueServiceProvider::class,
+        NatsTaskQueueServiceProvider::class,
+        SwooleTableKeyValueStorageServiceProvider::class,
+        TaskServiceProvider::class,
+    ];
+
     public function __construct(private readonly string $basePath)
     {
         // Load config from .env
         $loader = ConfigLoader::fromEnv($this->basePath);
-
-        /**
-         * Detect available CPU cores for worker scaling.
-         * PHP 8.4 fluent instantiation style.
-         */
-        $cpuCores = max(1, new CpuCoreCounter()->getCount());
 
         // App version
         $versionPath = __DIR__ . '/../../version.php';
@@ -68,37 +68,43 @@ class Kernel
 
         // System settings
         $workerNum = $loader->getInt('SERVER_WORKER_NUM', 4);
-        $queueCapacity = $loader->getInt('QUEUE_CAPACITY', 10000);
-
-        // Message to send to clients onopen
-        $welcomeMessage = new WelcomeMessage(
-            workerNum: $workerNum,
-            cpuCores: $cpuCores,
-            queueCapacity: $queueCapacity,
-            appVersion: $appVersion,
-        );
 
         // Options
         $options = new Options(
             appVersion:         (string) $appVersion,
-            serverHost:         $loader->getString('SERVER_HOST', '0.0.0.0'),
-            logLevel:           $loader->getString('LOG_LEVEL', 'info'),
-            serverPort:         $loader->getInt('SERVER_PORT', 9501),
-            dispatchMode:       $loader->getInt('SERVER_DISPATCH_MODE', 2),
-            socketBufferMb:     $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
-            wsTableSize:        $loader->getInt('WS_TABLE_SIZE', 1024),
-            taskMaxBatchSize:   $loader->getInt('TASK_MAX_BATCH_SIZE', 5000),
-            taskSemaphoreLimit: $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
-            taskLockTimeoutSec: $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
-            taskRetryDelaySec:  $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
-            taskMaxRetries:     $loader->getInt('TASK_MAX_RETRIES', 3),
-            metricsIntervalMs:  $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
-            shutdownTimeoutSec: $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
-            stressMinTaskNum:   $loader->getInt('STRESS_MIN_TASK_NUM', 1000),
-            queueCapacity:      $queueCapacity,
-            workerNum:          $workerNum,
-            cpuCores:           $cpuCores,
-            welcomeMessage:     $welcomeMessage,
+            serverHost:           $loader->getString('SERVER_HOST', '0.0.0.0'),
+            logLevel:             $loader->getString('LOG_LEVEL', 'info'),
+            serverPort:           $loader->getInt('SERVER_PORT', 9501),
+            dispatchMode:         $loader->getInt('SERVER_DISPATCH_MODE', 2),
+            socketBufferMb:       $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
+            taskMaxBatchSize:     $loader->getInt('TASK_MAX_BATCH_SIZE', 5000),
+            taskSemaphoreLimit:   $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
+            taskLockTimeoutSec:   $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
+            taskRetryDelaySec:    $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
+            taskMaxRetries:       $loader->getInt('TASK_MAX_RETRIES', 3),
+            metricsIntervalMs:    $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
+            shutdownTimeoutSec:   $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
+            stressMinTaskNum:     $loader->getInt('STRESS_MIN_TASK_NUM', 1000),
+            natsHost:             $loader->getString('NATS_HOST', 'nutz'),
+            natsPort:             $loader->getInt('NATS_PORT', 4222),
+            natsToken:            $loader->getString('NATS_TOKEN', ''),
+            workerNum:            $workerNum,
+            // Queue
+            queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
+            queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
+            taskQueueMultiplier:  $loader->getInt('TASK_QUEUE_MULTIPLIER', 15),
+            // NATS & broadcast
+            natsAckWaitMs:        $loader->getInt('NATS_ACK_WAIT_MS', 30000),
+            natsTimeoutSec:       $loader->getInt('NATS_TIMEOUT_SEC', 1),
+            natsPingIntervalSec:  $loader->getInt('NATS_PING_INTERVAL_SEC', 10),
+            // Queue/streams
+            broadcastSubject:     $loader->getString('NATS_SUBJECT_BROADCAST', 'ws.broadcast'),
+            taskQueueSubject:     $loader->getString('NATS_SUBJECT_TASKS', 'task.queue'),
+            taskQueueConsumer:    $loader->getString('NATS_CONSUMER_TASKS', 'php-task-consumers'),
+            taskQueueStream:      $loader->getString('NATS_STREAM_TASKS', 'tasks'),
+            // KV
+            kvTableSize:          $loader->getInt('KV_TABLE_SIZE'),
+            kvTtlSec:             $loader->getInt('KV_TTL_SEC', 1),
         );
 
         // Assign options to object state
@@ -109,6 +115,13 @@ class Kernel
 
         // Server settings
         $this->server->set([
+            // Hearthbeat & TCP
+            'heartbeat_check_interval' => 30,
+            'heartbeat_idle_time' => 60,
+            'open_tcp_keepalive' => true,
+            'tcp_keepidle' => 60,
+            'tcp_keepinterval' => 10,
+
             // Workers
             'worker_num' => $options->workerNum,
             'task_worker_num' => $options->workerNum, // same as Server's worker_num
@@ -120,11 +133,13 @@ class Kernel
             // Enable coroutines
             'enable_coroutine' => true,
             'task_enable_coroutine' => true,
+            'task_use_object' => true,
 
             // Static files & HTTP
             'enable_static_handler' => true,
             'document_root' => rtrim($this->basePath, '/') . '/public',
             'http_compression' => true,
+            'http_compression_level' => 6,
             'http_index_files' => ['index.html'],
         ]);
 
@@ -133,6 +148,9 @@ class Kernel
         /** @var LoggerInterface $logger */
         $logger = $this->container->get(LoggerInterface::class);
         $this->logger = $logger;
+
+        // Boot providers
+        $this->bootProviders();
     }
 
     public function run(): void
@@ -149,9 +167,6 @@ class Kernel
          */
         $server = $this->server;
         $options = $this->options;
-
-        // WebSocket Connections storage
-        $connectionsTable = ConnectionPool::configureAndCreateTable($options->wsTableSize);
 
         // Task counter
         $tasksAtomic = new Atomic(0);
@@ -174,7 +189,7 @@ class Kernel
         /**
          * DI container setup
          */
-        $c = new ContainerBuilder()
+        $builder = new ContainerBuilder()
             ->useAutowiring(true)
             ->addDefinitions([
                 Server::class => $server,
@@ -182,7 +197,6 @@ class Kernel
 
                 // Config options (explicit)
                 'options.app_version' => $options->appVersion,
-                'options.queue_capacity' => $options->queueCapacity,
                 'options.task_max_retries' => $options->taskMaxRetries,
                 'options.task_retry_delay_sec' => $options->taskRetryDelaySec,
                 'options.task_lock_timeout_sec' => $options->taskLockTimeoutSec,
@@ -190,7 +204,15 @@ class Kernel
                 'options.task_max_batch_size' => $options->taskMaxBatchSize,
                 'options.task_semaphore_limit' => $options->taskSemaphoreLimit,
 
-                'shared.table.connections' => $connectionsTable,
+                // Queue
+                'options.queue_capacity' => $options->queueCapacity,
+
+                // Channels & Jet streams
+                'options.broadcast_subject' => $options->broadcastSubject,
+                'options.task_queue_subject' => $options->taskQueueSubject,
+                'options.task_queue_stream' => $options->taskQueueStream,
+                'options.nats_ack_wait_ms' => $options->natsAckWaitMs,
+
                 'shared.atomic.tasks' => $tasksAtomic,
                 'shared.semaphores.atomics' => $semaphoreAtomics,
 
@@ -199,77 +221,52 @@ class Kernel
                     ->constructor(fn (Options $opt) => $opt->logLevel),
                 LoggerInterface::class => create(StdoutLogger::class),
 
-                // Services
-                MessageHub::class => create()
-                    ->constructor(
-                        get(Server::class),
-                        get(ConnectionPool::class),
-                    )
-                    ->lazy(),
-
-                // ConnectionPool
-                ConnectionPool::class => create()->constructor(get('shared.table.connections')),
-
-                // Misc
-                TaskCounter::class => create(SwooleAtomicCounter::class)
-                    ->constructor(get('shared.atomic.tasks')),
+                // Semaphore
                 TaskSemaphore::class => create(GlobalSharedSemaphore::class)
                     ->constructor(get('shared.semaphores.atomics')),
 
-                TaskDelayStrategy::class => create(DemoDelayStrategy::class),
-
-                SystemMonitor::class => create(SystemMonitor::class)
-                    ->constructor(get(ConnectionPool::class)),
-
-                // EventBus
-                EventBus::class => create(InternalBus::class),
-                EventDispatcherInterface::class => get(EventBus::class),
-                ListenerProviderInterface::class => get(EventBus::class),
-
                 // Task Service
-                TaskService::class => create()
-                    ->constructor(
-                        get(Server::class),
-                        get(TaskSemaphore::class),
-                        get(TaskDelayStrategy::class),
-                        get(TaskCounter::class),
-                        get(ProcessorFactory::class),
-                        get(LoggerInterface::class),
-                        get(EventBus::class),
-                        get('options.queue_capacity'),
-                        get('options.task_max_retries'),
-                        get('options.task_retry_delay_sec'),
-                        get('options.task_lock_timeout_sec'),
-                    ),
+                TaskService::class => autowire()
+                    ->constructorParameter('broadcastSubject', get('options.broadcast_subject'))
+                    ->constructorParameter('maxRetries', get('options.task_max_retries'))
+                    ->constructorParameter('retryDelaySec', get('options.task_retry_delay_sec'))
+                    ->constructorParameter('lockTimeoutSec', get('options.task_lock_timeout_sec')),
 
                 TaskController::class => create()
                     ->constructor(
                         get(TaskService::class),
-                        get(MessageHub::class),
                         get('options.app_version'),
                         get('options.stress_min_task_num'),
                         get('options.task_max_batch_size'),
                         get('options.task_semaphore_limit'),
                     ),
 
-                Router::class => create()
-                    ->constructor(get(TaskController::class)),
+                Router::class => autowire(Router::class),
 
-                // Event Handler
-                EventHandler::class => create()
-                    ->constructor(
-                        get(Router::class),
-                        get(ConnectionPool::class),
-                        get(SystemMonitor::class),
-                        get(LoggerInterface::class),
-                        get(TaskCounter::class),
-                        factory(fn (Options $opt) => $opt->welcomeMessage),
-                        factory(fn (Options $opt) => $opt->metricsIntervalMs)
-                    ),
-            ])
-            ->build();
+                // Serializer
+                MessageSerializer::class => autowire(MappedMessageSerializer::class),
+           ]);
 
-        return $c;
+        // Custom providers
+        foreach (self::PROVIDERS as $providerClass) {
+            $builder->addDefinitions(new $providerClass()->register($builder));
+        }
+
+        // Build DI container
+        $container = $builder->build();
+
+        return $container;
+    }
+
+    private function bootProviders(): void
+    {
+        foreach (self::PROVIDERS as $providerClass) {
+            $provider = $this->container->get($providerClass);
+
+            if ($provider instanceof Bootable) {
+                $provider->boot($this->container);
+            }
+        }
     }
 
     private function registerEvents(): void
@@ -282,48 +279,44 @@ class Kernel
                     if ($task->data instanceof TaskExecutionPayload) {
                         /** @var TaskService $taskService */
                         $taskService = $this->container->get(TaskService::class);
+
                         $taskService->processTask($task->data, $server->worker_id);
-                        return;
+                        $task->finish(true);
                     }
 
-                    $this->logger->warning('Invalid task payload received', [
-                        'type' => get_debug_type($task->data),
-                    ]);
-
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $this->logger->error('Task execution failed', [
                         'error' => $e->getMessage(),
                         'worker_id' => $server->worker_id,
                         'trace' => $e->getTraceAsString(),
                     ]);
+
+                    $task->finish(false);
                 }
             });
         });
 
         // Required for task completion
-        $this->server->on('finish', function ($server, $taskId, $data): void {
+        $this->server->on('finish', function (Server $server, $taskId, $data): void {
             // Optional: Log task completion from worker pool
         });
 
-        // Worker Lifecycle
-        $this->server->on('WorkerStart', function ($server, $workerId): void {
-            // Re-bind the server instance to the current worker context
+        $this->server->on('WorkerStart', function (Server $server, int $workerId): void {
+            // Replace server instance in DI
             $this->container->set(Server::class, $server);
 
-            /** @var EventBus $bus */
-            $bus = $this->container->get(EventDispatcherInterface::class);
-            /** @var MessageHub $messageHub */
-            $messageHub = $this->container->get(MessageHub::class);
+            // Iterate over providers list & execute :)
+            foreach (self::PROVIDERS as $providerClass) {
+                $provider = $this->container->get($providerClass);
 
-            $bus->listen(TaskStatusChangedEvent::class, static function ($event) use ($messageHub): void {
-                $messageHub->broadcast(InternalEnvelope::wrap('status.changed', $event->update));
-            });
+                if ($provider instanceof WorkerStartAware) {
+                    $provider->onWorkerStart($this->container, $server, $workerId);
+                }
+            }
         });
 
         // Graceful shutdown
         $this->server->on('WorkerStop', function ($server, $workerId): void {
-            /** @var TaskCounter $taskCounter */
-            $taskCounter = $this->container->get(TaskCounter::class);
             $timeout = $this->options->shutdownTimeoutSec;
             $start = microtime(true);
 
@@ -331,6 +324,8 @@ class Kernel
              * Wait for active tasks to finish.
              * Using Co::sleep (if in coroutine context) or usleep for safe polling.
              */
+            /*
+            // TODO: REFACTOR
             while ($taskCounter->get() > 0 && (microtime(true) - $start) < $timeout) {
                 // Check if we can use non-blocking sleep
                 if (Co::getuid() > 0) {
@@ -339,66 +334,22 @@ class Kernel
                     usleep(50000);
                 }
             }
+            */
 
             $duration = round(microtime(true) - $start, 2);
 
-            $this->logger->info("[System] Worker #$workerId stopped after {$duration}s. Active tasks: " . $taskCounter->get());
+            $this->logger->info("[System] Worker #$workerId stopped after {$duration}s.");
         });
 
-        // WebSocket Event Handlers
+        // Request handling
         $this->server->on(
             'request',
             function (Request $req, Response $res): void {
-                /** @var EventHandler $handler */
-                $handler = $this->container->get(EventHandler::class);
-                $handler->onRequest($req, $res);
+                /** @var Router $router */
+                $router = $this->container->get(Router::class);
+                $router->handle($req, $res, $this->server);
             }
         );
-        $this->server->on(
-            'open',
-            function (Server $s, Request $req): void {
-                /** @var EventHandler $handler */
-                $handler = $this->container->get(EventHandler::class);
-                $handler->onOpen($s, $req);
-            }
-        );
-        $this->server->on(
-            'message',
-            function (Server $s, Frame $f): void {
-                /** @var EventHandler $handler */
-                $handler = $this->container->get(EventHandler::class);
-                $handler->onMessage($s, $f);
-            }
-        );
-        $this->server->on(
-            'close',
-            function (Server $s, int $fd): void {
-                /** @var EventHandler $handler */
-                $handler = $this->container->get(EventHandler::class);
-                $handler->onClose($s, $fd);
-            }
-        );
-
-        // IPC
-        $this->server->on('pipeMessage', function ($server, $srcWorkerId, $message): void {
-            try {
-                match (true) {
-                    // Task Retry
-                    $message instanceof TaskExecutionPayload => $server->task($message),
-
-                    // WebSocket Broadcast
-                    $message instanceof InternalEnvelope =>
-                        (($hub = $this->container->get(MessageHub::class)) instanceof MessageHub)
-                            ? $hub->localBroadcast($message)
-                            : null,
-
-                    default =>
-                        $this->logger->warning('Unknown IPC', ['type' => get_debug_type($message)]),
-                };
-            } catch (\Throwable $e) {
-                $this->logger->error('IPC Error', ['msg' => $e->getMessage()]);
-            }
-        });
 
         // On start
         $this->server->on('start', function (Server $server): void {

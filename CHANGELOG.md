@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 ### Added
+- NATS JetStream integration for all messaging
+- Go WebSocket proxy service (cmd/proxy)
+- Go monitoring tool (cmd/monitor)
+- Service Provider pattern with Bootable/WorkerStartAware interfaces
+- TaskQueue abstraction with ack/nack support
+- Temporary receipt storage in Swoole Table
+- Makefile target: nats-sub for debugging
+- Docker Compose with NATS container
 - **PHP-DI Integration**: Switched to a robust PSR-11 container with Autowiring and Lazy Injection support.
 - **Proxy Manager**: Added `ocramius/proxy-manager` to handle Ghost Objects for circular dependencies.
 - **Binary Frame v2**: New 13-byte structure for `StatusUpdate` (Type, Status, TaskID, MC, Progress, Worker).
@@ -14,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Type Guarding**: Added comprehensive `instanceof`, `is_array`, and `is_scalar` checks to satisfy PHPStan Level 9 requirements.
 
 ### Changed
+- WebSocket handling moved from PHP to Go (port 8080)
+- Task processing now uses NATS queues instead of IPC
+- Frontend connects to Go WebSocket proxy
+- Health endpoint now shows task worker stats
+- Task status mapping in frontend (0-based indices)
 - **Architectural Refactoring:** Standardized directory and namespace naming by shifting from plurals to singular nouns across the `app` structure.
 - **Directory Cleanup:** Renamed `Websockets` to `WebSocket`, `Services` to `Service`, `Controllers` to `Controller`, and consolidated `DTO` sub-directories to comply with PSR standards.
 - **Namespace Synchronization:** Updated all class definitions and imports to reflect the new singular naming pattern for better maintainability.
@@ -25,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Task Distribution**: Implemented random Event Worker selection for task re-queueing to improve load balancing.
 - **GlobalSharedSemaphore**: Refactored the `acquire` logic from a `get/cmpset` spin-lock to a more robust atomic `add/sub` pattern. This eliminates a race condition where multiple workers could read the same state before attempting a swap.
 - **Performance Optimization**: Reduced property lookups in the semaphore's hot loop by caching the Atomic instance into a local variable.
+
+### Removed
+- Internal IPC between Swoole workers
+- EventBus and internal message system
+- Binary serialization (JSON only now)
+- ConnectionPool and MessageHub (handled by Go)
+- TaskCounter and related monitoring
+- DemoDelayStrategy and unused interfaces
+- Obsolete tests (InternalEnvelope, DemoDelayStrategy, TaskService)
 
 ## Fixed
 - **Circular Dependency**: Resolved the infinite loop between `MessageHub` -> `TaskService` -> `EventBus` -> `MessageHub` using `->lazy`().

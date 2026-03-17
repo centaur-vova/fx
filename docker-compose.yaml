@@ -1,16 +1,19 @@
 services:
-  app:
-    build: .
-    container_name: atomic-flow-app
-    stop_grace_period: 1m
-    restart: always
-    # Docker reads your local .env and injects variables into the container environment
-    env_file:
-      - .env
+  nutz:
+    image: nats:latest
+    container_name: atomic-flow-nats
+    volumes:
+      - ./nats.conf:/etc/nats.conf
+    command: "-js -c /etc/nats.conf"
+    environment:
+      - NATS_USER=${NATS_USER}
+      - NATS_TOKEN=${NATS_TOKEN}
     ports:
-      - "${SERVER_PORT:-9501}:${SERVER_PORT:-9501}"
+      - "4222:4222"
+      - "8222:8222"
     networks:
       - atomic-network
+    restart: always
 
 networks:
   atomic-network:

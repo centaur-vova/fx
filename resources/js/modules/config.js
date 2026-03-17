@@ -47,14 +47,14 @@ export const WS = {
 export const TASK = {
     // Binary id mappings
     STATUS_MAP: {
-        1: 'queued',
-        2: 'processing',
-        3: 'check_lock',
-        4: 'progress',
-        5: 'completed',
-        6: 'lock_acquired',
-        7: 'lock_failed',
-        8: 'retries_failed'
+        0: 'queued',
+        1: 'processing',
+        2: 'check_lock',
+        3: 'progress',
+        4: 'completed',
+        5: 'lock_acquired',
+        6: 'lock_failed',
+        7: 'retries_failed'
     },
     // Human readable labels
     LABELS: {

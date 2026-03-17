@@ -17,8 +17,6 @@ class HighLoadProcessor implements Processor
 
     public function execute(?callable $onProgress = null): string
     {
-        $start = microtime(true);
-
         $data = random_bytes(32);
         for ($step = 1; $step <= self::STEPS; $step++) {
             for ($i = 0; $i < self::ITERATIONS; $i++) {
