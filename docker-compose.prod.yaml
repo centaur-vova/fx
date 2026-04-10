@@ -5,6 +5,9 @@ services:
     restart: always
     env_file:
       - .env
+    depends_on:
+      - deez-nutz
+      - ws-proxy
     ports:
       - "${SERVER_PORT:-9501}:${SERVER_PORT:-9501}"
     logging:
@@ -14,6 +17,35 @@ services:
         max-file: "3"   # Keep 3 files max
     networks:
       - atomic-network
+
+  deez-nutz:
+    image: nats:latest
+    container_name: fast-deez-nutz
+    command: -js
+    restart: always
+    volumes:
+      - deez-nutz-data:/data
+    ports:
+      - "4222:4222"
+    networks:
+      - atomic-network
+
+  ws-proxy:
+    image: ghcr.io/shmandalf/fast-atomic-flow-ws:latest
+    container_name: fast-ws
+    restart: always
+    command: /usr/local/bin/go-proxy
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - atomic-network
+    depends_on:
+      - deez-nutz
+
+volumes:
+  deez-nutz-data:
 
 networks:
   atomic-network:

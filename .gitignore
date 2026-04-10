@@ -50,3 +50,5 @@ version.php
 _ide_helper.php
 _ide_helper_models.php
 .phpstorm.meta.php
+# Used for local testing
+docker-compose.yaml

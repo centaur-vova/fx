@@ -2,7 +2,7 @@ name: Continuous Deployment
 
 on:
   push:
-    branches: [main] # Main branch only
+    branches: [main, test-deploy]
 
 jobs:
   build-and-push:
@@ -30,14 +30,24 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push
+
+      - name: Build and Push PHP App (Swoole + NATS)
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.version }}
+
+      - name: Build and Push Go WebSocket Proxy
+        uses: docker/build-push-action@v5
+        with:
+          context: ./go
+          file: ./go/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}-ws:latest
 
   deploy-vps:
     name: Pull & Restart on VPS
