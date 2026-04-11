@@ -113,7 +113,9 @@ class TaskService
                     Co::sleep(0.001);
                 };
 
+                $this->logger->debug('Task started', ['id' => $payload->id, 'time' => microtime(true)]);
                 $processor->execute($progressCallback);
+                $this->logger->debug('Task finished', ['id' => $payload->id, 'time' => microtime(true)]);
 
                 $this->notify(TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId));
             } finally {
