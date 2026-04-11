@@ -52,6 +52,8 @@ class TaskService
 
     public function processTask(TaskExecutionPayload $payload, int $workerId): void
     {
+        $this->logger->debug('Entered processTask', ['id' => $payload->id]);
+
         try {
             $permit = $this->semaphore->forLimit($payload->mc);
             $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc));

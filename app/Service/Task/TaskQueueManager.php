@@ -9,6 +9,7 @@ use App\Contract\Support\Identifiable;
 use App\Contract\Task\TaskQueue;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Server\Options;
+use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Server;
 
@@ -20,6 +21,7 @@ final class TaskQueueManager
         private readonly TaskQueue $taskQueue,
         private readonly KeyValueStorage $taskMetaCache,
         private readonly Options $options,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -54,7 +56,9 @@ final class TaskQueueManager
                     continue;
                 }
 
+                $this->logger->debug('Pull loop start', ['batchSize' => $batchSize]);
                 $tasks = $this->taskQueue->pull($batchSize);
+                $this->logger->debug('Pull loop end', ['tasksCount' => count(iterator_to_array($tasks))]);
 
                 foreach ($tasks as $receiptId => $task) {
                     if (!$task instanceof TaskExecutionPayload) {
@@ -62,7 +66,9 @@ final class TaskQueueManager
                         continue;
                     }
 
+                    $this->logger->debug('Task received', ['id' => $task->id, 'receipt' => $receiptId]);
                     $taskId = $server->task($task);
+                    $this->logger->debug('Task sent to worker', ['id' => $task->id]);
 
                     if ($taskId === false) {
                         $this->taskQueue->nack($receiptId);
