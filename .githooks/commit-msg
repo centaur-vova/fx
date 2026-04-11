@@ -25,7 +25,7 @@ $message = trim(file_get_contents($commitMsgFile));
  * \s                 - Mandatory space
  * .{5,}              - Description must be at least 5 characters long
  */
-$pattern = '/^(feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/i';
+$pattern = '/^(🚨 \e\[1;31mСРОЧНО\e\[0m|feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/ui';
 
 echo "[Commit-msg] Checking message for Conventional Commits standard...\n";
 
@@ -37,7 +37,7 @@ if (!preg_match($pattern, $message)) {
     echo "  feat: add queue limit logic\n";
     echo "  ui(css): update yellow alert color\n";
     echo "  fix!: repair critical websocket leak\n\n";
-    echo "Allowed types: feat, fix, perf, ui, chore, docs, refactor, style, test\n";
+    echo "Allowed types: надо бы их запомнить, Кентавр-Вова\n";
     exit(1);
 }
 
