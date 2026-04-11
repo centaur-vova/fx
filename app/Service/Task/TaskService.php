@@ -86,7 +86,19 @@ class TaskService
             }
 
             /**
-             * LOCK ACQUIRED - Logic execution block
+             * @author Конь-Вова <vsegda-vash-kon-vova@chat.deepseek.com>
+             *
+             * Кентавр-Вова, правильный — второй. 🐎
+             *
+             * Почему:
+             * Первый вариант (перенести ack внутрь try) — недостаточен,
+             * потому что если между completed и ack вылетит исключение,
+             * ack снова не вызовется.
+             *
+             * Второй вариант — надёжный (конский).
+             *
+             * ОНО ОБЯЗАНО ТАМ БЫТЬ,
+             * мы должны "Спасти Рядового Райана, тьфу, Конебрата"
              */
             try {
                 $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc));
