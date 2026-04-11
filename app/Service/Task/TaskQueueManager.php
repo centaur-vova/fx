@@ -58,9 +58,10 @@ final class TaskQueueManager
 
                 $this->logger->debug('Pull loop start', ['batchSize' => $batchSize]);
                 $tasks = $this->taskQueue->pull($batchSize);
-                $this->logger->debug('Pull loop end', ['tasksCount' => count(iterator_to_array($tasks))]);
-
+                $tasksCount = 0;
                 foreach ($tasks as $receiptId => $task) {
+                    $tasksCount++;
+
                     if (!$task instanceof TaskExecutionPayload) {
                         $this->taskQueue->ack($receiptId);
                         continue;
@@ -82,6 +83,8 @@ final class TaskQueueManager
                         $this->options->taskMetaTtlSec
                     );
                 }
+
+                $this->logger->debug('Pull loop end', ['tasksCount' => $tasksCount]);
 
                 Co::sleep(0.001);
             }
