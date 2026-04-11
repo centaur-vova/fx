@@ -62,6 +62,8 @@ func main() {
 		}
 		json.Unmarshal(m.Data, &env)
 
+		log.Printf("NATS -> WS: subject=%s, data=%s", m.Subject, string(m.Data))
+
 		if env.Type == "task.status.update" {
 			var t protocol.TaskStatusUpdate
 			if err := json.Unmarshal(env.Data, &t); err == nil {

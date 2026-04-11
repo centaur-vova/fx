@@ -83,6 +83,7 @@ func (h *Hub) Broadcast(data any) {
 
 	for conn, lock := range h.clients {
 		lock.Lock()
+		log.Printf("WS <- %s", string(payload))
 		_ = conn.WriteMessage(kind, payload)
 		lock.Unlock()
 	}

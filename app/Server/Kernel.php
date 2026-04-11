@@ -22,8 +22,15 @@ use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
+
+use function DI\autowire;
+
 use DI\Container;
 use DI\ContainerBuilder;
+
+use function DI\create;
+use function DI\get;
+
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Coroutine as Co;
@@ -32,10 +39,6 @@ use Swoole\Http\Response;
 use Swoole\Http\Server;
 use Swoole\Server\Task;
 use Throwable;
-
-use function DI\autowire;
-use function DI\create;
-use function DI\get;
 
 class Kernel
 {

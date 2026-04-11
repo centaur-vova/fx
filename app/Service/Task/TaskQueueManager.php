@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Task;
 
 use App\Contract\Storage\KeyValueStorage;
+use App\Contract\Support\Concern\LoopedLogger;
 use App\Contract\Support\Identifiable;
 use App\Contract\Task\TaskQueue;
 use App\DTO\Task\TaskExecutionPayload;
@@ -15,6 +16,8 @@ use Swoole\Server;
 
 final class TaskQueueManager
 {
+    use LoopedLogger;
+
     private const string RECEIPT_PREFIX = 'receipt:';
 
     public function __construct(
@@ -36,11 +39,14 @@ final class TaskQueueManager
 
             /** @phpstan-ignore-next-line */
             while (true) {
+                $this->logMemoryUsage();
+
                 // Occupied slots count
                 $activeTasks = $this->taskMetaCache->count();
 
                 // Free slots count
                 $freeSlots = $maxTableSize - $activeTasks - $reserve;
+                $this->logLoopDebug('Loop iteration', ['freeSlots' => $freeSlots]);
 
                 if ($freeSlots <= 0) {
                     // The task meta cache table is full, wait
@@ -56,7 +62,6 @@ final class TaskQueueManager
                     continue;
                 }
 
-                $this->logger->debug('Pull loop start', ['batchSize' => $batchSize]);
                 $tasks = $this->taskQueue->pull($batchSize);
                 $tasksCount = 0;
                 foreach ($tasks as $receiptId => $task) {
@@ -84,9 +89,8 @@ final class TaskQueueManager
                     );
                 }
 
-                $this->logger->debug('Pull loop end', ['tasksCount' => $tasksCount]);
-
-                Co::sleep(0.001);
+                // Adaptive delay
+                Co::sleep($tasksCount ? 0.001 : 0.1);
             }
         });
     }
