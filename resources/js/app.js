@@ -85,8 +85,7 @@ const drawShape = (x, y, size, mc, status) => {
 
 // Websockets
 const connect = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const wsUrl = WS_URL;
     const ws = new WebSocket(wsUrl);
 
     ws.binaryType = 'arraybuffer';
@@ -165,31 +164,29 @@ const handleUpdateTasks = (data) => {
 
 const handleMetrics = (data) => {
     store.updateMetrics(data);
-    // LOD Logic
-    const total = parseInt(data.task_num, 10);
-    if (total <= 50) { store.scale = 1; store.mode = 'normal'; }
-    else if (total <= 500) { store.scale = 0.5; store.mode = 'normal'; }
-    else { store.scale = 0.3; store.mode = 'dot'; }
-
-    store.isLogPanelDisabled = tasks.size > TASK.LOG_THRESHOLD;
 };
 
 // Rendering
 const render = () => {
     requestAnimationFrame(render);
-    if (!store.renderEnabled) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (store.renderEnabled) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
     const now = Date.now();
-
     tasks.forEach((task, id) => {
         task.currentX += (task.targetX - task.currentX) * 0.1;
-        if ((task.status === 'completed' || task.status === 'retries_failed') && now - task.endTime > 5000) {
+        if ((task.status === 'completed' || task.status === 'retries_failed') && now - task.endTime > 1000) {
             tasks.delete(id);
             return;
         }
-        drawShape(task.currentX * store.width, task.y * store.height, 24, task.mc, task.status);
+        if (store.renderEnabled) {
+            drawShape(task.currentX * store.width, task.y * store.height, 24, task.mc, task.status);
+        }
     });
+
+    store.updateTaskNum(tasks.size, TASK.LOG_THRESHOLD);
 };
 
 // Helpers
@@ -200,7 +197,7 @@ function addLog(taskId, mc, status, msg) {
     const entry = document.createElement('div');
     entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
     const time = new Date().toLocaleTimeString([], { hour12: false });
-    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.substring(0, 8)}</span> <span class="text-gray-400">${msg}</span>`;
+    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.slice(-8)}</span> <span class="text-gray-400">${msg}</span>`;
 
     logContainer.appendChild(entry);
     if (logContainer.children.length > 30) logContainer.removeChild(logContainer.firstChild);

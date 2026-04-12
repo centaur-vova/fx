@@ -13,7 +13,9 @@ final readonly class HealthResponse implements JsonSerializable
         public string $appVersion,
         public string $phpVersion,
         public float $memoryMb,
-        public int $connections,
+        public int $tasksInProgress,
+        public int $taskWorkers,
+        public int $idleWorkers,
     ) {
     }
 
@@ -28,7 +30,11 @@ final readonly class HealthResponse implements JsonSerializable
                 'php_version' => $this->phpVersion,
                 'app_version' => $this->appVersion,
                 'memory_mb' => $this->memoryMb,
-                'connections' => $this->connections,
+            ],
+            'queue' => [
+                'tasks_in_progress' => $this->tasksInProgress,
+                'task_workers' => $this->taskWorkers,
+                'idle_workers' => $this->idleWorkers,
             ],
         ];
     }

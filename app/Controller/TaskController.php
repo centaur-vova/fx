@@ -11,13 +11,12 @@ use App\Exception\Task\InvalidTaskBatchException;
 use App\Exception\Task\QueueFullException;
 use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\TaskService;
-use App\WebSocket\MessageHub;
+use Swoole\Server;
 
 class TaskController
 {
     public function __construct(
         private readonly TaskService $taskService,
-        private readonly MessageHub $wsHub,
         private readonly string $appVersion,
         private readonly int $stressMinTaskNum,
         private readonly int $taskMaxBatchSize,
@@ -38,25 +37,32 @@ class TaskController
             }
 
             // Guess mode
-            $mode = $dto->count < $this->stressMinTaskNum
+            go(function () use ($dto): void {
+                $mode = $dto->count < $this->stressMinTaskNum
                 ? ProcessorFactory::MODE_OBSERVATION
                 : ProcessorFactory::MODE_STRESS;
 
-            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $mode);
-            return ApiResponse::ok("{$dto->count} task(s) queued");
+                $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $mode);
+            });
+
+            return ApiResponse::ok('Tasks queued');
         } catch (InvalidTaskBatchException | QueueFullException $e) {
             return ApiResponse::error($e->getMessage());
         }
     }
 
-    public function health(): HealthResponse
+    public function health(Server $server): HealthResponse
     {
+        $stats = $server->stats();
+
         return new HealthResponse(
             appVersion: $this->appVersion,
             status: 'ok',
             phpVersion: PHP_VERSION,
             memoryMb: round(memory_get_usage(false) / 1024 / 1024, 2),
-            connections: $this->wsHub->count(),
+            tasksInProgress: $stats['tasking_num'],
+            taskWorkers: $stats['task_worker_num'],
+            idleWorkers: $stats['task_worker_num'] - $stats['tasking_num'],
         );
     }
 }

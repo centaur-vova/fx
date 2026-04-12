@@ -39,17 +39,6 @@ export const state = {
         content: ''
     },
 
-    // Getter for formatted capacity
-    get formattedCapacity() {
-        const cap = this.system.queue_capacity;
-
-        // If it's not a number (e.g. '--'), just return it
-        if (isNaN(cap)) return cap;
-
-        // Otherwise, do the math
-        return (cap / 1000).toFixed(0) + 'k';
-    },
-
     // Workers
     initWorkers(count) {
         this.workers = Array.from({ length: count }, () => ({ status: '' }));
@@ -81,7 +70,17 @@ export const state = {
         this.metrics.memory = data.memory_mb + 'MB';
         this.metrics.connections = data.connections;
         this.metrics.cpu = data.cpu_usage + '%';
-        this.metrics.taskNum = data.task_num;
+    },
+
+    updateTaskNum(total, logThreshold) {
+        this.metrics.taskNum = total;
+
+        // LOD Logic
+        if (total <= 50) { this.scale = 1; this.mode = 'normal'; }
+        else if (total <= 500) { this.scale = 0.5; this.mode = 'normal'; }
+        else { this.scale = 0.3; this.mode = 'dot'; }
+
+        this.isLogPanelDisabled = total > logThreshold;
     },
 
     // Toast
@@ -103,7 +102,7 @@ export const state = {
                 body: JSON.stringify({ count, max_concurrent: this.mc }),
             });
             const data = await res.json();
-            this.showToast(count, res.ok && data.success, data.message);
+            // this.showToast(count, res.ok && data.success, data.message);
         } catch (e) {
             this.showToast(0, false, "Connection error");
         }

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\DTO\WebSocket\Message;
 
-use App\Contract\WebSocket\BinarySerializable;
+use App\DTO\WebSocket\Concern\InteractsWithWebSocket;
 use JsonSerializable;
 
-final readonly class TaskStatusUpdate implements JsonSerializable, BinarySerializable
+final readonly class TaskStatusUpdate implements JsonSerializable
 {
+    use InteractsWithWebSocket;
+
     public const string EVENT_QUEUED = 'queued';
     public const string EVENT_PROCESSING = 'processing';
     public const string EVENT_CHECK_LOCK = 'check_lock';
@@ -77,45 +79,6 @@ final readonly class TaskStatusUpdate implements JsonSerializable, BinarySeriali
             mc: $this->mc,
             progress: $this->progress,
             worker: $this->worker,
-        );
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            'mc' => $this->mc,
-            'taskId' => $this->id,
-            'status' => $this->status,
-            'message' => $this->message,
-            'progress' => $this->progress,
-            'worker' => $this->worker,
-        ];
-    }
-
-    public function toBinary(): string
-    {
-        $eventMap = [
-            self::EVENT_QUEUED => 1,
-            self::EVENT_PROCESSING => 2,
-            self::EVENT_CHECK_LOCK => 3,
-            self::EVENT_PROGRESS => 4,
-            self::EVENT_COMPLETED => 5,
-            self::EVENT_LOCK_ACQUIRED => 6,
-            self::EVENT_LOCK_FAILED => 7,
-            self::EVENT_RETRIES_FAILED => 8,
-        ];
-
-        return pack(
-            'CCJCCC', // Type(1), Status(1), TaskID(8), MC(1), Progress(1), Worker(1)
-            0x02,
-            $eventMap[$this->status] ?? 0,
-            $this->id,
-            $this->mc,
-            $this->progress,
-            $this->worker ?? 0
         );
     }
 }

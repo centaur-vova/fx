@@ -3,7 +3,7 @@
     "scripts": {
         "build:css": "postcss resources/css/style.scss -o public/dist/style.css",
         "minify:css": "esbuild public/dist/style.css --minify --outfile=public/dist/style.min.css",
-        "build:js": "esbuild resources/js/app.js --bundle --minify --outfile=public/dist/app.min.js",
+        "build:js": "node build.mjs",
         "clean:css": "rimraf public/dist/style.css",
         "build": "npm run build:css && npm run minify:css && npm run build:js && npm run clean:css"
     },

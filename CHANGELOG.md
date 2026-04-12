@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ## [Unreleased]
 ### Added
+- NATS JetStream integration for all messaging
+- Go WebSocket proxy service (cmd/proxy)
+- Go monitoring tool (cmd/monitor)
+- Service Provider pattern with Bootable/WorkerStartAware interfaces
+- TaskQueue abstraction with ack/nack support
+- Temporary receipt storage in Swoole Table
+- Makefile target: nats-sub for debugging
+- Docker Compose with NATS container
+- `TtlKeyValueStorage` interface extending `KeyValueStorage` with `count()` and TTL methods
+- Task meta cache with configurable size (`TASK_META_CACHE_SIZE`) and TTL (`TASK_META_TTL_SEC`)
+- Cache capacity control in `TaskQueueManager` with 1% reserve to prevent overflow
+- Show only last 8 characters of taskId in frontend logs (`slice(-8)`)
 - **PHP-DI Integration**: Switched to a robust PSR-11 container with Autowiring and Lazy Injection support.
 - **Proxy Manager**: Added `ocramius/proxy-manager` to handle Ghost Objects for circular dependencies.
 - **Binary Frame v2**: New 13-byte structure for `StatusUpdate` (Type, Status, TaskID, MC, Progress, Worker).
@@ -14,6 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **Type Guarding**: Added comprehensive `instanceof`, `is_array`, and `is_scalar` checks to satisfy PHPStan Level 9 requirements.
 
 ### Changed
+- WebSocket handling moved from PHP to Go (port 8080)
+- Task processing now uses NATS queues instead of IPC
+- Frontend connects to Go WebSocket proxy
+- Health endpoint now shows task worker stats
+- Task status mapping in frontend (0-based indices)
+- Renamed `.env` variables:
+  - `KV_TABLE_SIZE` → `TASK_META_CACHE_SIZE`
+  - `KV_TTL_SEC` → `TASK_META_TTL_SEC`
+- Frontend: "Queue" stat renamed to "Buffer" (more accurate)
+- `TaskQueueManager` now uses `$taskMetaCache` instead of `$kvStorage`
+- Retry jitter increased from 30% to 50% for better distribution
 - **Architectural Refactoring:** Standardized directory and namespace naming by shifting from plurals to singular nouns across the `app` structure.
 - **Directory Cleanup:** Renamed `Websockets` to `WebSocket`, `Services` to `Service`, `Controllers` to `Controller`, and consolidated `DTO` sub-directories to comply with PSR standards.
 - **Namespace Synchronization:** Updated all class definitions and imports to reflect the new singular naming pattern for better maintainability.
@@ -29,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 ## Fixed
 - **Circular Dependency**: Resolved the infinite loop between `MessageHub` -> `TaskService` -> `EventBus` -> `MessageHub` using `->lazy`().
 - **Worker Isolation**: Fixed the "blind worker" issue where the owner worker couldn't see its own connections due to container re-initialization.
+- Receipt deletion in `ack()`/`nack()` — now deletes by task key, not receiptId
+- Jitter calculation in task retry (was using wrong multiplier)
 
 ## [v1.2.0] - 2026-02-16
 ### Added

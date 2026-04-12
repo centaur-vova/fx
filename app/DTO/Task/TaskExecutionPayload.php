@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\DTO\Task;
 
+use App\Contract\Support\Identifiable;
+
 /**
  * Payload for Swoole Task Worker execution
  */
-final readonly class TaskExecutionPayload
+final readonly class TaskExecutionPayload implements Identifiable
 {
     public function __construct(
         public int $id,
@@ -25,5 +27,10 @@ final readonly class TaskExecutionPayload
             mode: $this->mode,
             attempt: $this->attempt + 1,
         );
+    }
+
+    public function getId(): string
+    {
+        return (string) $this->id;
     }
 }
