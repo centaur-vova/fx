@@ -86,7 +86,7 @@ const drawShape = (x, y, size, mc, status) => {
 // Websockets
 const connect = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}/ws`;
+    const wsUrl = `${protocol}//${window.location.hostname}:${WS_PORT}/ws`;
     const ws = new WebSocket(wsUrl);
 
     ws.binaryType = 'arraybuffer';

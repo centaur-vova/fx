@@ -21,21 +21,46 @@ final readonly class NatsBroadcaster implements Broadcaster
 
     public function publish(string $subject, mixed $message): void
     {
-        try {
-            $payload = match (true) {
-                is_object($message) => $this->serializer->serialize($message),
-                is_string($message) => $message,
-                is_scalar($message) => (string) $message,
-                default => throw new \InvalidArgumentException('Message must be object or string'),
-            };
+        $payload = match (true) {
+            is_object($message) => $this->serializer->serialize($message),
+            is_string($message) => $message,
+            is_scalar($message) => (string) $message,
+            default => throw new \InvalidArgumentException('Message must be object or string'),
+        };
 
-            $this->client->publish($subject, $payload);
-        } catch (\Throwable $e) {
-            $this->logger->error('NATS Publish failed', [
+        $attempt = 0;
+        $maxRetries = 3;
+        $lastException = null;
+
+        while ($attempt < $maxRetries) {
+            try {
+                $this->client->publish($subject, $payload);
+                return;
+            } catch (\Throwable $e) {
+                $lastException = $e;
+                $attempt++;
+                if ($this->logger != null) {
+                    $this->logger->warning('NATS publish failed, attempt ' . $attempt, [
+                        'channel' => $subject,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                if ($attempt < $maxRetries) {
+                    $this->client->reconnect();
+                    usleep(100_000 * $attempt); // 100ms, 200ms, 300ms...
+                }
+            }
+        }
+
+        if ($this->logger !== null) {
+            $this->logger->error('NATS publish failed after ' . $maxRetries . ' attempts', [
                 'channel' => $subject,
-                'error' => $e->getMessage(),
+                'error' => $lastException->getMessage(),
             ]);
         }
+
+        throw $lastException;
     }
 
     public function subscribe(string $subject, callable $handler, ?string $group = null): void
