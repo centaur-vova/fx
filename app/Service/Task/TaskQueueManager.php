@@ -50,7 +50,7 @@ final class TaskQueueManager
 
                 if ($freeSlots <= 0) {
                     // The task meta cache table is full, wait
-                    Co::sleep(0.01);
+                    Co::sleep(0.1);
                     continue;
                 }
 
@@ -58,7 +58,7 @@ final class TaskQueueManager
                 $batchSize = min($this->options->queuePrefetchBatch, $freeSlots);
 
                 if ($batchSize <= 0) {
-                    Co::sleep(0.001);
+                    Co::sleep(0.1);
                     continue;
                 }
 
