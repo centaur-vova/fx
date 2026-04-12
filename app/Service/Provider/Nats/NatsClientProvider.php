@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Provider\Nats;
 
 use App\Server\Options;
+use App\Service\Messaging\Nats\ReconnectableClient;
 use App\Service\Provider\Contract\ServiceProvider;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Configuration as NatsConfiguration;
@@ -37,7 +38,7 @@ class NatsClientProvider implements ServiceProvider
             },
 
             // Client
-            NatsClient::class => autowire()
+            NatsClient::class => autowire(ReconnectableClient::class)
                 ->constructorParameter('configuration', get(NatsConfiguration::class)),
         ];
     }

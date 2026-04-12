@@ -45,6 +45,7 @@ final readonly class NatsBroadcaster implements Broadcaster
                 ]);
 
                 if ($attempt < $maxRetries) {
+                    // @phpstan-ignore-next-line
                     $this->client->reconnect();
                     usleep(100_000 * $attempt); // 100ms, 200ms, 300ms...
                 }
