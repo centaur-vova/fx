@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"encoding/json"
-	"errors"
 	"fast-atomic-flow/go/internal/protocol"
 	"log"
 	"math"
@@ -15,8 +14,16 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 )
 
+type ClientMessage struct {
+	Kind    int // websocket.BinaryMessage или websocket.TextMessage
+	Payload []byte
+}
+type Client struct {
+	Conn *websocket.Conn
+	Send chan ClientMessage
+}
 type Hub struct {
-	clients   map[*websocket.Conn]*sync.Mutex
+	clients   map[*Client]bool
 	clientsMu sync.RWMutex
 	config    *protocol.AppConfig
 	upgrader  websocket.Upgrader
@@ -24,7 +31,7 @@ type Hub struct {
 
 func NewHub(cfg *protocol.AppConfig) *Hub {
 	return &Hub{
-		clients: make(map[*websocket.Conn]*sync.Mutex),
+		clients: make(map[*Client]bool),
 		config:  cfg,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
@@ -33,29 +40,60 @@ func NewHub(cfg *protocol.AppConfig) *Hub {
 }
 
 func (h *Hub) Add(conn *websocket.Conn) {
+	client := &Client{
+		Conn: conn,
+		Send: make(chan ClientMessage, 256),
+	}
 	h.clientsMu.Lock()
-	h.clients[conn] = &sync.Mutex{}
+	h.clients[client] = true
 	h.clientsMu.Unlock()
+	go h.writePump(client)
 }
 
-func (h *Hub) WriteToConn(conn *websocket.Conn, kind int, payload []byte) error {
-	h.clientsMu.RLock()
-	lock, exists := h.clients[conn]
-	h.clientsMu.RUnlock()
+func (h *Hub) writePump(client *Client) {
+	defer func() {
+		h.Remove(client)
+		client.Conn.Close()
+	}()
+	for msg := range client.Send {
+		err := client.Conn.WriteMessage(msg.Kind, msg.Payload)
+		if err != nil {
+			return
+		}
+	}
+}
 
-	if !exists {
-		return errors.New("client not found")
+func (h *Hub) Remove(client *Client) {
+	h.clientsMu.Lock()
+	if _, exists := h.clients[client]; exists {
+		delete(h.clients, client)
+		h.clientsMu.Unlock()
+		close(client.Send)
+	} else {
+		h.clientsMu.Unlock()
+	}
+}
+
+func (h *Hub) Broadcast(data any) {
+	var msg ClientMessage
+	if packer, ok := data.(protocol.BinaryPacker); ok {
+		msg.Kind = websocket.BinaryMessage
+		msg.Payload = packer.Pack()
+	} else {
+		msg.Kind = websocket.TextMessage
+		msg.Payload, _ = json.Marshal(data)
 	}
 
-	lock.Lock()
-	defer lock.Unlock()
-	return conn.WriteMessage(kind, payload)
-}
+	h.clientsMu.RLock()
+	defer h.clientsMu.RUnlock()
 
-func (h *Hub) Remove(conn *websocket.Conn) {
-	h.clientsMu.Lock()
-	delete(h.clients, conn)
-	h.clientsMu.Unlock()
+	for client := range h.clients {
+		select {
+		case client.Send <- msg:
+		default:
+			go h.Remove(client)
+		}
+	}
 }
 
 func (h *Hub) Count() int {
@@ -64,28 +102,24 @@ func (h *Hub) Count() int {
 	return len(h.clients)
 }
 
-func (h *Hub) Broadcast(data any) {
-	var payload []byte
-	var kind int
-
-	// Binary format?
-	if packer, ok := data.(protocol.BinaryPacker); ok {
-		payload = packer.Pack()
-		kind = websocket.BinaryMessage
-	} else {
-		// Json format
-		payload, _ = json.Marshal(data)
-		kind = websocket.TextMessage
+func (h *Hub) SendToClient(client *Client, data any) {
+	var msg ClientMessage
+	switch v := data.(type) {
+	case protocol.BinaryPacker:
+		msg.Kind = websocket.BinaryMessage
+		msg.Payload = v.Pack()
+	case []byte:
+		msg.Kind = websocket.BinaryMessage
+		msg.Payload = v
+	default:
+		msg.Kind = websocket.TextMessage
+		msg.Payload, _ = json.Marshal(v)
 	}
 
-	h.clientsMu.RLock()
-	defer h.clientsMu.RUnlock()
-
-	for conn, lock := range h.clients {
-		lock.Lock()
-		log.Printf("WS <- %s", string(payload))
-		_ = conn.WriteMessage(kind, payload)
-		lock.Unlock()
+	select {
+	case client.Send <- msg:
+	default:
+		go h.Remove(client)
 	}
 }
 
@@ -96,17 +130,19 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 		return
 	}
 
-	// Register connection
-	h.Add(conn)
+	client := &Client{
+		Conn: conn,
+		Send: make(chan ClientMessage, 256),
+	}
+
+	h.clientsMu.Lock()
+	h.clients[client] = true
+	h.clientsMu.Unlock()
+	go h.writePump(client)
+
 	log.Printf("New client. Total: %d", h.Count())
 
-	defer func() {
-		h.Remove(conn)
-		conn.Close()
-		log.Printf("Disconnected. Remaining: %d", h.Count())
-	}()
-
-	// Create and send welcome event
+	// Welcome event
 	welcomeEvent := protocol.NewEvent(
 		"welcome",
 		protocol.WelcomeData{
@@ -116,29 +152,27 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 			AppVersion:    h.config.AppVersion,
 		},
 	)
-	h.WriteToConn(conn, websocket.TextMessage, welcomeEvent.Marshal())
+	h.SendToClient(client, welcomeEvent)
 
-	// Loop + pong
+	// Read loop
 	for {
-		messageType, p, err := conn.ReadMessage()
+		_, p, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		// Text message received - try routing it
-		if messageType == websocket.TextMessage {
-			response, err := router.Route(p)
-			if err != nil {
-				log.Printf("Router error: %v", err)
-				continue
-			}
+		response, err := router.Route(p)
+		if err != nil {
+			log.Printf("Router error: %v", err)
+			continue
+		}
 
-			if response != nil {
-				// Send response back
-				h.WriteToConn(conn, websocket.TextMessage, response)
-			}
+		if response != nil {
+			h.SendToClient(client, response)
 		}
 	}
+
+	h.Remove(client)
 }
 
 func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
