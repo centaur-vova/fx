@@ -1,7 +1,7 @@
 # FAST-ATOMIC-FLOW
 
 <p align="center">
-    <a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yaml/badge.svg" alt="Tests"></a>&nbsp;<a href="https://github.com/phpstan/phpstan"><img src="https://img.shields.io/badge/PHPStan-level%209-gold?style=flat&logo=php" alt="PHPStan Level 9"></a>&nbsp;<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+    <a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yaml/badge.svg" alt="Tests"></a>&nbsp;<a href="https://github.com/phpstan/phpstan"><img src="https://img.shields.io/badge/PHPStan-level%209-gold?style=flat&logo=php" alt="PHPStan Level 9"></a>&nbsp;<a href="LICENSE"><img src="https://img.shields.io/badge/license-KBL-blue" alt="License"></a>
 </p>
 
 🌐 **Демо:** **[https://fast.af.l3373.xyz](https://fast.af.l3373.xyz/)**

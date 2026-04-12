@@ -15,7 +15,7 @@ final readonly class NatsBroadcaster implements Broadcaster
     public function __construct(
         private NatsClient $client,
         private MessageSerializer $serializer,
-        private LoggerInterface $logger,
+        private ?LoggerInterface $logger,
     ) {
     }
 
@@ -39,12 +39,10 @@ final readonly class NatsBroadcaster implements Broadcaster
             } catch (\Throwable $e) {
                 $lastException = $e;
                 $attempt++;
-                if ($this->logger != null) {
-                    $this->logger->warning('NATS publish failed, attempt ' . $attempt, [
-                        'channel' => $subject,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+                $this->logger?->warning('NATS publish failed, attempt ' . $attempt, [
+                    'channel' => $subject,
+                    'error' => $e->getMessage(),
+                ]);
 
                 if ($attempt < $maxRetries) {
                     $this->client->reconnect();
@@ -53,12 +51,10 @@ final readonly class NatsBroadcaster implements Broadcaster
             }
         }
 
-        if ($this->logger !== null) {
-            $this->logger->error('NATS publish failed after ' . $maxRetries . ' attempts', [
-                'channel' => $subject,
-                'error' => $lastException->getMessage(),
-            ]);
-        }
+        $this->logger?->error('NATS publish failed after ' . $maxRetries . ' attempts', [
+            'channel' => $subject,
+            'error' => $lastException->getMessage(),
+        ]);
 
         throw $lastException;
     }
