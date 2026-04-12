@@ -7,6 +7,7 @@ namespace App\Service\Messaging\Nats;
 use Basis\Nats\Client;
 use Basis\Nats\Connection;
 use Swoole\Coroutine as Co;
+use Swoole\Timer;
 
 class ReconnectableClient extends Client
 {
@@ -23,5 +24,16 @@ class ReconnectableClient extends Client
         );
 
         $this->connection->ping();
+    }
+
+    public function startPingTimer(int $interval = 5): void
+    {
+        Timer::tick($interval * 1000, function (): void {
+            try {
+                $this->ping();
+            } catch (\Throwable) {
+                $this->reconnect();
+            }
+        });
     }
 }

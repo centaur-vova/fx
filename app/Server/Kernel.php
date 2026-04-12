@@ -22,6 +22,7 @@ use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
+use Basis\Nats\Client as NatsClient;
 
 use function DI\autowire;
 
@@ -312,6 +313,10 @@ class Kernel
                     $provider->onWorkerStart($this->container, $server, $workerId);
                 }
             }
+
+            // Конь должен жЫть
+            // @phpstan-ignore-next-line
+            $this->container->get(NatsClient::class)->startPingTimer();
         });
 
         // Graceful shutdown
