@@ -28,36 +28,14 @@ final readonly class NatsBroadcaster implements Broadcaster
             default => throw new \InvalidArgumentException('Message must be object or string'),
         };
 
-        $attempt = 0;
-        $maxRetries = 3;
-        $lastException = null;
-
-        while ($attempt < $maxRetries) {
-            try {
-                $this->client->publish($subject, $payload);
-                return;
-            } catch (\Throwable $e) {
-                $lastException = $e;
-                $attempt++;
-                $this->logger?->warning('NATS publish failed, attempt ' . $attempt, [
-                    'channel' => $subject,
-                    'error' => $e->getMessage(),
-                ]);
-
-                if ($attempt < $maxRetries) {
-                    // @phpstan-ignore-next-line
-                    $this->client->reconnect();
-                    usleep(100_000 * $attempt); // 100ms, 200ms, 300ms...
-                }
-            }
+        try {
+            $this->client->publish($subject, $payload);
+            return;
+        } catch (\Throwable) {
+            $this->logger?->error('NATS publish failed, exiting worker...');
+            // Restart worker
+            exit(1);
         }
-
-        $this->logger?->error('NATS publish failed after ' . $maxRetries . ' attempts', [
-            'channel' => $subject,
-            'error' => $lastException->getMessage(),
-        ]);
-
-        throw $lastException;
     }
 
     public function subscribe(string $subject, callable $handler, ?string $group = null): void
