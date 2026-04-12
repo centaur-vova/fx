@@ -49,19 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - **GlobalSharedSemaphore**: Refactored the `acquire` logic from a `get/cmpset` spin-lock to a more robust atomic `add/sub` pattern. This eliminates a race condition where multiple workers could read the same state before attempting a swap.
 - **Performance Optimization**: Reduced property lookups in the semaphore's hot loop by caching the Atomic instance into a local variable.
 
-### Removed
-- Internal IPC between Swoole workers
-- EventBus and internal message system
-- Binary serialization (JSON only now)
-- ConnectionPool and MessageHub (handled by Go)
-- TaskCounter and related monitoring
-- DemoDelayStrategy and unused interfaces
-- Obsolete tests (InternalEnvelope, DemoDelayStrategy, TaskService)
-- `TASK_QUEUE_MULTIPLIER` from `.env` and codebase (no longer used)
-- Queue capacity display from frontend (10k indicator removed)
-- Unused `formattedCapacity` getter from frontend state
-- Obsolete multiplier logic from `TaskQueueManager`
-
 ## Fixed
 - **Circular Dependency**: Resolved the infinite loop between `MessageHub` -> `TaskService` -> `EventBus` -> `MessageHub` using `->lazy`().
 - **Worker Isolation**: Fixed the "blind worker" issue where the owner worker couldn't see its own connections due to container re-initialization.
