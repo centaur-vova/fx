@@ -10,6 +10,10 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
+## 🎥 Демонстрация работы
+
+<video src="https://github.com/user-attachments/assets/47a4e663-7120-42a9-b957-9c39d13bcc88" controls></video>
+
 🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz)
 
 ---
