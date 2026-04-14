@@ -54,11 +54,24 @@
 4. Воркеры забирают задачи, проверяют семафоры, выполняют
 5. Статусы летят через NATS в Go-прокси, а оттуда — на фронт через WebSocket
 
+## Два режима работы
+
+- **Режим наблюдения** (< 500 задач):
+  Искусственная задержка через `Co::sleep()` — 4 шага по ~1 секунде.
+  [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
+
+- **Стресс-тест** (≥ 500 задач):
+  Вместо `sleep()` — полезная нагрузка: хеширование `hash('sha256', $data)` в цикле.
+  [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
+
+Порог переключения (`STRESS_MIN_TASK_NUM`) настраивается в `.env`.
+
 **Ключевая фича**: задачи с разными `max_concurrent` используют независимые семафоры и могут выполняться параллельно, не мешая друг другу.
 
-<img width="2574" height="1589" alt="image" src="https://github.com/user-attachments/assets/69b10bca-41ad-4342-bd80-5246daad5c65" />
+<img width="2574" height="1589" alt="Демо медленного режима" src="https://github.com/user-attachments/assets/69b10bca-41ad-4342-bd80-5246daad5c65" />
 
-*Визуализация очереди, свободных слотов и работы семафоров в реальном времени*
+ > *Одновременно в зоне In Progress — не больше задач, чем разрешает семафор (цифра внутри квадрата). Остальные ждут в очереди или в Check Lock. Наглядно — как кони не лезут в одну конюшню.*
+
 
 ---
 
