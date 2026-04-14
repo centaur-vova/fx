@@ -16,9 +16,7 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-## 🎥 Демонстрация работы
-
-<video src="https://github.com/user-attachments/assets/47a4e663-7120-42a9-b957-9c39d13bcc88" controls></video>
+<img width="2571" height="1587" alt="image" src="https://github.com/user-attachments/assets/b96bcf59-39ce-49f3-b12e-d33baaf93ab6" />
 
 🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz)
 
@@ -57,6 +55,10 @@
 5. Статусы летят через NATS в Go-прокси, а оттуда — на фронт через WebSocket
 
 **Ключевая фича**: задачи с разными `max_concurrent` используют независимые семафоры и могут выполняться параллельно, не мешая друг другу.
+
+<img width="2574" height="1589" alt="image" src="https://github.com/user-attachments/assets/69b10bca-41ad-4342-bd80-5246daad5c65" />
+
+*Визуализация очереди, свободных слотов и работы семафоров в реальном времени*
 
 ---
 
