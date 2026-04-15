@@ -13,7 +13,7 @@ use Swoole\Coroutine as Co;
 class HighLoadProcessor implements Processor
 {
     public const int STEPS = 4;
-    public const int ITERATIONS = 100;
+    public const int ITERATIONS = 1;
 
     public function execute(?callable $onProgress = null): string
     {
