@@ -35,6 +35,8 @@ services:
     container_name: fast-ws
     restart: always
     command: /usr/local/bin/go-proxy
+    environment:
+      - APP_VERSION=${APP_VERSION:-dev}
     env_file:
       - .env
     ports:

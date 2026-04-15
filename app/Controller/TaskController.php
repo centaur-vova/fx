@@ -17,7 +17,6 @@ class TaskController
 {
     public function __construct(
         private readonly TaskService $taskService,
-        private readonly string $appVersion,
         private readonly int $stressMinTaskNum,
         private readonly int $taskMaxBatchSize,
         private readonly int $taskSemaphoreLimit,
@@ -56,7 +55,6 @@ class TaskController
         $stats = $server->stats();
 
         return new HealthResponse(
-            appVersion: $this->appVersion,
             status: 'ok',
             phpVersion: PHP_VERSION,
             memoryMb: round(memory_get_usage(false) / 1024 / 1024, 2),

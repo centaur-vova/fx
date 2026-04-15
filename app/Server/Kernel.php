@@ -63,16 +63,11 @@ class Kernel
         // Load config from .env
         $loader = ConfigLoader::fromEnv($this->basePath);
 
-        // App version
-        $versionPath = __DIR__ . '/../../version.php';
-        $appVersion = file_exists($versionPath) ? require $versionPath : 'local';
-
         // System settings
         $workerNum = $loader->getInt('SERVER_WORKER_NUM', 4);
 
         // Options
         $options = new Options(
-            appVersion:         (string) $appVersion,
             serverHost:           $loader->getString('SERVER_HOST', '0.0.0.0'),
             logLevel:             $loader->getString('LOG_LEVEL', 'info'),
             serverPort:           $loader->getInt('SERVER_PORT', 9501),
@@ -196,7 +191,6 @@ class Kernel
                 Options::class => $options,
 
                 // Config options (explicit)
-                'options.app_version' => $options->appVersion,
                 'options.task_max_retries' => $options->taskMaxRetries,
                 'options.task_retry_delay_sec' => $options->taskRetryDelaySec,
                 'options.task_lock_timeout_sec' => $options->taskLockTimeoutSec,
@@ -235,7 +229,6 @@ class Kernel
                 TaskController::class => create()
                     ->constructor(
                         get(TaskService::class),
-                        get('options.app_version'),
                         get('options.stress_min_task_num'),
                         get('options.task_max_batch_size'),
                         get('options.task_semaphore_limit'),
@@ -367,7 +360,6 @@ class Kernel
                     " ┌──────────────────────────────────────────┐\n" .
                     " │  FAST.AF :: ATOMIC PIPELINE ENGINE       │\n" .
                     " │  NODE ID : root@l3373.xyz                │\n" .
-                    ' │  KERNEL  : ' . str_pad($this->options->appVersion, 30) . "│\n" .
                     " └──────────────────────────────────────────┘\n" .
                     " » STATUS : READY TO FLOW\n" .
                     " » LISTEN : http://{$host}:{$port}\n"

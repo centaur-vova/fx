@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 )
 
 type AppConfig struct {
@@ -30,9 +29,9 @@ func LoadConfig() *AppConfig {
 	queueCap, _ := strconv.Atoi(os.Getenv("QUEUE_CAPACITY"))
 	workerNum, _ := strconv.Atoi(os.Getenv("SERVER_WORKER_NUM"))
 
-	version := "1.0.0"
-	if data, err := os.ReadFile("../version.txt"); err == nil {
-		version = strings.TrimSpace(string(data))
+	version := os.Getenv("APP_VERSION")
+	if version == "" {
+		version = "dev"
 	}
 
 	return &AppConfig{
