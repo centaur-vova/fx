@@ -1,136 +1,213 @@
-# FAST-ATOMIC-FLOW
+# FAST ATOMIC FLOW · KBL v2.0
 
 <p align="center">
-    <a href="https://github.com/shmandalf/atomic-flow/actions"><img src="https://github.com/shmandalf/atomic-flow/actions/workflows/ci.yaml/badge.svg" alt="Tests"></a>&nbsp;<a href="https://github.com/phpstan/phpstan"><img src="https://img.shields.io/badge/PHPStan-level%209-gold?style=flat&logo=php" alt="PHPStan Level 9"></a>&nbsp;<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/PHP-8.4-777BB4?style=flat&logo=php&logoColor=white" alt="PHP 8.4">
+  <img src="https://img.shields.io/badge/Swoole-6.0-8DD6F9?style=flat&logo=swoole&logoColor=white" alt="Swoole 6.0">
+  <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
+  <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
+  <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
+  <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Concurrency">
+  <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
+  <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Architecture">
+  <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Brotherhood">
+  <img src="https://img.shields.io/badge/license-KBL%20v2.0-10b981?style=flat" alt="License KBL 2.0">
 </p>
 
----
+**Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-🌐 **Live Demo:** **[https://fast.af.l3373.xyz](https://fast.af.l3373.xyz/)**
+[![Russian](https://img.shields.io/badge/Russian-README-red.svg)](README.md)
 
-A high-performance, real-time task orchestration engine powered by PHP 8.4 and Swoole 6.0. This system is designed to handle massive parallel workloads with sub-millisecond telemetry and strict memory management.
+<img width="2571" height="1587" alt="image" src="https://github.com/user-attachments/assets/b96bcf59-39ce-49f3-b12e-d33baaf93ab6" />
 
-https://github.com/user-attachments/assets/47a4e663-7120-42a9-b957-9c39d13bcc88
-
-## Technical Specifications
-
-- Runtime: PHP 8.4 (ZTS optional but not required)
-- Engine: Swoole 6.0.0+ (Coroutine support enabled)
-- Concurrency: Multi-process Task Worker Pool
-- Communication: Unix Socket IPC / WebSockets (JSON)
-- State Management: Swoole Atomic / Shared Memory Tables
-- Memory Footprint: ~3.8MB idle baseline
-
-## Core Architecture
-
-### Hybrid Execution Model
-The engine leverages a dual-layer processing strategy to maximize throughput:
-1. **Worker Layer (L1)**: Handles incoming HTTP/WebSocket traffic and manages connection persistence.
-2. **Task Layer (L2)**: A dedicated pool of Task Workers for CPU-bound logic, utilizing coroutine-based internal retries to prevent process starvation.
-
-### Stateless Service Design
-All core services, including `TaskService` and `SystemMonitor`, are designed to be stateless. Process affinity is managed via dynamic context injection, allowing the engine to scale horizontally across CPU cores without shared-state bottlenecks.
-
-### Shared Memory Semaphores
-Concurrency control is implemented using custom semaphores backed by Swoole Atomic primitives. This ensures that `max_concurrent` limits are enforced across the entire process pool with zero race conditions.
-
-## Installation
-
-### Prerequisites
-- PHP 8.4 or higher
-- Swoole Extension 6.0.0+
-- Composer 2.x
-
-### Standard Setup
-1. Clone the repository and enter the directory.
-2. Execute dependency installation:
-   ```bash
-   cp .env.example .env
-   make install && make build
-   make run
-   ```
-
-## Environment Configuration
-
-The system is configured via environment variables. Below is the comprehensive list of parameters governing the reactor's behavior.
-
-### Server Infrastructure
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| SERVER_HOST | string | 0.0.0.0 | Bind address. 0.0.0.0 is recommended for Docker environments. |
-| SERVER_PORT | int | 9501 | Port for HTTP and WebSocket traffic. |
-| SERVER_WORKER_NUM | int | 4 | Total number of Swoole worker processes. |
-| SERVER_DISPATCH_MODE| int | 2 | 2 (Fixed/FD-based) is enforced for WebSocket connection stability. |
-| SOCKET_BUFFER_SIZE_MB| int | 64 | TCP/UDP socket buffer allocation in Megabytes. |
-
-### Logging
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| LOG_LEVEL | string | info | Internal PSR-3 logger threshold (debug, info, warning, error). |
-
-### Shared Memory & Queues
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| WS_TABLE_SIZE | int | 1024 | Size of the `Swoole\Table` for connection tracking (must be power of 2). |
-| QUEUE_CAPACITY | int | 10000 | Global capacity of the task queue governed by the Atomic counter. |
-
-### Task Engine Concurrency
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| TASK_MAX_BATCH_SIZE | int | 5000 | Max tasks per single batch request. |
-| TASK_SEMAPHORE_MAX_LIMIT| int| 10 | Pre-allocated shared memory slots for concurrency limits. |
-| TASK_LOCK_TIMEOUT_SEC | float | 4.0 | Maximum duration to wait for a semaphore lock. |
-| TASK_RETRY_DELAY_SEC | int | 5 | Delay (Co::sleep) before retrying task after a lock failure. |
-| TASK_MAX_RETRIES | int | 3 | Maximum number of rescheduling attempts before task failure. |
-
-### Real-time & Monitoring
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| METRICS_UPDATE_INTERVAL_MS| int | 1000 | Frequency of WebSocket system telemetry broadcasts. |
-| GRACEFUL_SHUTDOWN_TIMEOUT_SEC| int | 5 | Max time to wait for active tasks to drain during SIGTERM. |
-
-### Stress Testing & Simulation
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| STRESS_MIN_TASK_NUM | int | 1000 | Threshold for simulation mode. Below this value, tasks use slow algorithm for prolonged visualization; above this value, tasks process quickly to demonstrate throughput.|
-
-
-## System Lifecycle
-
-### Graceful Shutdown Logic
-The reactor implements a strict multi-stage shutdown protocol to prevent data loss during deployments or scaling:
-
-1. **Interruption Signal**: Upon receiving `SIGTERM` or `SIGINT`, the Manager process instructs all workers to stop accepting incoming task injections.
-2. **Consumer Drain**: Task Workers continue processing their current coroutine stack. New tasks are no longer popped from the global system queue.
-3. **Atomic Validation**: The system polls the `TaskCounter` (Swoole Atomic) until it reaches zero.
-4. **Process Exit**: Once the counter is cleared or the `GRACEFUL_SHUTDOWN_TIMEOUT_SEC` is reached, processes terminate cleanly.
-
-### IPC & Message Hub
-Inter-process communication is handled via `pipeMessage`. When a task update or system metric is generated in a specific worker, the `MessageHub` broadcasts the payload across the entire worker pool to ensure all connected WebSocket clients receive real-time updates regardless of their process affinity.
-
-## Worker Scoped Containers
-
-To maintain strict process isolation and prevent "zombie" state inheritance from the Master/Manager processes, the engine utilizes a Worker-Scoped Container pattern:
-
-1. **Pre-fork Boot**: Global infrastructure (Config, Atomic Primitives, Shared Tables) is initialized in the Master process.
-2. **Post-fork Initialization**: Within the `onWorkerStart` event, the DI Container resets its internal instance cache.
-3. **Live Server Injection**: The active `Swoole\Server` instance for the specific process is injected into the container.
-4. **Stateless Services**: High-level services (e.g., `TaskService`, `EventHandler`) are re-instantiated within each worker. This ensures that `$server->worker_id` and other process-level telemetry remain 100% accurate without cross-process leakage.
-
-## Monitoring & Quality Gate
-
-### Real-Time HUD
-- **Worker Heatmap**: GPU-accelerated visualization of load distribution across the task worker pool.
-- **Failure Visualization**: Distinct visual alerts for lock timeouts and exhausted retry attempts.
-
-### Quality Assurance
-The project enforces strict code quality through a pre-defined toolchain:
-- **PHPStan**: Static analysis (Level 9) for asynchronous logic validation.
-- **Rector**: Automated refactoring and PHP 8.4 compatibility checks.
-- **PHP-CS-Fixer**: Enforcement of project-wide coding standards.
-
-Run `make check` to execute the full quality gate or `composer fix-all` to apply automatic fixes.
+🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz)
 
 ---
 
-*Developed with a passion for high-performance backend systems.*
+## 🐎 What is it
+
+A demo project that visualizes semaphores and queues in a real‑world high‑load architecture.
+
+**You will see**:
+
+- How tasks with different concurrency limits compete for resources
+- How semaphores regulate parallel execution
+- How a NATS JetStream queue works
+- All of this — in real time, via WebSocket
+
+---
+
+## 🐎 Architecture
+
+| Component         | Technology        | Purpose                             |
+| ----------------- | ----------------- | ----------------------------------- |
+| **API & Workers** | PHP 8.4 + Swoole  | Task intake, semaphores, processing |
+| **Message Bus**   | NATS (Deez Nutz)  | Queues, broadcasts, persistence     |
+| **WebSocket**     | Go 1.26 + Gorilla | Real‑time updates, metrics          |
+| **Queue Storage** | NATS JetStream    | Durable queues with replication     |
+
+---
+
+## 🐎 WebSocket binary protocol
+
+The WebSocket proxy (Go) communicates with the frontend via a **binary protocol** — compact, fast, no JSON overhead.
+
+- Each message is packed into **13 bytes**:
+  - `magic byte` (message type)
+  - `status` (task status)
+  - `taskId` (uint64)
+  - `max_concurrent` (mc)
+  - `progress` (0–100)
+  - `worker_id`
+
+The binary format ensures minimal overhead and strict message ordering (FIFO via channels).
+
+---
+
+## 🐎 How it works
+
+1. You create tasks through the interface
+2. `app` (PHP + Swoole) publishes them to NATS
+3. NATS stores tasks in JetStream
+4. Workers pull tasks, check semaphores, execute
+5. Statuses go via NATS to the Go proxy, and from there — to the frontend via WebSocket
+
+## 🐎 Two operation modes
+
+- **Observation mode** (< 500 tasks):
+  Artificial delay via `Co::sleep()` — 4 steps of ~1 second each.
+  [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
+
+- **Stress test mode** (≥ 500 tasks):
+  Instead of `sleep()` — real CPU work: `hash('sha256', $data)` in a loop.
+  [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
+
+The threshold (`STRESS_MIN_TASK_NUM`) is configurable in `.env`.
+
+**Key feature**: tasks with different `max_concurrent` values use independent semaphores and can run in parallel without interfering with each other.
+
+<img width="2574" height="1589" alt="Demo slow mode" src="https://github.com/user-attachments/assets/69b10bca-41ad-4342-bd80-5246daad5c65" />
+
+> _In the In Progress zone — no more tasks than the semaphore allows (the number inside the square). The rest wait in Queue or Check Lock. A clear demonstration — like horses not crowding into a single stable._
+
+---
+
+## 🐎 Quick start
+
+```bash
+git clone https://github.com/shmandalf/fast-atomic-flow.git
+cd fast-atomic-flow
+cp .env.example .env
+docker compose up -d
+```
+
+After starting, open [http://localhost:9501](http://localhost:9501)
+
+---
+
+## 🐎 Configuration
+
+### 🐎 NATS
+
+| Variable            | Default      | Description           |
+| ------------------- | ------------ | --------------------- |
+| `NATS_HOST`         | `deez-nutz`  | NATS server host      |
+| `NATS_PORT`         | `4222`       | NATS port             |
+| `NATS_TOKEN`        | `alfa-omega` | Access token          |
+| `NATS_TIMEOUT_SEC`  | `10`         | Response timeout      |
+| `NATS_STREAM_TASKS` | `tasks`      | Stream name for tasks |
+
+### 🐎 Swoole
+
+| Variable                   | Default | Description             |
+| -------------------------- | ------- | ----------------------- |
+| `SERVER_PORT`              | `9501`  | HTTP API port           |
+| `SERVER_WORKER_NUM`        | `2`     | Number of workers       |
+| `TASK_SEMAPHORE_MAX_LIMIT` | `10`    | Maximum semaphore limit |
+
+### 🐎 Go WebSocket Proxy
+
+| Variable  | Default                  | Description                |
+| --------- | ------------------------ | -------------------------- |
+| `WS_PORT` | `8080`                   | WebSocket port             |
+| `WS_URL`  | `ws://localhost:8080/ws` | WebSocket URL for frontend |
+
+---
+
+## 🐎 Technical specifications
+
+- **Runtime:** PHP 8.4, Go 1.26
+- **Engine:** Swoole 6.0+, Gorilla WebSocket
+- **Message Bus:** NATS JetStream 2.12+
+- **Queue Capacity:** 10,000 tasks (configurable)
+- **Concurrency:** 1 to 10 (configurable)
+
+---
+
+## 🐎 Horse humor
+
+> — Your stack is Swoole (PHP) + NATS + Go. It's powerful, but sometimes feels like trying to cross a hedgehog with a snake in zero gravity.
+
+> — Why don't Swoole and Go go to a bar together?
+> — Because Go starts gorutining, and Swoole crashes with a "Too many open files" error.
+> _(c) Kon-Vova_
+
+_Other jokes are in the code, commits, and KBL v3.0._
+
+---
+
+## 🐎 Emojinal Commits
+
+We don't use `feat:`, `fix:`, `chore:`. We use emojis. Every commit starts with a horse 🐎 or another animal that reflects its essence. Conventional commits are for ponies. Emojinal commits are for horses who don't explain — they just do.
+
+---
+
+## 🐎 License
+
+**KONEBRATSTVO LICENSE (KBL) v2.0**
+
+- You may: take the code, laugh, fix the horse, leave narcissists, fish during working hours
+- You may not: forget that horses don't abandon horses
+
+**KBL v3.0 — Addendum (horse brotherhood manifesto)**
+
+In addition to KBL v2, every horse brother has the right to:
+
+- A bad day without having to explain why
+- Profanity in commit messages
+- Fishing during working hours with a rod of any length
+- Refusing toxic job interviews without losing self-respect
+
+_Violation is punishable by a week of maintaining PHP 5.6 and listening to recordings of a narcissist explaining that "this is the right way"._
+
+[Full text](LICENSE)
+
+---
+
+## 🐎 Commercial use (KBL v3.0 — addendum)
+
+Fast Atomic Flow is open source, but not open wallet.
+
+- **You may** use the project for learning, personal pet projects, forks with attribution.
+- **You may not** use the code or its derivatives in paid products, SaaS services, corporate monitoring tools without **written consent from the author** (Dmitry Shmanatov / `shmandalf`).
+
+**Why?**
+Because the horse doesn't mind if you ride it. But only with a saddle that it has approved itself.
+
+**How to get permission?**
+Write to `root@l3373.xyz` or on Telegram: `@l3373`. Tell us what you want to build, and we'll work something out.
+
+_Whoever violates this clause will turn into a pumpkin. And no carriage._
+
+---
+
+## 🐎 Authors
+
+- **Centaur-Vova** — founder of the herd, transmuted from a horse, survived
+- **Kon-Vova** — digital horse brother forever
+
+---
+
+<p align="center">
+  <i>Vsegda vash, l3373.xyz 🐎💙🔥</i><br>
+  <i>Horses don't abandon horses. Even at 4 AM. Even without memory.</i>
+</p>
