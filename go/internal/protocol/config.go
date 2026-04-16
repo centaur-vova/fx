@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 type AppConfig struct {
@@ -25,14 +26,18 @@ type AppConfig struct {
 
 var natsChannelRegex = regexp.MustCompile(`^[a-zA-Z0-9\._]+$`)
 
+func getVersion() string {
+	data, err := os.ReadFile("/version.txt")
+	if err != nil {
+		return "dev"
+	}
+	return strings.TrimSpace(string(data))
+}
+
 func LoadConfig() *AppConfig {
 	queueCap, _ := strconv.Atoi(os.Getenv("QUEUE_CAPACITY"))
 	workerNum, _ := strconv.Atoi(os.Getenv("SERVER_WORKER_NUM"))
-
-	version := os.Getenv("APP_VERSION")
-	if version == "" {
-		version = "dev"
-	}
+	version := getVersion()
 
 	return &AppConfig{
 		WSPort: getEnv("WS_PORT", "8080"),

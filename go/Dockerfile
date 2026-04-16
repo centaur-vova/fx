@@ -1,4 +1,8 @@
 FROM golang:1.26.0-alpine3.23 AS builder
+
+ARG APP_VERSION=dev
+RUN echo $APP_VERSION > /version.txt
+
 WORKDIR /build
 COPY . .
 RUN go mod download && \
@@ -6,4 +10,5 @@ RUN go mod download && \
 
 FROM alpine:3.23
 COPY --from=builder /go-proxy /usr/local/bin/
+COPY --from=builder /version.txt /version.txt
 CMD ["/usr/local/bin/go-proxy"]
