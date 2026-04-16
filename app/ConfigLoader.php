@@ -32,7 +32,9 @@ class ConfigLoader
 
         // Merge: System Env variables have higher priority than .env file
         // This ensures Docker Compose 'env_file' always wins
-        return new self(array_merge($fileData, $_ENV));
+        /** @var array<string, mixed> $merged */
+        $merged = array_merge($fileData, $_ENV);
+        return new self($merged);
     }
 
     public function getString(string $key, string $default = ''): string

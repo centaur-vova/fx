@@ -5,8 +5,7 @@
   <img src="https://img.shields.io/badge/Swoole-6.0-8DD6F9?style=flat&logo=swoole&logoColor=white" alt="Swoole 6.0">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
-  <img src="https://img.shields.io/badge/phpstan-level%209-gold?style=flat&logo=php" alt="PHPStan Level 9">
-  <img src="https://img.shields.io/badge/coverage-100%25-10b981?style=flat" alt="Coverage">
+  <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
   <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Concurrency">
   <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
   <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Architecture">

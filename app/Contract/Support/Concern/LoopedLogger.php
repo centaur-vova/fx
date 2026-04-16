@@ -35,6 +35,7 @@ trait LoopedLogger
 
     protected function logMemoryUsage(int $intervalSec = 60): void
     {
+        /** @var int $lastMemLog */
         static $lastMemLog = 0;
         $now = time();
         if ($now - $lastMemLog >= $intervalSec) {

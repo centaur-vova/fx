@@ -34,7 +34,9 @@ class SwooleTableKeyValueStorage implements TtlKeyValueStorage
             return null;
         }
 
-        return $row['value'];
+        /** @var string $value */
+        $value = $row['value'];
+        return $value;
     }
 
     public function set(string $key, string $value, ?int $ttl = null): bool

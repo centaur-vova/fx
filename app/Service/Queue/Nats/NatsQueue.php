@@ -54,6 +54,7 @@ class NatsQueue implements Queue
     public function count(): int
     {
         try {
+            /** @var object{state: object{messages: int}} $info */
             $info = $this->stream->info();
             return $info->state->messages ?? 0;
         } catch (\Throwable) {
@@ -74,13 +75,14 @@ class NatsQueue implements Queue
     public function info(): array
     {
         try {
+            /** @var object{state: object{messages: int, bytes: int, first_seq: int, last_seq: int}} $info */
             $info = $this->stream->info();
             return [
                 'name' => $this->streamName,
-                'messages' => $info->state->messages ?? 0,
-                'bytes' => $info->state->bytes ?? 0,
-                'first_seq' => $info->state->first_seq ?? 0,
-                'last_seq' => $info->state->last_seq ?? 0,
+                'messages' => intval($info->state->messages ?? 0),
+                'bytes' => intval($info->state->bytes ?? 0),
+                'first_seq' => intval($info->state->first_seq ?? 0),
+                'last_seq' => intval($info->state->last_seq ?? 0),
             ];
         } catch (\Throwable $e) {
             return [

@@ -266,14 +266,17 @@ class Kernel
     {
         // Task Lifecycle
         $this->server->on('task', function (Server $server, Task $task): void {
+            /** @var int $workerId */
+            $workerId = $server->worker_id;
+
             // Create a coroutine so this Task Worker can handle multiple concurrent tasks
-            Co::create(function () use ($server, $task): void {
+            Co::create(function () use ($server, $task, $workerId): void {
                 try {
                     if ($task->data instanceof TaskExecutionPayload) {
                         /** @var TaskService $taskService */
                         $taskService = $this->container->get(TaskService::class);
 
-                        $taskService->processTask($task->data, $server->worker_id);
+                        $taskService->processTask($task->data, $workerId);
                         $task->finish(true);
                     }
 
@@ -313,8 +316,7 @@ class Kernel
         });
 
         // Graceful shutdown
-        $this->server->on('WorkerStop', function ($server, $workerId): void {
-            $timeout = $this->options->shutdownTimeoutSec;
+        $this->server->on('WorkerStop', function ($server, int $workerId): void {
             $start = microtime(true);
 
             /**

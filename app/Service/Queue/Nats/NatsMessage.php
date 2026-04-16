@@ -46,7 +46,9 @@ class NatsMessage implements Message
      */
     public function getHeaders(): array
     {
-        return $this->msg->payload->headers ?? [];
+        /** @var array<string, string> $headers */
+        $headers = $this->msg->payload->headers ?? [];
+        return $headers;
     }
 
     public function getTimestamp(): int

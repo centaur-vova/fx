@@ -32,12 +32,16 @@ class Router
 
     public function handle(Request $request, Response $response, Server $server): void
     {
-        $path = $request->server['request_uri'] ?? '/';
+        /** @var array<string, string> $server */
+        $server = $request->server;
+
+        $path = $server['request_uri'] ?? '/';
         // fast return for websockets
         if ($path === '/ws') {
             return;
         }
-        $method = $request->server['request_method'] ?? 'GET';
+
+        $method = $server['request_method'] ?? 'GET';
         $key = "$method|$path";
 
         $this->setDefaultHeaders($response);
@@ -91,9 +95,13 @@ class Router
             return [];
         }
 
+        /** @var mixed $data */
         $data = json_decode($raw, true);
 
-        return is_array($data) ? $data : [];
+        /** @var array<string, mixed> $result */
+        $result = is_array($data) ? $data : [];
+
+        return $result;
     }
 
     private function sendError(Response $response, string $msg, int $code): void

@@ -52,6 +52,7 @@ class TaskController
 
     public function health(Server $server): HealthResponse
     {
+        /** @var array{tasking_num: int, task_worker_num: int} $stats */
         $stats = $server->stats();
 
         return new HealthResponse(

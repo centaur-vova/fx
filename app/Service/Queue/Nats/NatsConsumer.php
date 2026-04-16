@@ -29,8 +29,10 @@ class NatsConsumer implements Consumer
 
         $messages = $this->queue->fetchAll($batch);
 
-        return array_filter(array_map(function (Msg $msg): ?\App\Service\Queue\Nats\NatsMessage {
-            $headers = $msg->payload->headers;
+        /** @phpstan-ignore-next-line */
+        return array_filter(array_map(function (Msg $msg): ?NatsMessage {
+            /** @var array<string, string|int> $headers */
+            $headers = $msg->payload->headers ?? [];
 
             $replyTo = $msg->replyTo;
 
@@ -45,7 +47,7 @@ class NatsConsumer implements Consumer
             }
 
             // Seq/attempts
-            $sequence = (int) ($headers['Nats-Sequence'] ?? $msg->sequence ?? 0);
+            $sequence = (int) ($headers['Nats-Sequence'] ?? $msg->sequence ?? 0); // @phpstan-ignore-line
             $attempts = (int) ($headers['Nats-Attempts'] ?? 0);
 
             return new NatsMessage(

@@ -25,12 +25,21 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
     public function register(ContainerBuilder $builder): array
     {
         return [
-            TaskQueue::class => fn ($c) => new NatsTaskQueue(
-                queue: $c->get(Queue::class),
-                serializer: $c->get(MessageSerializer::class),
-                consumerName: $c->get(Options::class)->taskQueueConsumer,
-                subject: $c->get(Options::class)->taskQueueSubject,
-            ),
+            TaskQueue::class => function (ContainerInterface $c): NatsTaskQueue {
+                /** @var Queue $queue */
+                $queue = $c->get(Queue::class);
+                /** @var MessageSerializer $serializer */
+                $serializer = $c->get(MessageSerializer::class);
+                /** @var Options $options */
+                $options = $c->get(Options::class);
+
+                return new NatsTaskQueue(
+                    queue: $queue,
+                    serializer: $serializer,
+                    consumerName: $options->taskQueueConsumer,
+                    subject: $options->taskQueueSubject,
+                );
+            },
         ];
     }
 

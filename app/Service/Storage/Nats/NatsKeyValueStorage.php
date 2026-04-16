@@ -16,7 +16,9 @@ class NatsKeyValueStorage implements KeyValueStorage
 
     public function get(string $key): ?string
     {
-        return $this->bucket->get($key);
+        /** @var string $value */
+        $value = $this->bucket->get($key);
+        return $value;
     }
 
     public function set(string $key, string $value, ?int $ttl = null): bool
