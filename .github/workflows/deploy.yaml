@@ -48,6 +48,8 @@ jobs:
           file: ./go/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}-ws:latest
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.version }}
 
   deploy-vps:
     name: Pull & Restart on VPS

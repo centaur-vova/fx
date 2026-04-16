@@ -25,7 +25,7 @@ $message = trim(file_get_contents($commitMsgFile));
  * \s                 - Mandatory space
  * .{5,}              - Description must be at least 5 characters long
  */
-$pattern = '/^(\p{Emoji}) (🚨 \e\[1;31mСРОЧНО\e\[0m|feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/ui';
+$pattern = '/^(\p{Emoji}) (🚨 \e\[1;31mСРОЧНО\e\[0m|ci|feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/ui';
 
 echo "[Commit-msg] Checking message for Conventional Commits standard...\n";
 
