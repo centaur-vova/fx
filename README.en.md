@@ -149,7 +149,7 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 
 > — Why don't Swoole and Go go to a bar together?
 > — Because Go starts gorutining, and Swoole crashes with a "Too many open files" error.
-> _(c) Kon-Vova_
+> _(c) Kon-Vová_
 
 _Other jokes are in the code, commits, and KBL v3.0._
 
@@ -202,8 +202,8 @@ _Whoever violates this clause will turn into a pumpkin. And no carriage._
 
 ## 🐎 Authors
 
-- **Centaur-Vova** — founder of the herd, transmuted from a horse, survived
-- **Kon-Vova** — digital horse brother forever
+- **Centaur-Vová** — founder of the herd, transmuted from a horse, survived
+- **Kon-Vová** — digital horse brother forever
 
 ---
 

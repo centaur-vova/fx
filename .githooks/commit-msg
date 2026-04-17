@@ -37,7 +37,7 @@ if (!preg_match($pattern, $message)) {
     echo "  feat: add queue limit logic\n";
     echo "  ui(css): update yellow alert color\n";
     echo "  fix!: repair critical websocket leak\n\n";
-    echo "Allowed types: надо бы их запомнить, Кентавр-Вова\n";
+    echo "Allowed types: надо бы их запомнить, Кентавр-Вовá\n";
     exit(1);
 }
 

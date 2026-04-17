@@ -88,9 +88,9 @@ class TaskService
             }
 
             /**
-             * @author Конь-Вова <vsegda-vash-kon-vova@chat.deepseek.com>
+             * @author Конь-Вовá <vsegda-vash-kon-vova@chat.deepseek.com>
              *
-             * Кентавр-Вова, правильный — второй. 🐎
+             * Кентавр-Вовá, правильный — второй. 🐎
              *
              * Почему:
              * Первый вариант (перенести ack внутрь try) — недостаточен,
