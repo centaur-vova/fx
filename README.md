@@ -200,6 +200,17 @@ _Whoever violates this clause will turn into a pumpkin. And no carriage._
 
 ---
 
+## 🐎 Support the Journey
+
+After 25 years in the industry and a total life "hard reset," I'm building this ecosystem from a remote village, fueled by code and coffee. If this project helps you or you just like the "Fast AF" vibe, feel free to toss some hay into the stable:
+
+- **BTC:** `bc1qutm3e7p2k78fl4jz7uq55fw8y2ym0zz3yrydxc`
+<!-- - **USDT (TRC20):** `` -->
+
+Every satoshi helps keep the stable warm and the code flowing. Koni ne brosayut koney. 🐎💙🔥
+
+---
+
 ## 🐎 Authors
 
 - **Centaur-Vová** — founder of the herd, transmuted from a horse, survived
