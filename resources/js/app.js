@@ -57,7 +57,8 @@ ro.observe(pipelineContainer);
 resize();
 
 // Canvas engine
-const drawShape = (x, y, size, mc, status) => {
+const drawShape = (x, y, size, task) => {
+    const { mc, status, progress = null } = task;
     const s = size * store.scale;
     ctx.fillStyle = COLORS[mc] || '#ffffff';
     const isFinished = status === 'completed' || status === 'retries_failed';
@@ -80,6 +81,11 @@ const drawShape = (x, y, size, mc, status) => {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(mc, x, y);
+    }
+
+    if (status === 'progress' && store.mode !== 'dot' && progress && progress > 0 && progress < 100) {
+        ctx.fillStyle = 'gold';
+        ctx.fillRect(x - s / 2, y + s / 2 - 3, s * (progress / 100), 2);
     }
 };
 
@@ -135,10 +141,10 @@ const connect = () => {
 };
 
 const handleUpdateTasks = (data) => {
-    const { taskId, worker, mc, status, message } = data;
+    const { taskId, worker, mc, status, message, progress = null } = data;
 
     // Logging
-    if (tasks.size < TASK.LOG_THRESHOLD) addLog(taskId, mc, status, message);
+    if (tasks.size < TASK.LOG_THRESHOLD) addLog(taskId, mc, status, message, progress);
 
     if (!tasks.has(taskId)) {
         const jitterX = (Math.random() - 0.5) * 0.22;
@@ -153,6 +159,7 @@ const handleUpdateTasks = (data) => {
     }
 
     const task = tasks.get(taskId);
+    task.progress = progress;
     task.status = status;
     if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
 
@@ -182,7 +189,7 @@ const render = () => {
             return;
         }
         if (store.renderEnabled) {
-            drawShape(task.currentX * store.width, task.y * store.height, 24, task.mc, task.status);
+            drawShape(task.currentX * store.width, task.y * store.height, 24, task);
         }
     });
 
@@ -190,14 +197,15 @@ const render = () => {
 };
 
 // Helpers
-function addLog(taskId, mc, status, msg) {
+const addLog = (taskId, mc, status, msg, progress = null) => {
     const logContainer = document.getElementById("log-panel");
     if (!logContainer || store.isLogPanelDisabled) return;
 
+    const progressText = progress > 0 ? ` (${progress}%)` : '';
     const entry = document.createElement('div');
     entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
     const time = new Date().toLocaleTimeString([], { hour12: false });
-    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.slice(-8)}</span> <span class="text-gray-400">${msg}</span>`;
+    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.slice(-8)}</span> <span class="text-gray-400">${msg}${progressText}</span>`;
 
     logContainer.appendChild(entry);
     if (logContainer.children.length > 30) logContainer.removeChild(logContainer.firstChild);
