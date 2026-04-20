@@ -1,14 +1,13 @@
 import Alpine from 'alpinejs';
 import { state } from './modules/state';
 import { decodeMessage } from './modules/decoder.js';
+import { drawShape } from './modules/ui.js';
 import {
     WS,
     TASK,
     BRAND_LOGO,
-    COLORS,
     COORDS,
     PING_INTERVAL_MS,
-    UI,
 } from './modules/config';
 
 // Init store
@@ -56,39 +55,6 @@ const ro = new ResizeObserver(() => {
 ro.observe(pipelineContainer);
 // And call resize() just to make sure
 resize();
-
-// Canvas engine
-const drawShape = (x, y, size, task) => {
-    const { mc, status, progress = null } = task;
-    const s = size * store.scale;
-    ctx.fillStyle = COLORS[mc] || '#ffffff';
-    const isFinished = status === 'completed' || status === 'retries_failed';
-    ctx.globalAlpha = isFinished ? 0.3 : 1;
-
-    if (store.mode === 'dot') {
-        ctx.beginPath();
-        ctx.arc(x, y, 2 * store.scale, 0, Math.PI * 2);
-        ctx.fill();
-        return;
-    }
-
-    ctx.beginPath();
-    ctx.roundRect(x - s / 2, y - s / 2, s, s, 4 * store.scale);
-    ctx.fill();
-
-    if (store.scale > UI.PROGRESS_BAR_MIN_SCALE) {
-        ctx.fillStyle = 'white';
-        ctx.font = `bold ${10 * store.scale}px Inter, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(mc, x, y);
-
-        if (status === 'progress' && store.mode !== 'dot' && progress && progress > 0 && progress < 100) {
-            ctx.fillStyle = UI.PROGRESS_BAR_COLOR;
-            ctx.fillRect(x - s / 2, y + s / 2 - UI.PROGRESS_BAR_HEIGHT, s * (progress / 100), UI.PROGRESS_BAR_HEIGHT);
-        }
-    }
-};
 
 // Websockets
 const connect = () => {
@@ -155,7 +121,8 @@ const handleUpdateTasks = (data) => {
             jitterX: jitterX,
             currentX: COORDS.queued + jitterX,
             targetX: COORDS.queued + jitterX,
-            status: 'queued'
+            status: 'queued',
+            pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
     }
 
@@ -190,7 +157,7 @@ const render = () => {
             return;
         }
         if (store.renderEnabled) {
-            drawShape(task.currentX * store.width, task.y * store.height, 24, task);
+            drawShape(ctx, task.currentX * store.width, task.y * store.height, 24, task, store.mode, store.scale);
         }
     });
 

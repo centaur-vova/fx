@@ -74,7 +74,7 @@ The binary format ensures minimal overhead and strict message ordering (FIFO via
 ## 🐎 Two operation modes
 
 - **Observation mode** (< 500 tasks):
-  Artificial delay via `Co::sleep()` — 11 steps of 0.2–0.5 second each.
+  Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
   [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
 - **Stress test mode** (≥ 500 tasks):

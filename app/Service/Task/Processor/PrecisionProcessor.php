@@ -19,7 +19,7 @@ class PrecisionProcessor implements Processor
         $start = microtime(true);
 
         for ($step = 1; $step <= self::STEPS; $step++) {
-            Co::sleep(mt_rand(200, 500) / 1000); // 0.2–0.5 sec
+            Co::sleep(mt_rand(50, 200) / 1000); // 50-200 msec
             if ($onProgress !== null) {
                 $progress = (int) round($step / self::STEPS * 100);
                 $onProgress(min($progress, 100));
