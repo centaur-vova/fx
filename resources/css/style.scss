@@ -371,3 +371,16 @@ body {
     @apply text-gray-400;
   }
 }
+
+// Check Lock zone flash animation — triggered when a new task enters the queue
+@keyframes flashZone {
+  0% {
+    background-color: rgba(255, 215, 0, 0.4);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.flash {
+  animation: flashZone 0.2s ease-out;
+}

@@ -111,8 +111,13 @@ export const state = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ count, max_concurrent: this.mc }),
             });
-            const data = await res.json();
-            // this.showToast(count, res.ok && data.success, data.message);
+            await res.json();
+
+            const checkLockZone = document.querySelector('.zone-queue');
+            if (checkLockZone) {
+                checkLockZone.classList.add('flash');
+                setTimeout(() => checkLockZone.classList.remove('flash'), 200);
+            }
         } catch (e) {
             this.showToast(0, false, "Connection error");
         }

@@ -22,10 +22,18 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
     ctx.fillStyle = fillColor;
 
     // Pulsation for 'progress' tasks (all squares pulse together)
-    if (status === 'progress' && scale > UI.PROGRESS_BAR_MIN_SCALE) {
-        const speed = 150; // common speed
-        const pulse = 0.6 + 0.4 * Math.sin((Date.now() / speed) + (task.pulseOffset || 0));
-        ctx.globalAlpha = pulse;
+    if (scale > UI.PROGRESS_BAR_MIN_SCALE) {
+        if (status === 'progress') {
+            const speed = 150;
+            const pulse = 0.6 + 0.4 * Math.sin((Date.now() / speed) + (task.pulseOffset || 0));
+            ctx.globalAlpha = pulse;
+        } else if (status === 'queued') {
+            ctx.globalAlpha = 0.8;
+        } else if (status === 'check_lock') {
+            ctx.globalAlpha = 0.6;
+        } else {
+            ctx.globalAlpha = isFinished ? 0.3 : 1;
+        }
     } else {
         ctx.globalAlpha = isFinished ? 0.3 : 1;
     }
