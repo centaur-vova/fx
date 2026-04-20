@@ -84,8 +84,8 @@ const drawShape = (x, y, size, task) => {
     }
 
     if (status === 'progress' && store.mode !== 'dot' && progress && progress > 0 && progress < 100) {
-        ctx.fillStyle = 'gold';
-        ctx.fillRect(x - s / 2, y + s / 2 - 3, s * (progress / 100), 2);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(x - s / 2, y + s / 2 - 5, s * (progress / 100), 4);
     }
 };
 
