@@ -69,3 +69,17 @@ export const TASK = {
     },
     LOG_THRESHOLD: 300
 };
+
+export const UI = {
+    PROGRESS_BAR_MIN_SCALE: 0.8,
+    PROGRESS_BAR_HEIGHT: 4,
+    PROGRESS_BAR_COLOR: '#ffffff',
+    LOD: {
+        NORMAL_MAX: 100,      // upto 100 tasks - normal size
+        MEDIUM_MAX: 500,      // upto 500 tasks - reduced scale
+        SCALE_NORMAL: 1,
+        SCALE_MEDIUM: 0.5,
+        SCALE_SMALL: 0.3,
+        MODE_DOT_THRESHOLD: 500
+    }
+};

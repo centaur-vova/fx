@@ -7,7 +7,8 @@ import {
     BRAND_LOGO,
     COLORS,
     COORDS,
-    PING_INTERVAL_MS
+    PING_INTERVAL_MS,
+    UI,
 } from './modules/config';
 
 // Init store
@@ -75,17 +76,17 @@ const drawShape = (x, y, size, task) => {
     ctx.roundRect(x - s / 2, y - s / 2, s, s, 4 * store.scale);
     ctx.fill();
 
-    if (store.scale > 0.8) {
+    if (store.scale > UI.PROGRESS_BAR_MIN_SCALE) {
         ctx.fillStyle = 'white';
         ctx.font = `bold ${10 * store.scale}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(mc, x, y);
-    }
 
-    if (status === 'progress' && store.mode !== 'dot' && progress && progress > 0 && progress < 100) {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(x - s / 2, y + s / 2 - 5, s * (progress / 100), 4);
+        if (status === 'progress' && store.mode !== 'dot' && progress && progress > 0 && progress < 100) {
+            ctx.fillStyle = UI.PROGRESS_BAR_COLOR;
+            ctx.fillRect(x - s / 2, y + s / 2 - UI.PROGRESS_BAR_HEIGHT, s * (progress / 100), UI.PROGRESS_BAR_HEIGHT);
+        }
     }
 };
 

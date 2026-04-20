@@ -1,3 +1,5 @@
+import { UI } from './config.js';
+
 const getDefaults = () => ({
     latency: '--',
     metrics: {
@@ -76,9 +78,17 @@ export const state = {
         this.metrics.taskNum = total;
 
         // LOD Logic
-        if (total <= 50) { this.scale = 1; this.mode = 'normal'; }
-        else if (total <= 500) { this.scale = 0.5; this.mode = 'normal'; }
-        else { this.scale = 0.3; this.mode = 'dot'; }
+        const lod = UI.LOD;
+        if (total <= lod.NORMAL_MAX) {
+            this.scale = lod.SCALE_NORMAL;
+            this.mode = 'normal';
+        } else if (total <= lod.MEDIUM_MAX) {
+            this.scale = lod.SCALE_MEDIUM;
+            this.mode = 'normal';
+        } else {
+            this.scale = lod.SCALE_SMALL;
+            this.mode = 'dot';
+        }
 
         this.isLogPanelDisabled = total > logThreshold;
     },
