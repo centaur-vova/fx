@@ -12,16 +12,17 @@ use Swoole\Coroutine as Co;
  */
 class PrecisionProcessor implements Processor
 {
-    public const int STEPS = 4;
+    public const int STEPS = 11;
 
     public function execute(?callable $onProgress = null): string
     {
         $start = microtime(true);
 
         for ($step = 1; $step <= self::STEPS; $step++) {
-            Co::sleep(mt_rand(800, 1300) / 1000);
+            Co::sleep(mt_rand(200, 500) / 1000); // 0.2–0.5 sec
             if ($onProgress !== null) {
-                $onProgress($step * 25);
+                $progress = (int) round($step / self::STEPS * 100);
+                $onProgress(min($progress, 100));
             }
         }
 

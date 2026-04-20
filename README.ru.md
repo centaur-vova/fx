@@ -74,7 +74,7 @@ WebSocket-прокси (Go) общается с фронтом через **би
 ## 🐎 Два режима работы
 
 - **Режим наблюдения** (< 500 задач):
-  Искусственная задержка через `Co::sleep()` — 4 шага по ~1 секунде.
+  Искусственная задержка через `Co::sleep()` — 11 шагов по 200-500 миллисекунд.
   [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
 - **Стресс-тест** (≥ 500 задач):
