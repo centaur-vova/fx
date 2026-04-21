@@ -45,7 +45,26 @@ export const state = {
     toast: {
         show: false,
         success: true,
-        content: ''
+        content: '',
+        timeout: null,
+    },
+
+    // Toast
+    showToast(message, isSuccess = true, count = null) {
+        if (this.toast.timeout) clearTimeout(this.toast.timeout);
+
+        this.toast.success = isSuccess;
+        if (isSuccess && count !== null) {
+            this.toast.content = `<b class="toast-brand">${count}</b> ${message}`;
+        } else {
+            this.toast.content = (isSuccess ? '' : '<b class="toast-brand">ERROR:</b> ') + message;
+        }
+        this.toast.show = true;
+
+        this.toast.timeout = setTimeout(() => {
+            this.toast.show = false;
+            this.toast.timeout = null;
+        }, 2000);
     },
 
     // Workers
@@ -97,13 +116,18 @@ export const state = {
 
         const handleConfirm = () => {
             fetch('/api/tasks/purge', { method: 'POST' })
-                .then(res => {
+                .then(async res => {
                     if (res.ok) {
                         clearTasks();
-                        console.log('Queue purged');
-                    } else console.error('Purge failed');
+                        this.showToast('Queue purged', true);
+                    } else {
+                        const data = await res.json();
+                        this.showToast(data.error || 'Purge failed', false);
+                    }
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    this.showToast('Connection error', false);
+                });
             cleanup();
         };
 
@@ -130,16 +154,6 @@ export const state = {
         this.isLogPanelDisabled = total > logThreshold;
     },
 
-    // Toast
-    showToast(count, success, msg) {
-        this.toast.success = success;
-        this.toast.content = success
-            ? `<b class="toast-brand">${count}</b> tasks injected`
-            : `<b class="toast-brand">ERROR:</b> ${msg}`;
-        this.toast.show = true;
-        setTimeout(() => this.toast.show = false, 2000);
-    },
-
     // API - create tasks
     async createTasks(count) {
         try {
@@ -148,7 +162,12 @@ export const state = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ count, max_concurrent: this.mc }),
             });
-            await res.json();
+            const data = await res.json();
+
+            if (!data.success) {
+                this.showToast(data.message, false);
+                return;
+            }
 
             const checkLockZone = document.querySelector('.zone-queue');
             if (checkLockZone) {
@@ -156,7 +175,7 @@ export const state = {
                 setTimeout(() => checkLockZone.classList.remove('flash'), 200);
             }
         } catch (e) {
-            this.showToast(0, false, "Connection error");
+            this.showToast('Connection error', false);
         }
     }
 };

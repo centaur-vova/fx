@@ -55,6 +55,28 @@ class ConfigLoader
         return is_scalar($val) ? (float) $val : $default;
     }
 
+    /**
+     * @param array<string, mixed> $default
+     * @return array<string, mixed>
+     */
+    public function getArray(string $key, array $default = []): array
+    {
+        $val = $this->raw($key, $default);
+
+        if (!is_string($val)) {
+            return [];
+        }
+
+        $decoded = json_decode($val ?: '{}', true);
+
+        if (!is_array($decoded)) {
+            throw new \RuntimeException("Invalid JSON in {$key}. Expected object, got: " . json_last_error_msg());
+        }
+
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
+    }
+
     private function raw(string $key, mixed $default = null): mixed
     {
         return $this->repository[$key] ?? $default;

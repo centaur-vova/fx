@@ -11,15 +11,18 @@ namespace App\Server;
  */
 readonly class Options
 {
+    /**
+     * @param array<string, array{max_attempts: int, ttl: int}> $rateLimiters
+     */
     public function __construct(
-        // Server Infrastructure
+        // ========== Server Infrastructure ==========
         public string $serverHost,
         public int $serverPort,
         public int $workerNum,
         public int $dispatchMode,
         public int $socketBufferMb,
 
-        // Nats
+        // ========== Nats ==========
         public string $natsHost,
         public int $natsPort,
         public string $natsToken,
@@ -27,18 +30,18 @@ readonly class Options
         public int $natsPingIntervalSec,
         public int $natsAckWaitMs,
 
-        // Logging
+        // ========== Logging ==========
         public string $logLevel,
 
-        // Queue
+        // ========== Queue ==========
         public int $queueCapacity,
         public int $queuePrefetchBatch,
 
-        // Task Meta
+        // ========== Task Meta ==========
         public int $taskMetaCacheSize,
         public int $taskMetaTtlSec,
 
-        // Task Engine
+        // ========== Task Engine ==========
         public int $taskMaxBatchSize,
         public int $taskSemaphoreLimit,
         public float $taskLockTimeoutSec,
@@ -46,17 +49,23 @@ readonly class Options
         public int $taskMaxRetries,
         public int $stressMinTaskNum,
 
-        // Real-time
+        // ========== Real-time ==========
         public int $metricsIntervalMs,
         public int $shutdownTimeoutSec,
 
-        // Messaging consumer (group) name
+        // ========== Messaging consumer (group) name ==========
         public string $taskQueueConsumer,
 
-        // Messaging subjects/streams
+        // ========== Messaging subjects/streams ==========
         public string $broadcastSubject,
         public string $taskQueueSubject,
         public string $taskQueueStream,
+
+        // ========== Misc ==========
+        public array $rateLimiters,
+        public int $rateLimiterCleanupInterval,
+        public int $rateLimiterTableSize,
+        public int $rateLimiterTtl,
     ) {
     }
 }

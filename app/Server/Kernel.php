@@ -12,6 +12,7 @@ use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Router;
 use App\Service\Messaging\MappedMessageSerializer;
+use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\Contract\Bootable;
 use App\Service\Provider\Contract\WorkerStartAware;
 use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
@@ -20,6 +21,7 @@ use App\Service\Provider\Nats\NatsQueueServiceProvider;
 use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
 use App\Service\Provider\Swoole\SwooleTableKeyValueStorageServiceProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
+use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
@@ -50,13 +52,13 @@ class Kernel
     private readonly LoggerInterface $logger;
 
     private const array PROVIDERS = [
-        // Broadcasting/Queue
         NatsClientProvider::class,
         NatsBroadcasterServiceProvider::class,
         NatsQueueServiceProvider::class,
         NatsTaskQueueServiceProvider::class,
         SwooleTableKeyValueStorageServiceProvider::class,
         TaskServiceProvider::class,
+        RateLimiterServiceProvider::class,
     ];
 
     public function __construct(private readonly string $basePath)
@@ -66,6 +68,9 @@ class Kernel
 
         // System settings
         $workerNum = $loader->getInt('SERVER_WORKER_NUM', 4);
+
+        /** @var array<string, array{max_attempts: int, ttl: int}> $rateLimiters */
+        $rateLimiters = $loader->getArray('RATE_LIMITERS', []);
 
         // Options
         $options = new Options(
@@ -101,6 +106,11 @@ class Kernel
             // Task Meta (KV)
             taskMetaCacheSize:    $loader->getInt('TASK_META_CACHE_SIZE', 65536),
             taskMetaTtlSec:       $loader->getInt('TASK_META_TTL_SEC', 10),
+            // Misc
+            rateLimiters:         $rateLimiters,
+            rateLimiterCleanupInterval: $loader->getInt('RATE_LIMITER_CLEANUP_INTERVAL', 60),
+            rateLimiterTableSize: $loader->getInt('RATE_LIMITER_TABLE_SIZE', 4096),
+            rateLimiterTtl:       $loader->getInt('RATE_LIMITER_TTL', 60),
         );
 
         // Assign options to object state
@@ -231,6 +241,7 @@ class Kernel
                     ->constructor(
                         get(TaskService::class),
                         get(TaskQueue::class),
+                        get(RateLimiterService::class),
                         get(LoggerInterface::class),
                         get('options.stress_min_task_num'),
                         get('options.task_max_batch_size'),

@@ -8,11 +8,13 @@ use App\Contract\Task\TaskQueue;
 use App\DTO\Http\Request\CreateTasks;
 use App\DTO\Http\Response\ApiResponse;
 use App\DTO\Http\Response\HealthResponse;
-use App\Exception\Task\InvalidTaskBatchException;
-use App\Exception\Task\QueueFullException;
+use App\Exception\Http\InvalidTaskBatchException;
+use App\Exception\Http\RateLimitExceededException;
+use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\TaskService;
 use Psr\Log\LoggerInterface;
+use Swoole\Http\Request;
 use Swoole\Server;
 
 class TaskController
@@ -20,6 +22,7 @@ class TaskController
     public function __construct(
         private readonly TaskService $taskService,
         private readonly TaskQueue $taskQueue,
+        private readonly RateLimiterService $rateLimiterService,
         private readonly LoggerInterface $logger,
         private readonly int $stressMinTaskNum,
         private readonly int $taskMaxBatchSize,
@@ -27,41 +30,47 @@ class TaskController
     ) {
     }
 
-    public function createTasks(CreateTasks $dto): ApiResponse
+    /**
+     * @throws InvalidTaskBatchException
+     * @throws RateLimitExceededException
+     */
+    public function createTasks(Request $request, CreateTasks $dto): ApiResponse
     {
-        try {
-            // Validate DTO
-            if ($dto->count < 1 || $dto->count > $this->taskMaxBatchSize) {
-                throw new InvalidTaskBatchException("Count must be between 1 and {$this->taskMaxBatchSize}");
-            }
+        $this->rateLimit('create-tasks', $request);
 
-            if ($dto->maxConcurrent < 1 || $dto->maxConcurrent > $this->taskSemaphoreLimit) {
-                throw new InvalidTaskBatchException("Concurrency must be between 1 and {$this->taskSemaphoreLimit}");
-            }
-
-            // Guess mode
-            go(function () use ($dto): void {
-                $mode = $dto->count < $this->stressMinTaskNum
-                ? ProcessorFactory::MODE_OBSERVATION
-                : ProcessorFactory::MODE_STRESS;
-
-                $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $mode);
-            });
-
-            return ApiResponse::ok('Tasks queued');
-        } catch (InvalidTaskBatchException | QueueFullException $e) {
-            return ApiResponse::error($e->getMessage());
+        // Validate DTO
+        if ($dto->count < 1 || $dto->count > $this->taskMaxBatchSize) {
+            throw new InvalidTaskBatchException("Count must be between 1 and {$this->taskMaxBatchSize}");
         }
+
+        if ($dto->maxConcurrent < 1 || $dto->maxConcurrent > $this->taskSemaphoreLimit) {
+            throw new InvalidTaskBatchException("Concurrency must be between 1 and {$this->taskSemaphoreLimit}");
+        }
+
+        // Guess mode
+        go(function () use ($dto): void {
+            $mode = $dto->count < $this->stressMinTaskNum
+            ? ProcessorFactory::MODE_OBSERVATION
+            : ProcessorFactory::MODE_STRESS;
+
+            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $mode);
+        });
+
+        return ApiResponse::ok('Tasks queued');
     }
 
-    public function purgeQueue(): ApiResponse
+    /**
+     * @throws RateLimitExceededException
+     */
+    public function purgeQueue(Request $request): ApiResponse
     {
         try {
+            $this->rateLimit('purge-queue', $request);
             $this->taskQueue->purge();
             return ApiResponse::ok('Queue purged');
         } catch (\Throwable $e) {
             $this->logger->error('Queue purge failed', ['error' => $e->getMessage()]);
-            return ApiResponse::error('Purge failed');
+            throw $e;
         }
     }
 
@@ -78,5 +87,18 @@ class TaskController
             taskWorkers: $stats['task_worker_num'],
             idleWorkers: $stats['task_worker_num'] - $stats['tasking_num'],
         );
+    }
+
+    /**
+     * @throws RateLimitExceededException
+     */
+    private function rateLimit(string $limiterName, Request $request): void
+    {
+        /** @var array<string, string> $serverParams */
+        $serverParams = $request->server;
+        $ip = $serverParams['remote_addr'] ?? '0.0.0.0';
+        if (!$this->rateLimiterService->checkLimit($limiterName, $ip)) {
+            throw new RateLimitExceededException('Too many requests. Please slow down.');
+        }
     }
 }

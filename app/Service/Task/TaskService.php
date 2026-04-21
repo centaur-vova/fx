@@ -9,7 +9,6 @@ use App\Contract\Task\TaskQueue;
 use App\Contract\Task\TaskSemaphore;
 use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
-use App\Exception\Task\QueueFullException;
 use App\Service\Task\Processor\ProcessorFactory;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
@@ -32,9 +31,6 @@ class TaskService
     ) {
     }
 
-    /**
-     * @throws QueueFullException
-     */
     public function createBatch(int $count, int $maxConcurrent, string $mode): void
     {
         for ($i = 0; $i < $count; $i++) {

@@ -31,10 +31,11 @@ final readonly class ApiResponse implements JsonSerializable
 
     /**
      * @param string $message
+     * @param array<string, mixed> $data
      */
-    public static function error(string $message): self
+    public static function error(string $message, array $data = []): self
     {
-        return new self(false, $message);
+        return new self(false, $message, $data);
     }
 
     /**

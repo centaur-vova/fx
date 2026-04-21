@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Contract\Exception\HttpException;
 use App\Controller\TaskController;
 use App\DTO\Http\Request\CreateTasks;
+use App\DTO\Http\Response\ApiResponse;
+use App\Exception\Http\InternalServerErrorException;
+use App\Exception\Http\NotFoundException;
+use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Server;
-use Throwable;
 
 class Router
 {
@@ -18,6 +22,7 @@ class Router
 
     public function __construct(
         private readonly TaskController $taskController,
+        private readonly LoggerInterface $logger,
     ) {
         $this->registerRoutes();
     }
@@ -53,27 +58,38 @@ class Router
             return;
         }
 
-        if (isset($this->routes[$key])) {
+        try {
+            if (!isset($this->routes[$key])) {
+                throw new NotFoundException('Not Found');
+            }
+
+            [$controller, $action] = $this->routes[$key];
+
+            $payload = $this->getJsonPayload($request);
+
             try {
-                [$controller, $action] = $this->routes[$key];
-
-                $payload = $this->getJsonPayload($request);
-
                 $result = match ($path) {
-                    '/api/tasks/create' => $controller->$action(CreateTasks::fromArray($payload)),
-                    '/api/tasks/purge' => $controller->$action(),
+                    '/api/tasks/create' => $controller->$action($request, CreateTasks::fromArray($payload)),
+                    '/api/tasks/purge' => $controller->$action($request),
                     default => $controller->$action($server),
                 };
 
-                $json = json_encode($result);
-                $response->end(is_string($json) ? $json : '{}');
-            } catch (Throwable $e) {
-                $this->sendError($response, $e->getMessage(), 500);
+            } catch (HttpException $e) {
+                throw $e;
+            } catch (\Throwable $e) {
+                $this->logger->error('Unhandled exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                throw new InternalServerErrorException($e->getMessage());
             }
-            return;
+
+        } catch (HttpException $e) {
+            $status = $e->getHttpStatus();
+            $response->status($status->value);
+
+            $result = ApiResponse::error($e->getMessage());
         }
 
-        $this->sendError($response, 'Not Found', 404);
+        $json = json_encode($result);
+        $response->end(is_string($json) ? $json : '{}');
     }
 
     private function setDefaultHeaders(Response $response): void
@@ -102,13 +118,5 @@ class Router
         $result = is_array($data) ? $data : [];
 
         return $result;
-    }
-
-    private function sendError(Response $response, string $msg, int $code): void
-    {
-        $errorPayload = json_encode(['error' => $msg]);
-
-        $response->status($code);
-        $response->end(is_string($errorPayload) ? $errorPayload : '{"error":"Unknown encoding error"}');
     }
 }
