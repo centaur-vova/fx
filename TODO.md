@@ -54,6 +54,11 @@
   - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
 
 ### 🟡 Medium Priority
+- [ ] **🐎 HIGH.AF**: Deploy an experimental version at `high.af.l3373.xyz`
+  - [ ] Different color scheme (aggressive red/orange)
+  - [ ] Increased limits (workers, queue, timeouts)
+  - [ ] Separate `docker-compose.high.yaml`
+  - [ ] Use for stress testing without affecting the main demo
 - [ ] **Load & Stress Testing**:
   - [ ] Implement **k6** or **Locust** scripts to simulate 1,000+ concurrent WebSocket clients.
   - [ ] Measure memory stability and `Swoole\Table` contention under high-frequency broadcasting.
