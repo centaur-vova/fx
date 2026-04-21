@@ -24,12 +24,11 @@ type Client struct {
 	Send chan ClientMessage
 }
 type Hub struct {
-	clients         map[*Client]bool
-	clientsMu       sync.RWMutex
-	config          *protocol.AppConfig
-	upgrader        websocket.Upgrader
-	nc              *nats.Conn
-	streamCreatedAt time.Time
+	clients   map[*Client]bool
+	clientsMu sync.RWMutex
+	config    *protocol.AppConfig
+	upgrader  websocket.Upgrader
+	nc        *nats.Conn
 }
 
 func NewHub(cfg *protocol.AppConfig, nc *nats.Conn) *Hub {
@@ -40,13 +39,6 @@ func NewHub(cfg *protocol.AppConfig, nc *nats.Conn) *Hub {
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
 		nc: nc,
-	}
-
-	// Gather details about JetStream
-	js, _ := nc.JetStream()
-	info, err := js.StreamInfo(cfg.StreamCh)
-	if err == nil && info != nil {
-		h.streamCreatedAt = info.Created
 	}
 
 	return h
@@ -155,6 +147,15 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 	log.Printf("New client. Total: %d", h.Count())
 
+	// Gather details about JetStream
+	// TODO: Cache StreamInfo with short TTL (e.g., 10s) to reduce NATS requests on high load.
+	var streamCreatedAt time.Time
+	js, _ := h.nc.JetStream()
+	info, err := js.StreamInfo(h.config.StreamCh)
+	if err == nil && info != nil {
+		streamCreatedAt = info.Created
+	}
+
 	// Welcome event
 	welcomeEvent := protocol.NewEvent(
 		"welcome",
@@ -163,7 +164,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 			CPUCores:        h.config.CPUCores,
 			QueueCapacity:   h.config.QueueCapacity,
 			AppVersion:      h.config.AppVersion,
-			StreamCreatedAt: h.streamCreatedAt.Local().Format("2006-01-02 15:04:05"),
+			StreamCreatedAt: streamCreatedAt.Local().Format("2006-01-02 15:04:05"),
 		},
 	)
 	h.SendToClient(client, welcomeEvent)
