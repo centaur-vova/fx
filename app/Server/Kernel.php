@@ -6,6 +6,7 @@ namespace App\Server;
 
 use App\ConfigLoader;
 use App\Contract\Messaging\MessageSerializer;
+use App\Contract\Task\TaskQueue;
 use App\Contract\Task\TaskSemaphore;
 use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
@@ -229,6 +230,8 @@ class Kernel
                 TaskController::class => create()
                     ->constructor(
                         get(TaskService::class),
+                        get(TaskQueue::class),
+                        get(LoggerInterface::class),
                         get('options.stress_min_task_num'),
                         get('options.task_max_batch_size'),
                         get('options.task_semaphore_limit'),

@@ -119,4 +119,9 @@ class NatsQueue implements Queue
             return false;
         }
     }
+
+    public function purge(): void
+    {
+        $this->stream->purge();
+    }
 }

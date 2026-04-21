@@ -67,7 +67,7 @@
                 <div class="text-xs">
                   <span
                     class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
-                    >Buffer</span
+                    >Flow</span
                   >
                   <b
                     class="block font-mono text-sm min-w-[70px] text-yellow-500"
@@ -255,64 +255,140 @@
 
         <!-- Grid: Controls (4) + Terminal (8) -->
         <div class="grid grid-cols-12 gap-4">
-          <!-- LEFT: CONTROLS (Injection Panel) -->
+          <!-- LEFT: CONTROL PANEL -->
           <div
-            class="col-span-4 bg-[#111111] p-4 rounded-xl border border-[#222222] flex flex-col gap-4 shadow-2xl"
+            class="col-span-4 bg-[#111111] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl"
           >
-            <div class="slider-group w-full">
-              <label
-                class="flex justify-between items-center text-[10px] font-mono font-black text-gray-500 uppercase mb-2 tracking-widest"
+            <!-- Panel header (same style as terminal) -->
+            <div
+              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex items-center gap-2 shrink-0 select-none"
+            >
+              <span
+                class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
+                >CONTROL.PANEL</span
               >
-                <span>Concurrent Limit</span>
-                <span
-                  x-text="$store.app.mc"
-                  class="text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]"
-                ></span>
-              </label>
-              <input
-                type="range"
-                x-model="$store.app.mc"
-                class="block w-full cursor-pointer"
-                min="1"
-                max="10"
-              />
             </div>
 
-            <div class="grid grid-cols-2 gap-2 flex-grow">
-              <button class="task-button" @click="$store.app.createTasks(1)">
-                1 Task
-              </button>
-              <button class="task-button" @click="$store.app.createTasks(10)">
-                10 Tasks
-              </button>
+            <!-- Panel content -->
+            <div class="p-4 flex flex-col gap-4">
+              <!-- Concurrency slider -->
+              <div class="slider-group w-full">
+                <label
+                  class="flex justify-between items-center text-[10px] font-mono font-black text-gray-500 uppercase mb-2 tracking-widest"
+                >
+                  <span>Concurrent Limit</span>
+                  <span
+                    x-text="$store.app.mc"
+                    class="text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]"
+                  ></span>
+                </label>
+                <input
+                  type="range"
+                  x-model="$store.app.mc"
+                  class="block w-full cursor-pointer"
+                  min="1"
+                  max="10"
+                />
+              </div>
 
-              <button class="task-button" @click="$store.app.createTasks(50)">
-                50 Tasks
-              </button>
-              <button class="task-button" @click="$store.app.createTasks(100)">
-                100 Tasks
-              </button>
+              <!-- Task injection buttons -->
+              <div class="grid grid-cols-2 gap-2 flex-grow">
+                <button
+                  class="task-button py-2"
+                  @click="$store.app.createTasks(1)"
+                >
+                  1 Task
+                </button>
+                <button
+                  class="task-button py-2"
+                  @click="$store.app.createTasks(10)"
+                >
+                  10 Tasks
+                </button>
+                <button
+                  class="task-button py-2"
+                  @click="$store.app.createTasks(50)"
+                >
+                  50 Tasks
+                </button>
+                <button
+                  class="task-button py-2"
+                  @click="$store.app.createTasks(100)"
+                >
+                  100 Tasks
+                </button>
+                <button
+                  class="task-button task-button-warning py-2"
+                  @click="$store.app.createTasks(500)"
+                  :disabled="$store.app.system.queue_capacity < 500"
+                >
+                  500 Tasks
+                </button>
+                <button
+                  class="task-button task-button-accent py-2"
+                  @click="$store.app.createTasks(1000)"
+                  :disabled="$store.app.system.queue_capacity < 1000"
+                >
+                  1k Batch
+                </button>
+              </div>
+            </div>
+          </div>
 
-              <button
-                class="task-button task-button-warning"
-                @click="$store.app.createTasks(500)"
-                :disabled="$store.app.system.queue_capacity < 500"
+          <!-- CENTER: STATS (Nutz) -->
+          <div
+            class="col-span-4 bg-[#111111] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl"
+          >
+            <!-- Stats Header -->
+            <div
+              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none"
+            >
+              <span
+                class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
+                >DEEZ-NUTZ.STATS</span
               >
-                500 Tasks
-              </button>
-              <button
-                class="task-button task-button-danger"
-                @click="$store.app.createTasks(1000)"
-                :disabled="$store.app.system.queue_capacity < 1000"
+              <span
+                class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
               >
-                1k Batch
+                Stream created:
+                <span x-text="$store.app.system.stream_created_at ?? ''"></span>
+              </span>
+            </div>
+
+            <!-- Stats Content -->
+            <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
+              <div class="flex justify-between">
+                <span class="text-gray-500">Messages:</span>
+                <span
+                  class="text-green-500"
+                  x-text="$store.app.metrics.natsStats?.messages ?? 0"
+                ></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">Size:</span>
+                <span
+                  class="text-green-500"
+                  x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
+                ></span>
+              </div>
+              <div class="flex justify-center mt-auto">
+                <canvas
+                  id="msg-chart"
+                  style="width: 100%; height: 40px"
+                ></canvas>
+              </div>
+              <button
+                class="task-button task-button-danger w-full mt-2 py-2"
+                @click="$store.app.confirmPurge"
+              >
+                Clear Queue
               </button>
             </div>
           </div>
 
           <!-- RIGHT: TERMINAL (Neon Log Mode) -->
           <div
-            class="col-span-8 bg-[#0a0a0a] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl min-h-[220px]"
+            class="col-span-4 bg-[#0a0a0a] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl min-h-[220px]"
           >
             <!-- Terminal Header -->
             <div
@@ -356,17 +432,33 @@
       </div>
     </div>
 
-    <template id="semaphore-template">
-      <div class="semaphore-item p-2 bg-gray-50 rounded border">
-        <div class="flex justify-between text-xs mb-1">
-          <b class="key"></b>
-          <span class="val"></span>
-        </div>
-        <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-          <div class="progress-fill h-full bg-blue-500"></div>
+    <div
+      id="purge-modal"
+      class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-[#111111] border border-[#222222] rounded-xl p-6 w-96 shadow-2xl"
+      >
+        <h3 class="text-lg font-bold text-white mb-2">Purge Queue</h3>
+        <p class="text-gray-400 text-sm mb-6">
+          This will remove all tasks from NATS. Are you sure?
+        </p>
+        <div class="flex justify-end gap-3">
+          <button
+            id="cancel-purge"
+            class="px-4 py-2 rounded bg-gray-800 text-gray-300 hover:bg-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            id="confirm-purge"
+            class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+          >
+            Purge
+          </button>
         </div>
       </div>
-    </template>
+    </div>
 
     <script src="dist/app.min.js"></script>
   </body>

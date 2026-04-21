@@ -2,6 +2,8 @@ import Alpine from 'alpinejs';
 import { state } from './modules/state';
 import { decodeMessage } from './modules/decoder.js';
 import { drawShape } from './modules/ui.js';
+import { tasks, clearTasks } from './modules/taskStore.js';
+import { updateMessagesChart } from './modules/chart.js';
 import {
     WS,
     TASK,
@@ -19,9 +21,6 @@ Alpine.start();
 console.log(`%c${BRAND_LOGO}`, "color: #10b981; font-weight: bold;");
 console.log("%c» FAST.AF — FAST ATOMIC FLOW", "color: #10b981; font-weight: bold;");
 console.log("%c» KERNEL: SWOOLE_6.0_STABLE // MODE: SHARED_ATOMIC", "color: #6b7280;");
-
-// Keep tasks outside the store for faster access
-const tasks = new Map();
 
 const store = Alpine.store('app');
 
@@ -76,7 +75,8 @@ const connect = () => {
 
         store.resetMetrics();
         stopPinger();
-        tasks.clear();
+        clearTasks();
+
         setTimeout(connect, 3000);
     };
 
@@ -138,7 +138,11 @@ const handleUpdateTasks = (data) => {
 };
 
 const handleMetrics = (data) => {
+    // Update metrics
     store.updateMetrics(data);
+
+    // Update chart(s)
+    updateMessagesChart(data.nats_stats.messages ?? 0);
 };
 
 // Rendering

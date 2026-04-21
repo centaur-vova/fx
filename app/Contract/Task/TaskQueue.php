@@ -18,4 +18,6 @@ interface TaskQueue
     public function nack(string $receiptId, ?int $delay = null): void;
 
     public function count(): int;
+
+    public function purge(): void;
 }

@@ -26,22 +26,23 @@ class Router
     {
         $this->routes = [
             'POST|/api/tasks/create' => [$this->taskController, 'createTasks'],
+            'POST|/api/tasks/purge' => [$this->taskController, 'purgeQueue'],
             'GET|/api/tasks/health' => [$this->taskController, 'health'],
         ];
     }
 
     public function handle(Request $request, Response $response, Server $server): void
     {
-        /** @var array<string, string> $server */
-        $server = $request->server;
+        /** @var array<string, string> $serverParams */
+        $serverParams = $request->server;
 
-        $path = $server['request_uri'] ?? '/';
+        $path = $serverParams['request_uri'] ?? '/';
         // fast return for websockets
         if ($path === '/ws') {
             return;
         }
 
-        $method = $server['request_method'] ?? 'GET';
+        $method = $serverParams['request_method'] ?? 'GET';
         $key = "$method|$path";
 
         $this->setDefaultHeaders($response);
@@ -58,12 +59,11 @@ class Router
 
                 $payload = $this->getJsonPayload($request);
 
-                if ($path === '/api/tasks/create') {
-                    $dto = CreateTasks::fromArray($payload);
-                    $result = $controller->$action($dto);
-                } else {
-                    $result = $controller->$action($server);
-                }
+                $result = match ($path) {
+                    '/api/tasks/create' => $controller->$action(CreateTasks::fromArray($payload)),
+                    '/api/tasks/purge' => $controller->$action(),
+                    default => $controller->$action($server),
+                };
 
                 $json = json_encode($result);
                 $response->end(is_string($json) ? $json : '{}');

@@ -58,4 +58,12 @@ class NatsTaskQueue implements TaskQueue
     {
         return $this->queue->count();
     }
+
+    public function purge(): void
+    {
+        if (!method_exists($this->queue, 'purge')) {
+            throw new \RuntimeException('Purge not supported for this queue implementation');
+        }
+        $this->queue->purge();
+    }
 }

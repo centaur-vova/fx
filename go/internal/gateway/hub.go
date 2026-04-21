@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/nats-io/nats.go"
 	"github.com/shirou/gopsutil/v3/cpu"
 )
 
@@ -23,20 +24,32 @@ type Client struct {
 	Send chan ClientMessage
 }
 type Hub struct {
-	clients   map[*Client]bool
-	clientsMu sync.RWMutex
-	config    *protocol.AppConfig
-	upgrader  websocket.Upgrader
+	clients         map[*Client]bool
+	clientsMu       sync.RWMutex
+	config          *protocol.AppConfig
+	upgrader        websocket.Upgrader
+	nc              *nats.Conn
+	streamCreatedAt time.Time
 }
 
-func NewHub(cfg *protocol.AppConfig) *Hub {
-	return &Hub{
+func NewHub(cfg *protocol.AppConfig, nc *nats.Conn) *Hub {
+	h := &Hub{
 		clients: make(map[*Client]bool),
 		config:  cfg,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
+		nc: nc,
 	}
+
+	// Gather details about JetStream
+	js, _ := nc.JetStream()
+	info, err := js.StreamInfo(cfg.StreamCh)
+	if err == nil && info != nil {
+		h.streamCreatedAt = info.Created
+	}
+
+	return h
 }
 
 func (h *Hub) Add(conn *websocket.Conn) {
@@ -146,10 +159,11 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 	welcomeEvent := protocol.NewEvent(
 		"welcome",
 		protocol.WelcomeData{
-			WorkerNum:     h.config.WorkerNum,
-			CPUCores:      h.config.CPUCores,
-			QueueCapacity: h.config.QueueCapacity,
-			AppVersion:    h.config.AppVersion,
+			WorkerNum:       h.config.WorkerNum,
+			CPUCores:        h.config.CPUCores,
+			QueueCapacity:   h.config.QueueCapacity,
+			AppVersion:      h.config.AppVersion,
+			StreamCreatedAt: h.streamCreatedAt.Local().Format("2006-01-02 15:04:05"),
 		},
 	)
 	h.SendToClient(client, welcomeEvent)
@@ -193,12 +207,25 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 		cpuRounded := math.Round(cpuPercent*100) / 100
 		memRounded := math.Round(memoryMb*100) / 100
 
+		// NATS stats
+		js, _ := h.nc.JetStream()
+		streamInfo, _ := js.StreamInfo(h.config.StreamCh)
+		var natsStats protocol.NatsStats
+		if streamInfo != nil {
+			natsStats = protocol.NatsStats{
+				Messages:  streamInfo.State.Msgs,
+				Bytes:     streamInfo.State.Bytes,
+				Consumers: streamInfo.State.Consumers,
+			}
+		}
+
 		metrics := protocol.NewEvent(
 			"metrics.update",
 			protocol.SystemMetrics{
 				Connections: len(h.clients),
 				MemoryMb:    memRounded,
 				CPUUsage:    cpuRounded,
+				NatsStats:   natsStats,
 			},
 		)
 

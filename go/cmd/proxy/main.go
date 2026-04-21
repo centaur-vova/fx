@@ -39,9 +39,6 @@ func main() {
 	cfg := protocol.LoadConfig()
 	cfg.Validate()
 
-	// ==== INIT HUB ====
-	hub := gateway.NewHub(cfg)
-
 	// ==== INIT ROUTER ====
 	router := gateway.NewRouter()
 
@@ -53,6 +50,9 @@ func main() {
 	defer nc.Close()
 
 	fmt.Printf("Go Proxy connected to NATS at %s\n", cfg.NatsURL)
+
+	// ==== INIT HUB ====
+	hub := gateway.NewHub(cfg, nc)
 
 	// ==== NATS - passthrough incoming messages to websockets =====
 	nc.Subscribe(cfg.BroadcastCh, func(m *nats.Msg) {

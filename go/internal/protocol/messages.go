@@ -27,17 +27,24 @@ func (e WsEvent) Marshal() []byte {
 	return b
 }
 
+type NatsStats struct {
+	Messages  uint64 `json:"messages"`
+	Bytes     uint64 `json:"bytes"`
+	Consumers int    `json:"consumers"`
+}
 type SystemMetrics struct {
 	Connections int     `json:"connections"`
 	MemoryMb    float64 `json:"memory_mb"`
 	CPUUsage    float64 `json:"cpu_usage"`
+	NatsStats   `json:"nats_stats"`
 }
 
 type WelcomeData struct {
-	WorkerNum     int    `json:"worker_num"`
-	CPUCores      int    `json:"cpu_cores"`
-	QueueCapacity int    `json:"queue_capacity"`
-	AppVersion    string `json:"app_version"`
+	WorkerNum       int    `json:"worker_num"`
+	CPUCores        int    `json:"cpu_cores"`
+	QueueCapacity   int    `json:"queue_capacity"`
+	AppVersion      string `json:"app_version"`
+	StreamCreatedAt string `json:"stream_created_at"`
 }
 
 type TaskStatusUpdate struct {

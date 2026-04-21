@@ -15,6 +15,7 @@ type AppConfig struct {
 	// NATS infrastructure
 	NatsURL     string
 	NatsToken   string
+	StreamCh    string
 	BroadcastCh string
 
 	// Public data
@@ -44,6 +45,7 @@ func LoadConfig() *AppConfig {
 
 		NatsURL:     getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
 		NatsToken:   os.Getenv("NATS_TOKEN"),
+		StreamCh:    getEnv("NATS_STREAM_TASKS", "tasks"),
 		BroadcastCh: getEnv("NATS_SUBJECT_BROADCAST", "v1.ws.broadcast"),
 
 		WorkerNum:     workerNum,
@@ -56,6 +58,9 @@ func LoadConfig() *AppConfig {
 func (c *AppConfig) Validate() {
 	if !natsChannelRegex.MatchString(c.BroadcastCh) {
 		log.Fatalf("Invalid NATS channel name: '%s'. Only a-z, A-Z, 0-9, . and _ are allowed.", c.BroadcastCh)
+	}
+	if !natsChannelRegex.MatchString(c.StreamCh) {
+		log.Fatalf("Invalid NATS channel name: '%s'. Only a-z, A-Z, 0-9, . and _ are allowed.", c.StreamCh)
 	}
 }
 

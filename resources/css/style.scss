@@ -23,6 +23,7 @@
   --color-neon-magenta: #d946ef;
   --color-neon-cyan: #06b6d4;
   --color-neon-lime: #84cc16;
+  --color-neon-yellow: #fbbf24;
 
   /* Opacity variants for backgrounds using color-mix (Modern CSS) */
   --bg-neon-blue: color-mix(in srgb, var(--color-neon-blue), transparent 85%);
@@ -232,6 +233,16 @@ body {
       border-color: var(--color-neon-orange);
       box-shadow: 0 0 20px
         color-mix(in srgb, var(--color-neon-orange), transparent 60%);
+    }
+  }
+
+  &.task-button-accent {
+    border-color: color-mix(in srgb, var(--color-neon-yellow), transparent 60%);
+    color: color-mix(in srgb, var(--color-neon-yellow), transparent 20%);
+    &:hover {
+      border-color: var(--color-neon-yellow);
+      box-shadow: 0 0 20px
+        color-mix(in srgb, var(--color-neon-yellow), transparent 50%);
     }
   }
 

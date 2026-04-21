@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Contract\Task\TaskQueue;
 use App\DTO\Http\Request\CreateTasks;
 use App\DTO\Http\Response\ApiResponse;
 use App\DTO\Http\Response\HealthResponse;
@@ -11,12 +12,15 @@ use App\Exception\Task\InvalidTaskBatchException;
 use App\Exception\Task\QueueFullException;
 use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\TaskService;
+use Psr\Log\LoggerInterface;
 use Swoole\Server;
 
 class TaskController
 {
     public function __construct(
         private readonly TaskService $taskService,
+        private readonly TaskQueue $taskQueue,
+        private readonly LoggerInterface $logger,
         private readonly int $stressMinTaskNum,
         private readonly int $taskMaxBatchSize,
         private readonly int $taskSemaphoreLimit,
@@ -47,6 +51,17 @@ class TaskController
             return ApiResponse::ok('Tasks queued');
         } catch (InvalidTaskBatchException | QueueFullException $e) {
             return ApiResponse::error($e->getMessage());
+        }
+    }
+
+    public function purgeQueue(): ApiResponse
+    {
+        try {
+            $this->taskQueue->purge();
+            return ApiResponse::ok('Queue purged');
+        } catch (\Throwable $e) {
+            $this->logger->error('Queue purge failed', ['error' => $e->getMessage()]);
+            return ApiResponse::error('Purge failed');
         }
     }
 

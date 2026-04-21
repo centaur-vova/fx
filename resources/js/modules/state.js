@@ -1,4 +1,5 @@
 import { UI } from './config.js';
+import { clearTasks } from './taskStore.js';
 
 const getDefaults = () => ({
     latency: '--',
@@ -7,12 +8,18 @@ const getDefaults = () => ({
         connections: '--',
         cpu: '--%',
         taskNum: '--',
+        natsStats: {
+            messages: 0,
+            bytes: 0,
+            consumers: 0,
+        },
     },
     system: {
         app_version: '...',
         cpu_cores: '--',
         queue_capacity: '--',
-        worker_num: 0
+        worker_num: 0,
+        stream_created_at: '--',
     }
 });
 
@@ -72,6 +79,36 @@ export const state = {
         this.metrics.memory = data.memory_mb + 'MB';
         this.metrics.connections = data.connections;
         this.metrics.cpu = data.cpu_usage + '%';
+        this.metrics.natsStats = data.nats_stats;
+    },
+
+    // Purge queue with confirmation
+    confirmPurge() {
+        const modal = document.getElementById('purge-modal');
+        modal.classList.remove('hidden');
+        const confirmBtn = document.getElementById('confirm-purge');
+        const cancelBtn = document.getElementById('cancel-purge');
+
+        const cleanup = () => {
+            modal.classList.add('hidden');
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', cleanup);
+        };
+
+        const handleConfirm = () => {
+            fetch('/api/tasks/purge', { method: 'POST' })
+                .then(res => {
+                    if (res.ok) {
+                        clearTasks();
+                        console.log('Queue purged');
+                    } else console.error('Purge failed');
+                })
+                .catch(err => console.error(err));
+            cleanup();
+        };
+
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', cleanup);
     },
 
     updateTaskNum(total, logThreshold) {
