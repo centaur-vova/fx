@@ -75,8 +75,8 @@ export const UI = {
     PROGRESS_BAR_HEIGHT: 4,
     PROGRESS_BAR_COLOR: '#ffffff',
     LOD: {
-        NORMAL_MAX: 300,      // upto 100 tasks - normal size
-        MEDIUM_MAX: 500,      // upto 500 tasks - reduced scale
+        NORMAL_MAX: 300,      // normal size
+        MEDIUM_MAX: 500,      // reduced scale
         SCALE_NORMAL: 1,
         SCALE_MEDIUM: 0.5,
         SCALE_SMALL: 0.3,
