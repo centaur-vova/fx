@@ -15,7 +15,7 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[![English](https://img.shields.io/badge/English-README-blue.svg)](README.md)
+[📖 Read in English](README.md) | [📖 Читать README на русском](README.ru.md)
 
 <img width="2571" height="1587" alt="image" src="https://github.com/user-attachments/assets/b96bcf59-39ce-49f3-b12e-d33baaf93ab6" />
 
