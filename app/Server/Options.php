@@ -28,6 +28,7 @@ readonly class Options
         public string $natsToken,
         public float $natsTimeoutSec,
         public int $natsPingIntervalSec,
+        public int $natsWorkerPingIntervalSec,
         public int $natsAckWaitMs,
 
         // ========== Logging ==========

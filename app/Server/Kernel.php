@@ -25,7 +25,6 @@ use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
-use Basis\Nats\Client as NatsClient;
 
 use function DI\autowire;
 
@@ -98,6 +97,7 @@ class Kernel
             natsAckWaitMs:        $loader->getInt('NATS_ACK_WAIT_MS', 30000),
             natsTimeoutSec:       $loader->getFloat('NATS_TIMEOUT_SEC', 1.0),
             natsPingIntervalSec:  $loader->getInt('NATS_PING_INTERVAL_SEC', 10),
+            natsWorkerPingIntervalSec: $loader->getInt('NATS_WORKER_PING_INTERVAL_SEC', 5),
             // Queue/streams
             broadcastSubject:     $loader->getString('NATS_SUBJECT_BROADCAST', 'ws.broadcast'),
             taskQueueSubject:     $loader->getString('NATS_SUBJECT_TASKS', 'task.queue'),
@@ -323,10 +323,6 @@ class Kernel
                     $provider->onWorkerStart($this->container, $server, $workerId);
                 }
             }
-
-            // Конь должен жЫть
-            // @phpstan-ignore-next-line
-            $this->container->get(NatsClient::class)->startPingTimer();
         });
 
         // Graceful shutdown
