@@ -181,6 +181,8 @@ _Violation is punishable by a week of maintaining PHP 5.6 and listening to recor
 
 [Full text](LICENSE)
 
+📜 **Full legal text:** [legal.af.l3373.xyz](https://legal.af.l3373.xyz/en/) — _KBL v3.0, privacy, and the sacred law of the herd._
+
 ---
 
 ## 🐎 Commercial use (KBL v3.0 — addendum)
