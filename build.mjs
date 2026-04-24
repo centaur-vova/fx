@@ -2,27 +2,29 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
+import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.resolve(__dirname, '.env');
 
-// Read WS_URL from .env
-let WS_URL = 'wss://fast.af.l3373.xyz/ws';
+const wsUrl = process.env.WS_URL || 'wss://fast.af.l3373.xyz/ws';
+const uiTheme = process.env.UI_THEME || 'fast';
 
-if (fs.existsSync(envPath)) {
-    const content = fs.readFileSync(envPath, 'utf-8');
-    const match = content.match(/^WS_URL=(.+)$/m);
-    if (match) {
-        WS_URL = match[1].trim();
-    }
-}
+// Copy theme specific javascript the theme.js
+copyTheme(uiTheme);
 
 esbuild.build({
     entryPoints: ['resources/js/app.js'],
     bundle: true,
     minify: true,
-    outfile: 'public/dist/app.min.js',
+    outfile: `public/dist/app.min.js`,
     define: {
-        WS_URL: JSON.stringify(WS_URL)
+        WS_URL: JSON.stringify(wsUrl)
     }
 }).catch(() => process.exit(1));
+
+function copyTheme(themeName) {
+    const src = path.join(__dirname, `resources/js/modules/themes/${themeName}.js`);
+    const dest = path.join(__dirname, 'resources/js/modules/themes/theme.js');
+    fs.copyFileSync(src, dest);
+}

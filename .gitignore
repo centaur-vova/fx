@@ -41,6 +41,7 @@ version.php
 /npm-debug.log
 /yarn-error.log
 /dist
+/resources/js/modules/themes/theme.js
 
 # === Testing & Debugging ===
 .phpunit.cache/

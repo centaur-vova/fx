@@ -1,6 +1,6 @@
 import { WS, TASK } from './config.js';
 
-export const decodeMessage = (rawData) => {
+export const decodeMessage = (rawData, labels) => {
     // Binary
     if (rawData instanceof ArrayBuffer) {
         const view = new DataView(rawData);
@@ -17,7 +17,7 @@ export const decodeMessage = (rawData) => {
                         mc: view.getUint8(10),
                         progress: view.getUint8(11),
                         worker: view.getUint8(12) || null,
-                        message: TASK.LABELS[status] || ''
+                        message: labels[status] || ''
                     }
                 };
             }

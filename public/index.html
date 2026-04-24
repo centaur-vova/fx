@@ -19,8 +19,11 @@
   <body x-data x-cloak class="flex flex-col bg-gray-100">
     <div
       class="toast"
-      :class="$store.app.toast.show && 'show'"
-      :style="`--toast-color: ${$store.app.toast.success ? '#10b981' : '#ef4444'}`"
+      :class="{
+        show: $store.app.toast.show,
+        success: $store.app.toast.success,
+        error: !$store.app.toast.success
+      }"
       x-html="$store.app.toast.content"
     ></div>
 
@@ -173,10 +176,7 @@
         </div>
 
         <!-- PIPELINE -->
-        <div
-          class="main-section relative overflow-hidden bg-[#0a0a0a] rounded-xl border border-[#222]"
-          style="height: 50vh; width: 100%"
-        >
+        <div class="main-section">
           <div class="pipeline-background">
             <div class="zone-bg zone-queue"></div>
             <div class="zone-bg zone-lock"></div>
@@ -185,75 +185,6 @@
           </div>
 
           <div id="pipeline" class="relative h-full w-full z-10"></div>
-
-          <!-- PIPELINE HUD -->
-          <div
-            id="canvas-hud"
-            class="absolute bottom-4 left-0 right-0 z-30 select-none px-6"
-          >
-            <div class="flex justify-between items-end">
-              <!-- SHAPES LEGEND -->
-              <div id="hud-shapes" class="flex gap-3">
-                <template x-for="i in 10" :key="i">
-                  <div class="hud-item" :data-mc="i">
-                    <div
-                      class="hud-shape-preview"
-                      :class="{ 'is-active': $store.app.mc == i }"
-                      x-text="i"
-                    ></div>
-                  </div>
-                </template>
-              </div>
-
-              <div class="flex flex-col items-end gap-2 pointer-events-auto">
-                <!-- RENDER TOGGLE -->
-                <label
-                  class="flex items-center gap-2 cursor-pointer group select-none"
-                >
-                  <input
-                    type="checkbox"
-                    x-model="$store.app.renderEnabled"
-                    class="hidden peer"
-                  />
-                  <div
-                    class="w-2 h-2 rounded-full border border-gray-600 peer-checked:bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)] transition-all"
-                  ></div>
-                  <span
-                    class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter group-hover:text-gray-300"
-                  >
-                    Visual Engine:
-                    <span
-                      :class="$store.app.renderEnabled ? 'text-green-500' : 'text-red-500'"
-                      x-text="$store.app.renderEnabled ? 'Active' : 'Paused'"
-                    ></span>
-                  </span>
-                </label>
-
-                <!-- ENGINE RULES -->
-                <div
-                  class="text-[9px] font-mono text-gray-500 uppercase tracking-tighter leading-tight text-right opacity-60"
-                >
-                  <div class="mb-1 text-blue-500 font-bold">
-                    » ENGINE: STRICT SHARED-MEMORY LIMITS (SWOOLE ATOMIC)
-                  </div>
-                  <div>
-                    To prevent starvation: exactly N tasks for Type-N workers.
-                  </div>
-                  <div>
-                    Visual LOD: 500+ active tasks = "Star Dust" mode (60FPS).
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <template id="hud-item-template">
-            <div class="hud-item flex flex-col items-center">
-              <div
-                class="hud-shape-preview w-4 h-4 flex items-center justify-center text-[8px] font-black text-white"
-              ></div>
-            </div>
-          </template>
 
           <!-- Zone labels -->
           <div class="zone-label label-queue text-gray-500">Queue</div>
@@ -270,12 +201,40 @@
           >
             <!-- Panel header (same style as terminal) -->
             <div
-              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex items-center gap-2 shrink-0 select-none"
+              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between gap-2 shrink-0 select-none"
             >
               <span
                 class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
                 >CONTROL.PANEL</span
               >
+              <span
+                class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
+              >
+                <div class="flex flex-col items-end gap-2 pointer-events-auto">
+                  <!-- RENDER TOGGLE -->
+                  <label
+                    class="flex items-center gap-2 cursor-pointer group select-none"
+                  >
+                    <input
+                      type="checkbox"
+                      x-model="$store.app.renderEnabled"
+                      class="hidden peer"
+                    />
+                    <div
+                      class="w-2 h-2 rounded-full border border-gray-600 peer-checked:bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)] transition-all"
+                    ></div>
+                    <span
+                      class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter group-hover:text-gray-300"
+                    >
+                      Visual Engine:
+                      <span
+                        :class="$store.app.renderEnabled ? 'text-green-500' : 'text-red-500'"
+                        x-text="$store.app.renderEnabled ? 'Active' : 'Paused'"
+                      ></span>
+                    </span>
+                  </label>
+                </div>
+              </span>
             </div>
 
             <!-- Panel content -->
@@ -404,9 +363,6 @@
               class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none"
             >
               <div class="flex items-center gap-2">
-                <div
-                  class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]"
-                ></div>
                 <span
                   class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
                   >SYSTEM.TERMINAL_LOG</span

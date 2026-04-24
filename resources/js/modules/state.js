@@ -1,4 +1,4 @@
-import { UI } from './config.js';
+import { UI } from './themes/theme';
 import { clearTasks } from './taskStore.js';
 
 const getDefaults = () => ({

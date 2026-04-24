@@ -2,17 +2,6 @@
 
 /* --- Theme Configuration (Tailwind 4) --- */
 @theme {
-  --color-mc-1: #6366f1; /* Indigo */
-  --color-mc-2: #3b82f6; /* Blue */
-  --color-mc-3: #06b6d4; /* Cyan */
-  --color-mc-4: #10b981; /* Emerald */
-  --color-mc-5: #84cc16; /* Lime */
-  --color-mc-6: #eab308; /* Yellow */
-  --color-mc-7: #f97316; /* Orange */
-  --color-mc-8: #f43f5e; /* Rose */
-  --color-mc-9: #ef4444; /* Red */
-  --color-mc-10: #a855f7; /* Purple */
-
   --color-neon-blue: #3b82f6;
   --color-neon-orange: #f59e0b;
   --color-neon-green: #10b981;
@@ -51,6 +40,17 @@ body {
   margin: 0;
   overflow: hidden;
   @apply h-screen flex flex-col;
+}
+
+/* --- Main Section --- */
+.main-section {
+  height: 50vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background: #0a0a0a;
+  border-radius: 0.75rem;
+  border: 1px solid #222;
 }
 
 /* --- Pipeline Component --- */
@@ -172,18 +172,6 @@ body {
     .status-text {
       @apply text-green-400;
     }
-  }
-}
-
-.hud-shape-preview {
-  @apply w-4 h-4 flex items-center justify-center text-[8px] font-black text-white transition-all duration-200 border border-white/10;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  border-radius: 3px;
-
-  &.is-active {
-    @apply ring-1 ring-white/50 scale-125;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
-    filter: brightness(1.2);
   }
 }
 
@@ -319,41 +307,17 @@ body {
   }
 }
 
-/* --- HUD Geometry Map (Manual classes for native compatibility) --- */
-.hud-item[data-mc="1"] .hud-shape-preview {
-  background: var(--color-mc-1);
-}
-.hud-item[data-mc="2"] .hud-shape-preview {
-  background: var(--color-mc-2);
-}
-.hud-item[data-mc="3"] .hud-shape-preview {
-  background: var(--color-mc-3);
-}
-.hud-item[data-mc="4"] .hud-shape-preview {
-  background: var(--color-mc-4);
-}
-.hud-item[data-mc="5"] .hud-shape-preview {
-  background: var(--color-mc-5);
-}
-.hud-item[data-mc="6"] .hud-shape-preview {
-  background: var(--color-mc-6);
-}
-.hud-item[data-mc="7"] .hud-shape-preview {
-  background: var(--color-mc-7);
-}
-.hud-item[data-mc="8"] .hud-shape-preview {
-  background: var(--color-mc-8);
-}
-.hud-item[data-mc="9"] .hud-shape-preview {
-  background: var(--color-mc-9);
-}
-.hud-item[data-mc="10"] .hud-shape-preview {
-  background: var(--color-mc-10);
-}
-
 /* --- Toast Notification (Compact Mode) --- */
 .toast {
   --toast-color: #10b981; // Default green
+
+  &.success {
+    --toast-color: #10b981;
+  }
+
+  &.error {
+    --toast-color: #ef4444;
+  }
 
   @apply fixed top-5 right-5 bg-[#111] text-white rounded-md shadow-2xl z-[1000] pointer-events-none uppercase tracking-wider;
 

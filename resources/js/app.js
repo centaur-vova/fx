@@ -7,10 +7,11 @@ import { updateMessagesChart } from './modules/chart.js';
 import {
     WS,
     TASK,
-    BRAND_LOGO,
-    COORDS,
     PING_INTERVAL_MS,
 } from './modules/config';
+
+// Theme JS imports (theme.js is copied from the specific theme during build)
+import * as theme from './modules/themes/theme.js';
 
 // Init store
 window.Alpine = Alpine;
@@ -18,7 +19,7 @@ Alpine.store('app', state);
 Alpine.start();
 
 // Brand logo
-console.log(`%c${BRAND_LOGO}`, "color: #10b981; font-weight: bold;");
+console.log(`%c${theme.BRAND_LOGO}`, "color: #10b981; font-weight: bold;");
 console.log("%c» FAST.AF — FAST ATOMIC FLOW", "color: #10b981; font-weight: bold;");
 console.log("%c» KERNEL: SWOOLE_6.0_STABLE // MODE: SHARED_ATOMIC", "color: #6b7280;");
 
@@ -81,7 +82,7 @@ const connect = () => {
     };
 
     ws.onmessage = (e) => {
-        const msg = decodeMessage(e.data);
+        const msg = decodeMessage(e.data, theme.TASK_LABELS);
         if (!msg) return;
 
         const { event, data } = msg;
@@ -119,8 +120,8 @@ const handleUpdateTasks = (data) => {
             mc: mc || store.mc,
             y: 0.15 + Math.random() * 0.7,
             jitterX: jitterX,
-            currentX: COORDS.queued + jitterX,
-            targetX: COORDS.queued + jitterX,
+            currentX: theme.COORDS.queued + jitterX,
+            targetX: theme.COORDS.queued + jitterX,
             status: 'queued',
             pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
@@ -129,7 +130,7 @@ const handleUpdateTasks = (data) => {
     const task = tasks.get(taskId);
     task.progress = progress;
     task.status = status;
-    if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
+    if (theme.COORDS[status]) task.targetX = theme.COORDS[status] + task.jitterX;
 
     if (status === 'completed' || status === 'retries_failed') {
         task.endTime = Date.now();
