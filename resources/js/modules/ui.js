@@ -1,7 +1,7 @@
 import {
     COLORS,
     UI,
-} from './themes/theme';
+} from './config';
 
 /**
  * Draw a single task square (or dot) on the canvas.

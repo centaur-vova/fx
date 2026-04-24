@@ -1,1 +1,404 @@
-@import "./themes/theme.scss";
+@import "tailwindcss";
+
+/* --- Theme Configuration (Tailwind 4) --- */
+@theme {
+  /* Semantic color roles — change these values to create different themes */
+  --color-error: #ef4444; /* danger actions, deletions, fatal errors */
+  --color-warning: #f59e0b; /* warnings, Lock zone */
+  --color-success: #10b981; /* success, Work zone, online status */
+  --color-info: #3b82f6; /* information, Queue zone */
+  --color-accent: #fbbf24; /* highlights, important elements, golden dividers */
+  --color-highlight: #d946ef; /* special states, magenta glow */
+  --color-urgent: #f43f5e; /* critical tasks, rose tint */
+  --color-subtle: #8b5cf6; /* secondary accents, purple details */
+  --color-bright: #06b6d4; /* vivid elements, cyan highlights */
+  --color-vivid: #84cc16; /* energetic zones, lime accents */
+
+  /* Surface & background colors */
+  --bg-primary: #0a0a0a; /* main app background */
+  --bg-secondary: #080808; /* pipeline background, deeper layers */
+  --bg-elevated: #111111; /* toast, modals, elevated surfaces */
+  --bg-control: rgba(10, 10, 10, 0.8); /* button backgrounds */
+  --bg-control-disabled: rgba(20, 20, 20, 0.5); /* disabled button bg */
+
+  /* Border colors */
+  --border-default: #222222; /* default borders */
+  --border-subtle: rgba(255, 255, 255, 0.05); /* subtle dividers */
+  --border-emphasized: rgba(
+    255,
+    255,
+    255,
+    0.2
+  ); /* emphasized borders (Lock zone) */
+  --border-disabled: #333333; /* disabled state borders */
+
+  /* Text colors */
+  --text-primary: #e5e5e5; /* main text color */
+  --text-secondary: #888888; /* disabled/low emphasis text */
+  --text-muted: #9ca3af; /* muted text (gray-500) */
+  --text-accent: var(--color-accent); /* accent text (version link) */
+
+  /* UI element colors */
+  --color-slider-track: #1a1a1a; /* slider background track */
+  --worker-bar-idle: #222222; /* worker bar default state */
+  --grid-dot: rgba(255, 255, 255, 0.03); /* radial grid dots */
+  --divider-subtle: rgba(255, 255, 255, 0.05); /* subtle divider lines */
+
+  /* Opacity variants for backgrounds using color-mix (Modern CSS) */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+
+  /* Zone position markers */
+  --spacing-queue: 12.5%;
+  --spacing-lock: 37.5%;
+  --spacing-work: 62.5%;
+  --spacing-done: 87.5%;
+}
+
+/* --- Base Infrastructure --- */
+[x-cloak] {
+  display: none !important;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  margin: 0;
+  overflow: hidden;
+  @apply h-screen flex flex-col;
+}
+
+/* --- Main Section --- */
+.main-section {
+  height: 50vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+}
+
+/* --- Msg Chart --- */
+#msg-chart {
+  width: 100%;
+  height: 40px;
+}
+
+/* --- Pipeline Component --- */
+#pipeline {
+  background-color: transparent;
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 30px 30px;
+  position: relative;
+  overflow: hidden;
+
+  /* Vertical Divider Lines */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+    background-image:
+      linear-gradient(
+        to right,
+        transparent 24.9%,
+        var(--divider-subtle) 25%,
+        transparent 25.1%
+      ),
+      linear-gradient(
+        to right,
+        transparent 49.9%,
+        color-mix(in srgb, var(--color-accent), transparent 60%) 50%,
+        transparent 50.1%
+      ),
+      linear-gradient(
+        to right,
+        transparent 74.9%,
+        var(--divider-subtle) 75%,
+        transparent 75.1%
+      );
+  }
+
+  /* LOD Mode: Star Dust */
+  &[data-view-mode="dot"] .task {
+    font-size: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    clip-path: none !important;
+    box-shadow: 0 0 6px var(--task-color, currentColor) !important;
+  }
+}
+
+/* --- Background Sections --- */
+.pipeline-background {
+  @apply absolute inset-0 flex z-0 pointer-events-none;
+  background-color: var(--bg-secondary);
+
+  .zone-bg {
+    @apply h-full transition-all duration-500 w-1/4;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-right: 1px solid var(--border-subtle);
+
+    &:hover {
+      filter: brightness(1.5);
+    }
+
+    &.zone-queue {
+      background: linear-gradient(180deg, var(--bg-info) 0%, transparent 70%);
+    }
+
+    &.zone-lock {
+      background: linear-gradient(
+        180deg,
+        var(--bg-warning) 0%,
+        transparent 70%
+      );
+      border-right: 2px solid var(--border-emphasized) !important;
+    }
+
+    &.zone-work {
+      background: linear-gradient(
+        180deg,
+        var(--bg-success) 0%,
+        transparent 70%
+      );
+    }
+
+    &.zone-done {
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-success), transparent 95%) 0%,
+        transparent 100%
+      );
+      border-right: none;
+    }
+  }
+}
+
+/* --- Custom checkbox for render toggle --- */
+.peer:checked ~ div {
+  background-color: var(--color-success);
+  box-shadow: 0 0 8px var(--color-success);
+}
+
+/* --- UI Elements --- */
+.status-block {
+  @apply flex items-center gap-2 justify-end;
+
+  .status-dot {
+    @apply w-1.5 h-1.5 rounded-full bg-error animate-pulse transition-all duration-300;
+  }
+
+  .status-text {
+    @apply font-mono uppercase transition-colors;
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+
+  &.is-online {
+    .status-dot {
+      @apply bg-success shadow-[0_0_8px_var(--color-success)] animate-none;
+    }
+    .status-text {
+      color: var(--color-success);
+    }
+  }
+}
+
+/* --- Version link --- */
+.version-link {
+  color: var(--text-accent);
+  text-decoration: none;
+}
+
+/* --- Controls --- */
+.task-button {
+  @apply flex items-center justify-center rounded-sm border font-mono text-[10px] font-black uppercase tracking-tighter transition-all duration-200 active:scale-95;
+  background: var(--bg-control);
+  border-color: color-mix(in srgb, var(--color-success), transparent 80%);
+  color: color-mix(in srgb, var(--color-success), transparent 40%);
+
+  &:disabled {
+    @apply opacity-25 cursor-not-allowed grayscale-[0.8];
+    background: var(--bg-control-disabled);
+    border-color: var(--border-disabled) !important;
+    color: var(--text-secondary) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: brightness(0.8);
+
+    &:hover {
+      background: var(--bg-control-disabled);
+      box-shadow: none !important;
+      border-color: var(--border-disabled) !important;
+    }
+
+    &::after {
+      content: " [LOCKED]";
+      font-size: 8px;
+      opacity: 0.5;
+    }
+  }
+
+  &:hover {
+    @apply text-white border-success;
+    background: color-mix(in srgb, var(--color-success), transparent 85%);
+    box-shadow: 0 0 15px
+      color-mix(in srgb, var(--color-success), transparent 60%);
+  }
+
+  &.task-button-warning {
+    border-color: color-mix(in srgb, var(--color-warning), transparent 70%);
+    color: color-mix(in srgb, var(--color-warning), transparent 30%);
+    &:hover {
+      border-color: var(--color-warning);
+      box-shadow: 0 0 20px
+        color-mix(in srgb, var(--color-warning), transparent 60%);
+    }
+  }
+
+  &.task-button-accent {
+    border-color: color-mix(in srgb, var(--color-accent), transparent 60%);
+    color: color-mix(in srgb, var(--color-accent), transparent 20%);
+    &:hover {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 20px
+        color-mix(in srgb, var(--color-accent), transparent 50%);
+    }
+  }
+
+  &.task-button-danger {
+    @apply italic;
+    border-color: color-mix(in srgb, var(--color-error), transparent 70%);
+    color: color-mix(in srgb, var(--color-error), transparent 20%);
+    &:hover {
+      background-color: var(--color-error);
+      color: white;
+      border-color: var(--color-error);
+      box-shadow: 0 0 25px
+        color-mix(in srgb, var(--color-error), transparent 40%);
+    }
+  }
+}
+
+#max-concurrent-slider {
+  @apply appearance-none h-1 rounded-full outline-none;
+  background-color: var(--color-slider-track);
+
+  &::-webkit-slider-thumb {
+    @apply appearance-none w-3 h-3 rounded-full cursor-pointer border-none;
+    background-color: var(--color-success);
+    box-shadow: 0 0 10px var(--color-success);
+  }
+}
+
+/* --- Terminal & Logs --- */
+#log-panel.log-panel-disabled {
+  @apply opacity-20 grayscale contrast-[0.8] pointer-events-none transition-all duration-500;
+}
+
+.worker-bar {
+  @apply w-3 h-1 rounded-full transition-all duration-300;
+  background-color: var(--worker-bar-idle);
+
+  &.flash-success {
+    animation: flash-success 0.4s ease-out forwards;
+  }
+  &.flash-error {
+    animation: flash-error 0.4s ease-out forwards;
+  }
+}
+
+@keyframes flash-success {
+  0% {
+    background: var(--color-success);
+    box-shadow: 0 0 10px var(--color-success);
+  }
+  100% {
+    background: var(--worker-bar-idle);
+  }
+}
+@keyframes flash-error {
+  0% {
+    background: var(--color-error);
+    box-shadow: 0 0 10px var(--color-error);
+  }
+  100% {
+    background: var(--worker-bar-idle);
+  }
+}
+
+/* --- Zone Labels Positioning --- */
+.zone-label {
+  @apply absolute top-6 font-black tracking-widest uppercase text-[10px] opacity-80 z-20 pointer-events-none;
+  transform: translateX(-50%);
+  text-shadow: 0 0 10px currentColor;
+
+  &.label-queue {
+    left: var(--spacing-queue);
+  }
+  &.label-lock {
+    left: var(--spacing-lock);
+  }
+  &.label-work {
+    left: var(--spacing-work);
+  }
+  &.label-done {
+    left: var(--spacing-done);
+  }
+}
+
+/* --- Toast Notification (Compact Mode) --- */
+.toast {
+  --toast-color: var(--color-success); /* Default: success style */
+
+  &.success {
+    --toast-color: var(--color-success);
+  }
+
+  &.error {
+    --toast-color: var(--color-error);
+  }
+
+  @apply fixed top-5 right-5 rounded-md shadow-2xl z-[1000] pointer-events-none uppercase tracking-wider;
+  background-color: var(--bg-elevated);
+  color: white;
+  padding: 8px 16px;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 10px;
+  border-left: 3px solid var(--toast-color);
+
+  transform: translateX(180%);
+  transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+
+  &.show {
+    transform: translateX(0);
+  }
+
+  .toast-brand {
+    color: var(--toast-color);
+    @apply font-black mr-1;
+  }
+
+  .toast-msg {
+    color: var(--text-muted);
+  }
+}
+
+/* Zone flash animation — triggered when a new task enters the lock zone */
+@keyframes flashZone {
+  0% {
+    background-color: color-mix(in srgb, var(--color-accent), transparent 60%);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.flash {
+  animation: flashZone 0.2s ease-out;
+}

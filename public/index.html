@@ -16,7 +16,12 @@
     <meta name="author" content="Centaur-Vova (Dmitry Shmanatov)" />
   </head>
 
-  <body x-data x-cloak class="flex flex-col bg-gray-100">
+  <body
+    x-data
+    x-cloak
+    class="flex flex-col"
+    style="background-color: var(--bg-primary)"
+  >
     <div
       class="toast"
       :class="{
@@ -31,7 +36,11 @@
       <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
         <!-- HEADER -->
         <div
-          class="bg-[#111111] rounded-xl shadow-2xl p-4 border border-[#222222]"
+          class="rounded-xl shadow-2xl p-4"
+          style="
+            background-color: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+          "
         >
           <div class="flex justify-between items-center">
             <!-- LEFT: LOGO (Stay static) -->
@@ -41,12 +50,14 @@
               class="block hover:opacity-80 transition-opacity"
             >
               <h1
-                class="text-xl font-black tracking-tighter text-white uppercase italic"
+                class="text-xl font-black tracking-tighter uppercase italic"
+                style="color: var(--text-white)"
               >
-                Fast.<span class="text-green-500">AF</span>
+                Fast.<span style="color: var(--color-success)">AF</span>
               </h1>
               <p
-                class="text-[10px] font-mono text-gray-500 uppercase tracking-widest"
+                class="text-[10px] font-mono uppercase tracking-widest"
+                style="color: var(--text-muted)"
               >
                 High-Load Pipeline Engine
               </p>
@@ -57,9 +68,13 @@
               <!-- Stats Grid: Use flex with fixed widths to prevent shifting -->
               <div class="flex gap-6 text-right" x-data>
                 <!-- Workers Heatmap -->
-                <div class="text-xs pr-6 border-r border-[#222]">
+                <div
+                  class="text-xs pr-6"
+                  style="border-right: 1px solid var(--border-default)"
+                >
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right"
+                    class="block text-[9px] font-bold mb-1 uppercase tracking-tighter text-right"
+                    style="color: var(--text-muted)"
                     >Workers</span
                   >
                   <div
@@ -78,11 +93,13 @@
                 <!-- Queue -->
                 <div class="text-xs">
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
                     >Flow</span
                   >
                   <b
-                    class="block font-mono text-sm min-w-[70px] text-yellow-500"
+                    class="block font-mono text-sm min-w-[70px]"
+                    style="color: var(--color-warning)"
                   >
                     <span x-text="$store.app.metrics.taskNum">--</span>
                   </b>
@@ -91,12 +108,14 @@
                 <!-- Memory -->
                 <div class="text-xs">
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
                     >Memory</span
                   >
                   <b
                     x-text="$store.app.metrics.memory"
-                    class="block font-mono text-sm text-blue-400 min-w-[70px]"
+                    class="block font-mono text-sm min-w-[70px]"
+                    style="color: var(--color-info)"
                     >--MB</b
                   >
                 </div>
@@ -104,12 +123,14 @@
                 <!-- Clients -->
                 <div class="text-xs">
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
                     >Clients</span
                   >
                   <b
                     x-text="$store.app.metrics.connections"
-                    class="block font-mono text-sm text-purple-400 min-w-[40px]"
+                    class="block font-mono text-sm min-w-[40px]"
+                    style="color: var(--color-subtle)"
                     >--</b
                   >
                 </div>
@@ -117,12 +138,14 @@
                 <!-- CPU -->
                 <div class="text-xs">
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
                     >CPU</span
                   >
                   <b
                     x-text="$store.app.metrics.cpu"
-                    class="block font-mono text-sm text-red-400 min-w-[60px] text-right"
+                    class="block font-mono text-sm min-w-[60px] text-right"
+                    style="color: var(--color-error)"
                     >--%</b
                   >
                 </div>
@@ -130,12 +153,14 @@
                 <!-- Ping (Latency) -->
                 <div class="text-xs">
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
                     >Ping</span
                   >
                   <b
                     x-text="$store.app.latency + 'ms'"
-                    class="block font-mono text-sm text-orange-400 min-w-[55px]"
+                    class="block font-mono text-sm min-w-[55px]"
+                    style="color: var(--color-warning)"
                     >--ms</b
                   >
                 </div>
@@ -143,21 +168,27 @@
                 <!-- Cores -->
                 <div class="text-xs">
                   <span
-                    class="block text-[9px] text-gray-500 font-bold mb-1 uppercase"
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
                     >Cores</span
                   >
                   <b
                     x-text="$store.app.system.cpu_cores"
-                    class="block font-mono text-sm text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]"
+                    class="block font-mono text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]"
+                    style="color: var(--color-bright)"
                     >--</b
                   >
                 </div>
               </div>
 
               <!-- Reactor Status: Anchored to the far right -->
-              <div class="pl-6 border-l border-[#222] min-w-[90px]">
+              <div
+                class="pl-6 min-w-[90px]"
+                style="border-left: 1px solid var(--border-default)"
+              >
                 <span
-                  class="block text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-tighter text-right"
+                  class="block text-[9px] font-bold mb-1 uppercase tracking-tighter text-right"
+                  style="color: var(--text-muted)"
                   >Reactor</span
                 >
                 <div
@@ -187,28 +218,38 @@
           <div id="pipeline" class="relative h-full w-full z-10"></div>
 
           <!-- Zone labels -->
-          <div class="zone-label label-queue text-gray-500">Queue</div>
-          <div class="zone-label label-lock text-orange-500">Check Lock</div>
-          <div class="zone-label label-work text-blue-500">In Progress</div>
-          <div class="zone-label label-done text-green-500">Complete</div>
+          <div class="zone-label label-queue">Queue</div>
+          <div class="zone-label label-lock">Check Lock</div>
+          <div class="zone-label label-work">In Progress</div>
+          <div class="zone-label label-done">Complete</div>
         </div>
 
         <!-- Grid: Controls (4) + Terminal (8) -->
         <div class="grid grid-cols-12 gap-4">
           <!-- LEFT: CONTROL PANEL -->
           <div
-            class="col-span-4 bg-[#111111] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl"
+            class="col-span-4 rounded-xl overflow-hidden flex flex-col shadow-2xl"
+            style="
+              background-color: var(--bg-elevated);
+              border: 1px solid var(--border-default);
+            "
           >
             <!-- Panel header (same style as terminal) -->
             <div
-              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between gap-2 shrink-0 select-none"
+              class="px-3 py-2 flex justify-between gap-2 shrink-0 select-none"
+              style="
+                background-color: var(--bg-elevated);
+                border-bottom: 1px solid var(--border-default);
+              "
             >
               <span
-                class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
+                class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
+                style="color: var(--text-muted)"
                 >CONTROL.PANEL</span
               >
               <span
-                class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
+                class="text-[8px] font-mono uppercase tracking-widest"
+                style="color: var(--text-secondary)"
               >
                 <div class="flex flex-col items-end gap-2 pointer-events-auto">
                   <!-- RENDER TOGGLE -->
@@ -221,10 +262,15 @@
                       class="hidden peer"
                     />
                     <div
-                      class="w-2 h-2 rounded-full border border-gray-600 peer-checked:bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)] transition-all"
+                      class="w-2 h-2 rounded-full transition-all"
+                      style="
+                        border: 1px solid var(--text-secondary);
+                        box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
+                      "
                     ></div>
                     <span
-                      class="text-[8px] font-mono text-gray-500 uppercase tracking-tighter group-hover:text-gray-300"
+                      class="text-[8px] font-mono uppercase tracking-tighter"
+                      style="color: var(--text-muted)"
                     >
                       Visual Engine:
                       <span
@@ -242,16 +288,21 @@
               <!-- Concurrency slider -->
               <div class="slider-group w-full">
                 <label
-                  class="flex justify-between items-center text-[10px] font-mono font-black text-gray-500 uppercase mb-2 tracking-widest"
+                  class="flex justify-between items-center text-[10px] font-mono font-black uppercase mb-2 tracking-widest"
+                  style="color: var(--text-muted)"
                 >
                   <span>Concurrent Limit</span>
                   <span
                     x-text="$store.app.mc"
-                    class="text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.4)]"
+                    style="
+                      color: var(--color-success);
+                      text-shadow: 0 0 5px rgba(34, 197, 94, 0.4);
+                    "
                   ></span>
                 </label>
                 <input
                   type="range"
+                  id="max-concurrent-slider"
                   x-model="$store.app.mc"
                   class="block w-full cursor-pointer"
                   min="1"
@@ -305,18 +356,28 @@
 
           <!-- CENTER: STATS (Nutz) -->
           <div
-            class="col-span-4 bg-[#111111] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl"
+            class="col-span-4 rounded-xl overflow-hidden flex flex-col shadow-2xl"
+            style="
+              background-color: var(--bg-elevated);
+              border: 1px solid var(--border-default);
+            "
           >
             <!-- Stats Header -->
             <div
-              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none"
+              class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
+              style="
+                background-color: var(--bg-elevated);
+                border-bottom: 1px solid var(--border-default);
+              "
             >
               <span
-                class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
+                class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
+                style="color: var(--text-muted)"
                 >DEEZ-NUTZ.STATS</span
               >
               <span
-                class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
+                class="text-[8px] font-mono uppercase tracking-widest"
+                style="color: var(--text-secondary)"
               >
                 Stream created:
                 <span x-text="$store.app.system.stream_created_at ?? ''"></span>
@@ -326,16 +387,16 @@
             <!-- Stats Content -->
             <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
               <div class="flex justify-between">
-                <span class="text-gray-500">Messages:</span>
+                <span style="color: var(--text-muted)">Messages:</span>
                 <span
-                  class="text-green-500"
+                  style="color: var(--color-success)"
                   x-text="$store.app.metrics.natsStats?.messages ?? 0"
                 ></span>
               </div>
               <div class="flex justify-between">
-                <span class="text-gray-500">Size:</span>
+                <span style="color: var(--text-muted)">Size:</span>
                 <span
-                  class="text-green-500"
+                  style="color: var(--color-success)"
                   x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
                 ></span>
               </div>
@@ -353,20 +414,30 @@
 
           <!-- RIGHT: TERMINAL (Neon Log Mode) -->
           <div
-            class="col-span-4 bg-[#0a0a0a] rounded-xl overflow-hidden flex flex-col border border-[#222222] shadow-2xl min-h-[220px]"
+            class="col-span-4 rounded-xl overflow-hidden flex flex-col shadow-2xl min-h-[220px]"
+            style="
+              background-color: var(--bg-primary);
+              border: 1px solid var(--border-default);
+            "
           >
             <!-- Terminal Header -->
             <div
-              class="px-3 py-2 bg-[#111111] border-b border-[#222222] flex justify-between items-center shrink-0 select-none"
+              class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
+              style="
+                background-color: var(--bg-elevated);
+                border-bottom: 1px solid var(--border-default);
+              "
             >
               <div class="flex items-center gap-2">
                 <span
-                  class="font-mono text-[9px] font-black text-gray-500 tracking-[0.2em] uppercase"
+                  class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
+                  style="color: var(--text-muted)"
                   >SYSTEM.TERMINAL_LOG</span
                 >
               </div>
               <div
-                class="text-[8px] font-mono text-gray-600 uppercase tracking-widest"
+                class="text-[8px] font-mono uppercase tracking-widest"
+                style="color: var(--text-secondary)"
               >
                 <a
                   href="https://github.com/shmandalf/fast-atomic-flow"
@@ -400,25 +471,37 @@
 
     <div
       id="purge-modal"
-      class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden"
+      class="fixed inset-0 flex items-center justify-center z-50 hidden"
+      style="background-color: var(--bg-overlay)"
     >
       <div
-        class="bg-[#111111] border border-[#222222] rounded-xl p-6 w-96 shadow-2xl"
+        class="rounded-xl p-6 w-96 shadow-2xl"
+        style="
+          background-color: var(--bg-elevated);
+          border: 1px solid var(--border-default);
+        "
       >
-        <h3 class="text-lg font-bold text-white mb-2">Purge Queue</h3>
-        <p class="text-gray-400 text-sm mb-6">
+        <h3 class="text-lg font-bold mb-2" style="color: var(--text-white)">
+          Purge Queue
+        </h3>
+        <p class="text-sm mb-6" style="color: var(--text-muted)">
           This will remove all tasks from NATS. Are you sure?
         </p>
         <div class="flex justify-end gap-3">
           <button
             id="cancel-purge"
-            class="px-4 py-2 rounded bg-gray-800 text-gray-300 hover:bg-gray-700"
+            class="px-4 py-2 rounded transition-colors"
+            style="background-color: #374151; color: var(--text-muted)"
           >
             Cancel
           </button>
           <button
             id="confirm-purge"
-            class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+            class="px-4 py-2 rounded transition-colors"
+            style="
+              background-color: var(--color-error);
+              color: var(--text-white);
+            "
           >
             Purge
           </button>

@@ -24,8 +24,11 @@ function updateMessagesChart(messages) {
     const h = canvas.height = rect.height;
     msgChart.clearRect(0, 0, w, h);
     msgChart.beginPath();
-    msgChart.strokeStyle = '#10b981';
-    msgChart.lineWidth = 1;
+
+    // Use semantic color from CSS variables
+    const computedStyle = getComputedStyle(document.body);
+    msgChart.strokeStyle = computedStyle.getPropertyValue('--color-success').trim();
+    msgChart.lineWidth = 1.5;
 
     const step = w / (msgHistory.length - 1);
     const max = Math.max(...msgHistory, 1);

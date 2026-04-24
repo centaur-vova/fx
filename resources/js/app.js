@@ -8,10 +8,11 @@ import {
     WS,
     TASK,
     PING_INTERVAL_MS,
+    COORDS,
+    BRAND_LOGO,
+    TASK_LABELS,
+    UI,
 } from './modules/config';
-
-// Theme JS imports (theme.js is copied from the specific theme during build)
-import * as theme from './modules/themes/theme.js';
 
 // Init store
 window.Alpine = Alpine;
@@ -19,7 +20,7 @@ Alpine.store('app', state);
 Alpine.start();
 
 // Brand logo
-console.log(`%c${theme.BRAND_LOGO}`, "color: #10b981; font-weight: bold;");
+console.log(`%c${BRAND_LOGO}`, "color: #10b981; font-weight: bold;");
 console.log("%c» FAST.AF — FAST ATOMIC FLOW", "color: #10b981; font-weight: bold;");
 console.log("%c» KERNEL: SWOOLE_6.0_STABLE // MODE: SHARED_ATOMIC", "color: #6b7280;");
 
@@ -82,7 +83,7 @@ const connect = () => {
     };
 
     ws.onmessage = (e) => {
-        const msg = decodeMessage(e.data, theme.TASK_LABELS);
+        const msg = decodeMessage(e.data, TASK_LABELS);
         if (!msg) return;
 
         const { event, data } = msg;
@@ -120,8 +121,8 @@ const handleUpdateTasks = (data) => {
             mc: mc || store.mc,
             y: 0.15 + Math.random() * 0.7,
             jitterX: jitterX,
-            currentX: theme.COORDS.queued + jitterX,
-            targetX: theme.COORDS.queued + jitterX,
+            currentX: COORDS.queued + jitterX,
+            targetX: COORDS.queued + jitterX,
             status: 'queued',
             pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
@@ -130,7 +131,7 @@ const handleUpdateTasks = (data) => {
     const task = tasks.get(taskId);
     task.progress = progress;
     task.status = status;
-    if (theme.COORDS[status]) task.targetX = theme.COORDS[status] + task.jitterX;
+    if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
 
     if (status === 'completed' || status === 'retries_failed') {
         task.endTime = Date.now();
@@ -178,7 +179,43 @@ const addLog = (taskId, mc, status, msg, progress = null) => {
     const entry = document.createElement('div');
     entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
     const time = new Date().toLocaleTimeString([], { hour12: false });
-    entry.innerHTML = `<span class="text-gray-600">${time}</span> <span class="text-blue-400 font-bold">[${status.toUpperCase()}]</span> <span class="text-white">${taskId.slice(-8)}</span> <span class="text-gray-400">${msg}${progressText}</span>`;
+
+    // Status color mapping based on semantic roles
+    let statusColor = 'var(--text-muted)';  // default
+
+    switch (status) {
+        case 'error':
+        case 'failed':
+            statusColor = 'var(--color-error)';
+            break;
+        case 'warning':
+            statusColor = 'var(--color-warning)';
+            break;
+        case 'success':
+        case 'done':
+        case 'completed':
+            statusColor = 'var(--color-success)';
+            break;
+        case 'info':
+        case 'queue':
+            statusColor = 'var(--color-info)';
+            break;
+        case 'accent':
+            statusColor = 'var(--color-accent)';
+            break;
+        case 'urgent':
+            statusColor = 'var(--color-urgent)';
+            break;
+        default:
+            statusColor = 'var(--text-muted)';
+    }
+
+    entry.innerHTML = `
+        <span style="color: var(--text-secondary)">${time}</span>
+        <span style="color: ${statusColor}; font-weight: bold">[${status.toUpperCase()}]</span>
+        <span style="color: var(--text-primary)">${taskId.slice(-8)}</span>
+        <span style="color: var(--text-muted)">${msg}${progressText}</span>
+    `;
 
     logContainer.appendChild(entry);
     if (logContainer.children.length > 30) logContainer.removeChild(logContainer.firstChild);
