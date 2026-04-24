@@ -20,9 +20,11 @@ jobs:
         run: |
           # Use tag if present, use branch name & SHA otherwise
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-              echo "version=${{ github.ref_name }}-atomic" >> $GITHUB_OUTPUT
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "build_date=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
           else
-              echo "version=${{ github.ref_name }}-${GITHUB_SHA::7}-atomic" >> $GITHUB_OUTPUT
+            echo "version=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+            echo "build_date=$(date -u +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
           fi
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -50,6 +52,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}-ws:latest
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.version }}
+            BUILD_DATE=${{ steps.vars.outputs.build_date }}
 
   deploy-vps:
     name: Pull & Restart on VPS

@@ -1,7 +1,8 @@
 FROM golang:1.26.0-alpine3.23 AS builder
 
 ARG APP_VERSION=dev
-RUN echo $APP_VERSION > /version.txt
+ARG BUILD_DATE
+RUN echo "$APP_VERSION (built at $BUILD_DATE)" > /version.txt
 
 WORKDIR /build
 COPY . .
