@@ -44,6 +44,7 @@ type WelcomeData struct {
 	CPUCores        int    `json:"cpu_cores"`
 	QueueCapacity   int    `json:"queue_capacity"`
 	AppVersion      string `json:"app_version"`
+	BuildDate       string `json:"build_date"`
 	StreamCreatedAt string `json:"stream_created_at"`
 }
 

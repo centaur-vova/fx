@@ -16,6 +16,7 @@ const getDefaults = () => ({
     },
     system: {
         app_version: '...',
+        build_date: '...',
         cpu_cores: '--',
         queue_capacity: '--',
         worker_num: 0,

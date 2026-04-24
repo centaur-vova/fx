@@ -23,22 +23,29 @@ type AppConfig struct {
 	CPUCores      int
 	QueueCapacity int
 	AppVersion    string
+	BuildDate     string
 }
 
 var natsChannelRegex = regexp.MustCompile(`^[a-zA-Z0-9\._]+$`)
 
-func getVersion() string {
+func getVersion() (string, string) {
 	data, err := os.ReadFile("/version.txt")
 	if err != nil {
-		return "dev"
+		return "dev", "n/a"
 	}
-	return strings.TrimSpace(string(data))
+
+	versionInfo := strings.Split(string(data), ";")
+	if len(versionInfo) < 2 {
+		return "dev", "n/a"
+	}
+
+	return strings.TrimSpace(versionInfo[0]), strings.TrimSpace(versionInfo[1])
 }
 
 func LoadConfig() *AppConfig {
 	queueCap, _ := strconv.Atoi(os.Getenv("QUEUE_CAPACITY"))
 	workerNum, _ := strconv.Atoi(os.Getenv("SERVER_WORKER_NUM"))
-	version := getVersion()
+	version, buildDate := getVersion()
 
 	return &AppConfig{
 		WSPort: getEnv("WS_PORT", "8080"),
@@ -52,6 +59,7 @@ func LoadConfig() *AppConfig {
 		CPUCores:      runtime.NumCPU(),
 		QueueCapacity: queueCap,
 		AppVersion:    version,
+		BuildDate:     buildDate,
 	}
 }
 

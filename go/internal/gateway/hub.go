@@ -164,6 +164,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 			CPUCores:        h.config.CPUCores,
 			QueueCapacity:   h.config.QueueCapacity,
 			AppVersion:      h.config.AppVersion,
+			BuildDate:       h.config.BuildDate,
 			StreamCreatedAt: streamCreatedAt.Local().Format("2006-01-02 15:04:05"),
 		},
 	)
