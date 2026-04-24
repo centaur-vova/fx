@@ -52,6 +52,7 @@ class AppServiceProvider implements ServiceProvider, WorkerStartAware
                 logger: $logger,
                 size: $options->cacheMaxSize,
                 ttl: $options->cacheDefaultTtlSec,
+                maxValueSize: $options->cacheValueMaxSize,
             ),
             default => throw new \RuntimeException("Unsupported storage driver: {$driver}"),
         };

@@ -27,6 +27,7 @@ readonly class Options
         public int $cacheDefaultTtlSec,
         public int $cacheMaxSize,
         public int $cacheAutoCleanSec,
+        public int $cacheValueMaxSize,
 
         // ========== Nats ==========
         public string $natsHost,

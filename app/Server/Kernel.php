@@ -95,6 +95,7 @@ class Kernel
             cacheDefaultTtlSec:   $loader->getInt('CACHE_DEFAULT_TTL_SEC', 60),
             cacheMaxSize:         $loader->getInt('CACHE_MAX_SIZE', 131072),
             cacheAutoCleanSec:    $loader->getInt('CACHE_AUTO_CLEAN_SEC', 60),
+            cacheValueMaxSize:    $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
             // Queue
             queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
             queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),

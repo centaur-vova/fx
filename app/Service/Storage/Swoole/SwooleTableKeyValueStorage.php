@@ -11,16 +11,19 @@ use Swoole\Table;
 
 class SwooleTableKeyValueStorage implements CacheStorage
 {
+    private const int EXPIRES_COLUMN_SIZE = 8;
+
     private readonly Table $table;
 
     public function __construct(
         private readonly LoggerInterface $logger,
         int $size = 1024,
         private readonly int $ttl = 3600,
+        private readonly int $maxValueSize = 256,
     ) {
         $this->table = new Table($size);
-        $this->table->column('value', Table::TYPE_STRING, 1024);
-        $this->table->column('expires', Table::TYPE_INT, 8);
+        $this->table->column('value', Table::TYPE_STRING, $maxValueSize);
+        $this->table->column('expires', Table::TYPE_INT, self::EXPIRES_COLUMN_SIZE);
         $this->table->create();
     }
 
@@ -44,6 +47,16 @@ class SwooleTableKeyValueStorage implements CacheStorage
 
     public function set(string $key, string $value, ?int $ttl = null): bool
     {
+        // strlen is safe here because cache values are ASCII strings (IDs, counters, tokens).
+        // For UTF-8 use mb_strlen($value, '8bit') — adds ~3-5ms per 65k sets, negligible.
+        if (strlen($value) > $this->maxValueSize) {
+            $this->logger->warning(
+                'Value too large for cache, consider increasing CACHE_VALUE_MAX_SIZE in .env',
+                ['key' => $key, 'size' => strlen($value)]
+            );
+            return false;
+        }
+
         $expires = time() + ($ttl ?? $this->ttl);
         $result = @$this->table->set($key, [
             'value' => $value,
@@ -55,7 +68,7 @@ class SwooleTableKeyValueStorage implements CacheStorage
         }
 
         $this->logger->warning(
-            'Failed to set cache key (table full). Consider increasing CACHE_MAX_SIZE in .env',
+            'Failed to set cache key (table full?). Consider increasing CACHE_MAX_SIZE in .env',
             ['key' => $key]
         );
         return false;
