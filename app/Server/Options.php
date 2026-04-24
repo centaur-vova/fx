@@ -22,6 +22,12 @@ readonly class Options
         public int $dispatchMode,
         public int $socketBufferMb,
 
+        // ========== App Cache ==========
+        public string $cacheStorageDriver,
+        public int $cacheDefaultTtlSec,
+        public int $cacheMaxSize,
+        public int $cacheAutoCleanSec,
+
         // ========== Nats ==========
         public string $natsHost,
         public int $natsPort,
@@ -64,9 +70,6 @@ readonly class Options
 
         // ========== Misc ==========
         public array $rateLimiters,
-        public int $rateLimiterCleanupInterval,
-        public int $rateLimiterTableSize,
-        public int $rateLimiterTtl,
     ) {
     }
 }

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Service\RateLimiter;
 
-use App\Contract\Storage\TtlKeyValueStorage;
+use App\Domain\Cache\Contract\CacheStorage;
 use Psr\Log\LoggerInterface;
 
 class RateLimiterService
 {
     public function __construct(
-        private readonly TtlKeyValueStorage $storage,
+        private readonly CacheStorage $storage,
         private readonly RateLimiterConfig $config,
         private readonly ?LoggerInterface $logger = null,
     ) {

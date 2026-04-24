@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Service\Storage\Swoole;
 
-use App\Contract\Storage\TtlKeyValueStorage;
+use App\Domain\Cache\Contract\CacheStorage;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Table;
 
-class SwooleTableKeyValueStorage implements TtlKeyValueStorage
+class SwooleTableKeyValueStorage implements CacheStorage
 {
     private readonly Table $table;
 
-    public function __construct(private readonly LoggerInterface $logger, int $size = 1024, private readonly int $ttl = 3600)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        int $size = 1024,
+        private readonly int $ttl = 3600,
+    ) {
         $this->table = new Table($size);
         $this->table->column('value', Table::TYPE_STRING, 1024);
         $this->table->column('expires', Table::TYPE_INT, 8);
@@ -42,10 +45,20 @@ class SwooleTableKeyValueStorage implements TtlKeyValueStorage
     public function set(string $key, string $value, ?int $ttl = null): bool
     {
         $expires = time() + ($ttl ?? $this->ttl);
-        return $this->table->set($key, [
+        $result = @$this->table->set($key, [
             'value' => $value,
             'expires' => $expires,
         ]);
+
+        if ($result) {
+            return true;
+        }
+
+        $this->logger->warning(
+            'Failed to set cache key (table full). Consider increasing CACHE_MAX_SIZE in .env',
+            ['key' => $key]
+        );
+        return false;
     }
 
     public function delete(string $key): bool
@@ -99,7 +112,7 @@ class SwooleTableKeyValueStorage implements TtlKeyValueStorage
                 Co::sleep($interval);
                 $deleted = $this->cleanExpired();
                 if ($deleted > 0) {
-                    $logger->info("Cleaned $deleted expired keys");
+                    $logger->debug("Cleaned $deleted expired keys");
                 }
             }
         });

@@ -11,6 +11,7 @@ trait InteractsWithWebSocket
      */
     public function jsonSerialize(): array
     {
+        // @phpstan-ignore-next-line
         return get_object_vars($this);
     }
 }

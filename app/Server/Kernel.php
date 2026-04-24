@@ -12,6 +12,7 @@ use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Router;
 use App\Service\Messaging\MappedMessageSerializer;
+use App\Service\Provider\App\AppServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\Contract\Bootable;
 use App\Service\Provider\Contract\WorkerStartAware;
@@ -19,7 +20,6 @@ use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
 use App\Service\Provider\Nats\NatsClientProvider;
 use App\Service\Provider\Nats\NatsQueueServiceProvider;
 use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
-use App\Service\Provider\Swoole\SwooleTableKeyValueStorageServiceProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
@@ -51,11 +51,11 @@ class Kernel
     private readonly LoggerInterface $logger;
 
     private const array PROVIDERS = [
+        AppServiceProvider::class,
         NatsClientProvider::class,
         NatsBroadcasterServiceProvider::class,
         NatsQueueServiceProvider::class,
         NatsTaskQueueServiceProvider::class,
-        SwooleTableKeyValueStorageServiceProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,
     ];
@@ -90,6 +90,11 @@ class Kernel
             natsPort:             $loader->getInt('NATS_PORT', 4222),
             natsToken:            $loader->getString('NATS_TOKEN', ''),
             workerNum:            $workerNum,
+            // Cache
+            cacheStorageDriver:   $loader->getString('CACHE_STORAGE_DRIVER', 'swoole_table'),
+            cacheDefaultTtlSec:   $loader->getInt('CACHE_DEFAULT_TTL_SEC', 60),
+            cacheMaxSize:         $loader->getInt('CACHE_MAX_SIZE', 131072),
+            cacheAutoCleanSec:    $loader->getInt('CACHE_AUTO_CLEAN_SEC', 60),
             // Queue
             queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
             queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
@@ -108,9 +113,6 @@ class Kernel
             taskMetaTtlSec:       $loader->getInt('TASK_META_TTL_SEC', 10),
             // Misc
             rateLimiters:         $rateLimiters,
-            rateLimiterCleanupInterval: $loader->getInt('RATE_LIMITER_CLEANUP_INTERVAL', 60),
-            rateLimiterTableSize: $loader->getInt('RATE_LIMITER_TABLE_SIZE', 4096),
-            rateLimiterTtl:       $loader->getInt('RATE_LIMITER_TTL', 60),
         );
 
         // Assign options to object state
