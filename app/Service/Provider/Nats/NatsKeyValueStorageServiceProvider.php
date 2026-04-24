@@ -13,6 +13,11 @@ use Basis\Nats\Stream\RetentionPolicy;
 use Basis\Nats\Stream\StorageBackend;
 use DI\ContainerBuilder;
 
+/**
+ * @deprecated Not used yet. Should be refactored to match CacheStorage interface.
+ * @todo Make it implement CacheStorage with simple constructor (like SwooleTable),
+ *       add driver support and Redis alternative.
+ */
 final readonly class NatsKeyValueStorageServiceProvider implements ServiceProvider
 {
     public function register(ContainerBuilder $builder): array
