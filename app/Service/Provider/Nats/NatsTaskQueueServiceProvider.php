@@ -18,6 +18,7 @@ use Basis\Nats\Stream\RetentionPolicy;
 use Basis\Nats\Stream\StorageBackend;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Swoole\Server;
 
 class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
@@ -53,9 +54,19 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
         $client = $container->get(NatsClient::class);
         /** @var Options $options */
         $options = $container->get(Options::class);
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
 
-        $this->createStream($client, $options);
-        $this->createConsumer($client, $options);
+        try {
+            $this->createStream($client, $options);
+            $this->createConsumer($client, $options);
+        } catch (\Throwable $e) {
+            $logger->error(
+                'NATS init failed, horse falls into medically induced coma',
+                ['error' => $e->getMessage()]
+            );
+            $server->shutdown();
+        }
     }
 
     private function createStream(NatsClient $client, Options $options): void
