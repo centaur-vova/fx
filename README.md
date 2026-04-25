@@ -131,6 +131,18 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 | `WS_PORT` | `8080`                   | WebSocket port             |
 | `WS_URL`  | `ws://localhost:8080/ws` | WebSocket URL for frontend |
 
+### 🐎 Semaphore & Retry tuning
+
+These settings control how tasks behave when the semaphore is busy:
+
+| Variable                | Default | Description                                                                     |
+| ----------------------- | ------- | ------------------------------------------------------------------------------- |
+| `TASK_LOCK_TIMEOUT_SEC` | 5       | Maximum time a task waits for a semaphore slot before giving up                 |
+| `TASK_RETRY_DELAY_SEC`  | 1       | Delay before re‑queueing a task after a failed lock attempt                     |
+| `TASK_MAX_RETRIES`      | 3       | How many times a failed task is retried before being marked as `retries_failed` |
+
+⚠️ **Important:** These settings affect task fairness. Too many retries can overload the queue.
+
 ---
 
 ## 🐎 Technical specifications
@@ -140,6 +152,24 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 - **Message Bus:** NATS JetStream 2.12+
 - **Queue Capacity:** 10,000 tasks (configurable)
 - **Concurrency:** 1 to 10 (configurable)
+
+---
+
+## 🐎 Themes
+
+Fast Atomic Flow supports visual themes. Each theme is defined as a separate YAML file and can be switched via URL parameter `?theme=<name>`.
+
+Built‑in themes:
+
+- `fast` — default neon style
+- `crystal` — icy blues and purples
+- `sin-city` — noir, mostly gray with red accents
+
+How to switch: add `?theme=sin-city` to the URL, for example:
+`https://fast.af.l3373.xyz/?theme=sin-city`
+
+Custom themes: you can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, etc.).
+See the [Wiki](https://github.com/shmandalf/fast-atomic-flow/wiki/Themes) for details.
 
 ---
 
