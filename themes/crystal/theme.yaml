@@ -21,10 +21,10 @@ settings:
       # Disable on themes with high MC
       height: 0
     lod:
-      normal_max: 300
-      medium_max: 600
-      scale_normal: 1.1
-      scale_medium: 0.8
+      normal_max: 150
+      medium_max: 400
+      scale_normal: 1.0
+      scale_medium: 0.6
       scale_dot: 0.5
     # Label color — auto-contrast will work, but explicit is better for light theme
     label_text_color: "#0f172a"  # Dark slate for max contrast on light backgrounds
