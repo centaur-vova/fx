@@ -200,8 +200,16 @@ export const state = {
         this.isLogPanelDisabled = total > logThreshold;
     },
 
+    async flashQueue() {
+        const label = document.querySelector('.label-queue');
+        if (!label) return;
+        label.classList.add('flash');
+        setTimeout(() => label.classList.remove('flash'), 200);
+    },
+
     // API - create tasks
     async createTasks(count, forceStress) {
+        this.flashQueue();
         try {
             const res = await fetch("/api/tasks/create", {
                 method: "POST",
@@ -213,12 +221,6 @@ export const state = {
             if (!data.success) {
                 this.showToast(data.message, false);
                 return;
-            }
-
-            const checkLockZone = document.querySelector('.zone-queue');
-            if (checkLockZone) {
-                checkLockZone.classList.add('flash');
-                setTimeout(() => checkLockZone.classList.remove('flash'), 200);
             }
         } catch (e) {
             this.showToast('Connection error', false);

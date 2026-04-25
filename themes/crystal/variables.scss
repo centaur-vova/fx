@@ -48,4 +48,8 @@
   --spacing-lock: 37.5%;
   --spacing-work: 62.5%;
   --spacing-done: 87.5%;
+
+  /* Flash when creating tasks */
+  --flash-bg: rgba(0, 0, 0, 0.15);
+  --flash-filter: brightness(0.9);
 }

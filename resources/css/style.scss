@@ -390,7 +390,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background-color: var(--bg-elevated);
-  color: white;
+  color: var(--text-primary);
   padding: 8px 16px;
   font-family: ui-monospace, monospace;
   font-size: 10px;
@@ -413,15 +413,26 @@ body {
   }
 }
 
-/* Zone flash animation */
-@keyframes flashZone {
+/**
+ * Flash animation for the Queue zone label.
+ * Triggered when a task creation request is sent.
+ */
+.label-queue.flash {
+  animation: flashLabel 0.15s ease-out;
+}
+
+@keyframes flashLabel {
   0% {
-    background-color: color-mix(in srgb, var(--color-accent), transparent 60%);
+    background-color: transparent;
+    color: var(--color-accent);
+  }
+  50% {
+    background-color: var(--color-accent);
+    color: #fff;
+    text-shadow: 0 0 6px var(--color-accent);
   }
   100% {
     background-color: transparent;
+    color: var(--color-accent);
   }
-}
-.flash {
-  animation: flashZone 0.2s ease-out;
 }

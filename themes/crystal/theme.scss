@@ -134,3 +134,8 @@ canvas {
 .zone-bg {
   backdrop-filter: blur(1px);
 }
+
+.zone-queue.flash {
+  --flash-bg: rgba(0, 0, 0, 0.3) !important;
+  --flash-filter: brightness(0.8) !important;
+}
