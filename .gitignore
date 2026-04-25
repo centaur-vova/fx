@@ -43,6 +43,7 @@ version.php
 /dist
 /resources/js/modules/themes/theme.js
 /resources/css/themes/theme.scss
+resources/css/tailwind.css
 
 # === Testing & Debugging ===
 .phpunit.cache/

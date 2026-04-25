@@ -1,0 +1,37 @@
+name: "fast"
+author: "Centaur-Vova"
+description: "Neon velocity. High-throughput, low-latency, max performance."
+emoji: "🚀"
+
+settings:
+  flow:
+    min_concurrent: 1
+    max_concurrent: 10
+    task_buttons:
+      - { label: '1', tasks: 1, class: 'default', stress: false }
+      - { label: '10', tasks: 10, class: 'default', stress: false }
+      - { label: '50', tasks: 50, class: 'default', stress: false }
+      - { label: '100', tasks: 100, class: 'default', stress: false }
+      - { label: '500', tasks: 500, class: 'warning', stress: true }
+      - { label: '1000', tasks: 1000, class: 'accent', stress: true }
+
+  ui:
+    color_generator: "neon"
+    label_text_color: white # classic
+    lod:
+      normal_max: 300
+      medium_max: 600
+      scale_normal: 1.0
+      scale_medium: 0.7
+      scale_dot: 0.5
+    #task_colors:
+    #  1: "#6366f1" # Indigo
+    #  2: "#3b82f6" # Blue
+    #  3: "#06b6d4" # Cyan
+    #  4: "#10b981" # Emerald
+    #  5: "#84cc16" # Lime
+    #  6: "#eab308" # Yellow
+    #  7: "#f97316" # Orange
+    #  8: "#f43f5e" # Rose
+    #  9: "#ef4444" # Red
+    #  10: "#a855f7" # Purple

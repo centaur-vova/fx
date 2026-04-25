@@ -1,21 +1,21 @@
 {
     "type": "module",
     "scripts": {
-        "build:css": "postcss resources/css/style.scss -o public/dist/style.css",
-        "minify:css": "esbuild public/dist/style.css --minify --outfile=public/dist/style.min.css",
+        "build:themes": "node build-themes.mjs",
         "build:js": "node build.mjs",
-        "clean:css": "rimraf public/dist/style.css",
-        "build": "npm run build:css && npm run minify:css && npm run build:js && npm run clean:css"
+        "build": "npm run build:themes && npm run build:js"
     },
     "devDependencies": {
-        "@tailwindcss/postcss": "^4.1.18",
         "alpinejs": "^3.15.8",
+        "autoprefixer": "^10.5.0",
         "dotenv": "^17.4.2",
         "esbuild": "^0.27.2",
-        "postcss": "^8.5.6",
+        "js-yaml": "^4.1.1",
+        "postcss": "^8.5.10",
         "postcss-cli": "^11.0.1",
         "postcss-scss": "^4.0.9",
         "rimraf": "^6.1.2",
-        "tailwindcss": "^4.1.18"
+        "sass": "^1.99.0",
+        "tailwindcss": "^3.4.19"
     }
 }

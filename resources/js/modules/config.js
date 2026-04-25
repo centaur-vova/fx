@@ -1,59 +1,59 @@
-export const COLORS = {
-    1: '#6366f1', // Indigo
-    2: '#3b82f6', // Blue
-    3: '#06b6d4', // Cyan
-    4: '#10b981', // Emerald
-    5: '#84cc16', // Lime
-    6: '#eab308', // Yellow
-    7: '#f97316', // Orange
-    8: '#f43f5e', // Rose
-    9: '#ef4444', // Red
-    10: '#a855f7'  // Purple
-};
-export const COORDS = {
-    queued: 0.125,
-    check_lock: 0.375,
-    lock_acquired: 0.625,
-    progress: 0.625,
-    completed: 0.875,
-    retries_failed: 0.875,
-    lock_failed: 0.125,
-};
+// import proxies to fetch settings from window.THEME_CONFIG
+import { getThemeColor, getLabelTextColor, getStatusLabel, getUISetting } from './theme-config.js';
 
 // Welcome/branding message
 export const BRAND_LOGO = `
-    ███████╗ █████╗ ███████╗████████╗     █████╗ ███████╗
-    ██╔════╝██╔══██╗██╔════╝╚══██╔══╝    ██╔══██╗██╔════╝
-    █████╗  ███████║███████╗   ██║       ███████║█████╗
-    ██╔══╝  ██╔══██║╚════██║   ██║       ██╔══██║██╔══╝
-    ██║     ██║  ██║███████║   ██║    ██╗██║  ██║██║
-    ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝    ╚═╝╚═╝  ╚═╝╚═╝     `;
+            █████╗ ███████╗
+           ██╔══██╗██╔════╝
+           ███████║█████╗
+           ██╔══██║██╔══╝
+     ██╗   ██║  ██║██║
+     ╚═╝   ╚═╝  ╚═╝╚═╝
+    Atomic Flow Orchestrator `;
 
-// Human readable labels
-export const TASK_LABELS = {
-    queued: 'In queue',
-    processing: 'Started',
-    check_lock: 'Checking semaphore',
-    progress: 'In progress',
-    completed: 'Done',
-    lock_acquired: 'Accepted',
-    lock_failed: 'Timeout',
-    retries_failed: 'Max retries reached'
-};
+// PROXIES
 
-export const UI = {
-    PROGRESS_BAR_MIN_SCALE: 0.8,
-    PROGRESS_BAR_HEIGHT: 4,
-    PROGRESS_BAR_COLOR: '#ffffff',
-    LOD: {
-        NORMAL_MAX: 300,      // normal size
-        MEDIUM_MAX: 500,      // reduced scale
-        SCALE_NORMAL: 1,
-        SCALE_MEDIUM: 0.5,
-        SCALE_SMALL: 0.3,
-        MODE_DOT_THRESHOLD: 500
-    }
-};
+/**
+ * Reactive proxy for task background colors
+ */
+export const COLORS = new Proxy({}, {
+    get: (target, prop) => getThemeColor(prop)
+});
+
+/**
+ * Reactive proxy for task labels (text inside shapes)
+ */
+export const LABEL_COLORS = new Proxy({}, {
+    get: (target, prop) => getLabelTextColor(prop)
+});
+
+/**
+ * Proxy object to access status labels as if they were a static object
+ */
+export const STATUS_LABELS = new Proxy({}, {
+    get: (target, prop) => getStatusLabel(prop)
+});
+
+/**
+ * Proxy for reactive Progress Bar settings
+ */
+export const PROGRESS_BAR = new Proxy({}, {
+    get: (target, prop) => getUISetting('PROGRESS_BAR', prop)
+});
+
+/**
+ * Proxy for reactive Level Of Detail (LOD) settings
+ */
+export const LOD = new Proxy({}, {
+    get: (target, prop) => getUISetting('LOD', prop)
+});
+
+/**
+ * Proxy for reactive zone coordinates
+ */
+export const COORDS = new Proxy({}, {
+    get: (target, prop) => getUISetting('ZONE_COORDS', prop)
+});
 
 // WebSocket Protocol
 export const WS = {

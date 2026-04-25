@@ -1,7 +1,4 @@
-import {
-    COLORS,
-    UI,
-} from './config';
+import { COLORS, LABEL_COLORS, PROGRESS_BAR } from './config';
 
 /**
  * Draw a single task square (or dot) on the canvas.
@@ -22,7 +19,7 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
     ctx.fillStyle = fillColor;
 
     // Pulsation for 'progress' tasks (all squares pulse together)
-    if (scale > UI.PROGRESS_BAR_MIN_SCALE) {
+    if (scale > PROGRESS_BAR.min_scale) {
         if (status === 'progress') {
             const speed = 150;
             const pulse = 0.6 + 0.4 * Math.sin((Date.now() / speed) + (task.pulseOffset || 0));
@@ -39,9 +36,9 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
     }
 
     if (mode === 'dot') {
-        ctx.beginPath();
-        ctx.arc(x, y, 2 * scale, 0, Math.PI * 2);
-        ctx.fill();
+        // Just a pixel — fastest possible
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(x, y, 1, 1);
         return;
     }
 
@@ -51,16 +48,15 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
 
     ctx.globalAlpha = 1;
 
-    if (scale > UI.PROGRESS_BAR_MIN_SCALE) {
-        ctx.fillStyle = 'white';
+    if (scale > PROGRESS_BAR.min_scale) {
+        ctx.fillStyle = LABEL_COLORS[mc];
         ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(mc, x, y);
 
-        if (status === 'progress' && mode !== 'dot' && progress && progress > 0 && progress < 100) {
-            ctx.fillStyle = UI.PROGRESS_BAR_COLOR;
-            ctx.fillRect(x - s / 2, y + s / 2 - UI.PROGRESS_BAR_HEIGHT, s * (progress / 100), UI.PROGRESS_BAR_HEIGHT);
+        if (status === 'progress' && progress && progress > 0 && progress < 100 && PROGRESS_BAR.height > 0) {
+            ctx.fillRect(x - s / 2, y + s / 2 - PROGRESS_BAR.height, s * (progress / 100), PROGRESS_BAR.height);
         }
     }
 };

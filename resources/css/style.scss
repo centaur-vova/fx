@@ -1,59 +1,6 @@
-@import "tailwindcss";
-
-/* --- Theme Configuration (Tailwind 4) --- */
+/* Your custom styles */
 @theme {
-  /* Semantic color roles — change these values to create different themes */
-  --color-error: #ef4444; /* danger actions, deletions, fatal errors */
-  --color-warning: #f59e0b; /* warnings, Lock zone */
-  --color-success: #10b981; /* success, Work zone, online status */
-  --color-info: #3b82f6; /* information, Queue zone */
-  --color-accent: #fbbf24; /* highlights, important elements, golden dividers */
-  --color-highlight: #d946ef; /* special states, magenta glow */
-  --color-urgent: #f43f5e; /* critical tasks, rose tint */
-  --color-subtle: #8b5cf6; /* secondary accents, purple details */
-  --color-bright: #06b6d4; /* vivid elements, cyan highlights */
-  --color-vivid: #84cc16; /* energetic zones, lime accents */
-
-  /* Surface & background colors */
-  --bg-primary: #0a0a0a; /* main app background */
-  --bg-secondary: #080808; /* pipeline background, deeper layers */
-  --bg-elevated: #111111; /* toast, modals, elevated surfaces */
-  --bg-control: rgba(10, 10, 10, 0.8); /* button backgrounds */
-  --bg-control-disabled: rgba(20, 20, 20, 0.5); /* disabled button bg */
-
-  /* Border colors */
-  --border-default: #222222; /* default borders */
-  --border-subtle: rgba(255, 255, 255, 0.05); /* subtle dividers */
-  --border-emphasized: rgba(
-    255,
-    255,
-    255,
-    0.2
-  ); /* emphasized borders (Lock zone) */
-  --border-disabled: #333333; /* disabled state borders */
-
-  /* Text colors */
-  --text-primary: #e5e5e5; /* main text color */
-  --text-secondary: #888888; /* disabled/low emphasis text */
-  --text-muted: #9ca3af; /* muted text (gray-500) */
-  --text-accent: var(--color-accent); /* accent text (version link) */
-
-  /* UI element colors */
-  --color-slider-track: #1a1a1a; /* slider background track */
-  --worker-bar-idle: #222222; /* worker bar default state */
-  --grid-dot: rgba(255, 255, 255, 0.03); /* radial grid dots */
-  --divider-subtle: rgba(255, 255, 255, 0.05); /* subtle divider lines */
-
-  /* Opacity variants for backgrounds using color-mix (Modern CSS) */
-  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
-  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
-  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
-
-  /* Zone position markers */
-  --spacing-queue: 12.5%;
-  --spacing-lock: 37.5%;
-  --spacing-work: 62.5%;
-  --spacing-done: 87.5%;
+  /* Variables will be injected from theme */
 }
 
 /* --- Base Infrastructure --- */
@@ -66,7 +13,9 @@ body {
   color: var(--text-primary);
   margin: 0;
   overflow: hidden;
-  @apply h-screen flex flex-col;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* --- Main Section --- */
@@ -133,11 +82,17 @@ body {
 
 /* --- Background Sections --- */
 .pipeline-background {
-  @apply absolute inset-0 flex z-0 pointer-events-none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 0;
+  pointer-events: none;
   background-color: var(--bg-secondary);
 
   .zone-bg {
-    @apply h-full transition-all duration-500 w-1/4;
+    height: 100%;
+    transition: all 0.5s;
+    width: 25%;
     background-repeat: no-repeat;
     background-size: 100% 100%;
     border-right: 1px solid var(--border-subtle);
@@ -186,25 +141,47 @@ body {
 
 /* --- UI Elements --- */
 .status-block {
-  @apply flex items-center gap-2 justify-end;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
 
   .status-dot {
-    @apply w-1.5 h-1.5 rounded-full bg-error animate-pulse transition-all duration-300;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background-color: var(--color-error);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    transition: all 0.3s;
   }
 
   .status-text {
-    @apply font-mono uppercase transition-colors;
+    font-family: ui-monospace, monospace;
+    text-transform: uppercase;
+    transition: color 0.3s;
     color: var(--text-muted);
     font-size: 10px;
   }
 
   &.is-online {
     .status-dot {
-      @apply bg-success shadow-[0_0_8px_var(--color-success)] animate-none;
+      background-color: var(--color-success);
+      box-shadow: 0 0 8px var(--color-success);
+      animation: none;
     }
     .status-text {
       color: var(--color-success);
     }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 
@@ -216,13 +193,29 @@ body {
 
 /* --- Controls --- */
 .task-button {
-  @apply flex items-center justify-center rounded-sm border font-mono text-[10px] font-black uppercase tracking-tighter transition-all duration-200 active:scale-95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.125rem;
+  border-width: 1px;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  transition: all 0.2s;
   background: var(--bg-control);
   border-color: color-mix(in srgb, var(--color-success), transparent 80%);
   color: color-mix(in srgb, var(--color-success), transparent 40%);
 
+  &:active {
+    transform: scale(0.95);
+  }
+
   &:disabled {
-    @apply opacity-25 cursor-not-allowed grayscale-[0.8];
+    opacity: 0.25;
+    cursor: not-allowed;
+    filter: grayscale(0.8);
     background: var(--bg-control-disabled);
     border-color: var(--border-disabled) !important;
     color: var(--text-secondary) !important;
@@ -243,8 +236,9 @@ body {
     }
   }
 
-  &:hover {
-    @apply text-white border-success;
+  &:hover:not(:disabled) {
+    color: white;
+    border-color: var(--color-success);
     background: color-mix(in srgb, var(--color-success), transparent 85%);
     box-shadow: 0 0 15px
       color-mix(in srgb, var(--color-success), transparent 60%);
@@ -253,7 +247,7 @@ body {
   &.task-button-warning {
     border-color: color-mix(in srgb, var(--color-warning), transparent 70%);
     color: color-mix(in srgb, var(--color-warning), transparent 30%);
-    &:hover {
+    &:hover:not(:disabled) {
       border-color: var(--color-warning);
       box-shadow: 0 0 20px
         color-mix(in srgb, var(--color-warning), transparent 60%);
@@ -263,7 +257,7 @@ body {
   &.task-button-accent {
     border-color: color-mix(in srgb, var(--color-accent), transparent 60%);
     color: color-mix(in srgb, var(--color-accent), transparent 20%);
-    &:hover {
+    &:hover:not(:disabled) {
       border-color: var(--color-accent);
       box-shadow: 0 0 20px
         color-mix(in srgb, var(--color-accent), transparent 50%);
@@ -271,10 +265,10 @@ body {
   }
 
   &.task-button-danger {
-    @apply italic;
+    font-style: italic;
     border-color: color-mix(in srgb, var(--color-error), transparent 70%);
     color: color-mix(in srgb, var(--color-error), transparent 20%);
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: var(--color-error);
       color: white;
       border-color: var(--color-error);
@@ -285,23 +279,36 @@ body {
 }
 
 #max-concurrent-slider {
-  @apply appearance-none h-1 rounded-full outline-none;
+  -webkit-appearance: none;
+  height: 0.25rem;
+  border-radius: 9999px;
   background-color: var(--color-slider-track);
 
   &::-webkit-slider-thumb {
-    @apply appearance-none w-3 h-3 rounded-full cursor-pointer border-none;
+    -webkit-appearance: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    cursor: pointer;
     background-color: var(--color-success);
     box-shadow: 0 0 10px var(--color-success);
+    border: none;
   }
 }
 
 /* --- Terminal & Logs --- */
 #log-panel.log-panel-disabled {
-  @apply opacity-20 grayscale contrast-[0.8] pointer-events-none transition-all duration-500;
+  opacity: 0.2;
+  filter: grayscale(0.8) contrast(0.8);
+  pointer-events: none;
+  transition: all 0.5s;
 }
 
 .worker-bar {
-  @apply w-3 h-1 rounded-full transition-all duration-300;
+  width: 0.75rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  transition: all 0.3s;
   background-color: var(--worker-bar-idle);
 
   &.flash-success {
@@ -333,7 +340,15 @@ body {
 
 /* --- Zone Labels Positioning --- */
 .zone-label {
-  @apply absolute top-6 font-black tracking-widest uppercase text-[10px] opacity-80 z-20 pointer-events-none;
+  position: absolute;
+  top: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 10px;
+  opacity: 0.8;
+  z-index: 20;
+  pointer-events: none;
   transform: translateX(-50%);
   text-shadow: 0 0 10px currentColor;
 
@@ -353,7 +368,7 @@ body {
 
 /* --- Toast Notification (Compact Mode) --- */
 .toast {
-  --toast-color: var(--color-success); /* Default: success style */
+  --toast-color: var(--color-success);
 
   &.success {
     --toast-color: var(--color-success);
@@ -363,16 +378,23 @@ body {
     --toast-color: var(--color-error);
   }
 
-  @apply fixed top-5 right-5 rounded-md shadow-2xl z-[1000] pointer-events-none uppercase tracking-wider;
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  border-radius: 0.375rem;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 1000;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   background-color: var(--bg-elevated);
   color: white;
   padding: 8px 16px;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+  font-family: ui-monospace, monospace;
   font-size: 10px;
   border-left: 3px solid var(--toast-color);
-
   transform: translateX(180%);
   transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 
@@ -382,7 +404,8 @@ body {
 
   .toast-brand {
     color: var(--toast-color);
-    @apply font-black mr-1;
+    font-weight: 900;
+    margin-right: 0.25rem;
   }
 
   .toast-msg {
@@ -390,7 +413,7 @@ body {
   }
 }
 
-/* Zone flash animation — triggered when a new task enters the lock zone */
+/* Zone flash animation */
 @keyframes flashZone {
   0% {
     background-color: color-mix(in srgb, var(--color-accent), transparent 60%);

@@ -1,0 +1,51 @@
+:root {
+  /* Semantic color roles — Pure Light & Crystal Accents */
+  --color-error: #ef4444; /* red */
+  --color-warning: #f59e0b; /* amber */
+  --color-success: #10b981; /* emerald */
+  --color-info: #0ea5e9; /* sky */
+  --color-accent: #0ea5e9; /* primary brand color */
+  --color-highlight: #f8fafc;
+  --color-urgent: #ef4444; /* same as error */
+  --color-subtle: #94a3b8; /* secondary gray */
+  --color-bright: #0f172a; /* dark for light theme */
+  --color-vivid: #0ea5e9;
+
+  /* Surface & background colors — Apple-style White */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-elevated: #f1f5f9;
+  --bg-control: rgba(255, 255, 255, 0.9);
+  --bg-control-disabled: rgba(241, 245, 249, 0.5);
+  --bg-overlay: rgba(255, 255, 255, 0.95);
+
+  /* Border colors */
+  --border-default: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-emphasized: #0ea5e966;
+  --border-disabled: #f1f5f9;
+
+  /* Text colors — High contrast for Light Theme */
+  --text-primary: #0f172a; /* Very dark slate */
+  --text-secondary: #475569; /* Slate gray */
+  --text-muted: #94a3b8; /* Light gray */
+  --text-accent: #0ea5e9;
+  --text-white: #ffffff;
+
+  /* UI elements */
+  --color-slider-track: #e2e8f0;
+  --worker-bar-idle: #f1f5f9;
+  --grid-dot: rgba(14, 165, 233, 0.08);
+  --divider-subtle: #f1f5f9;
+
+  /* Opacity variants */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+
+  /* Zone markers — Perfectly synced */
+  --spacing-queue: 12.5%;
+  --spacing-lock: 37.5%;
+  --spacing-work: 62.5%;
+  --spacing-done: 87.5%;
+}

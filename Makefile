@@ -3,19 +3,20 @@ PHP_BIN = php
 SERVER_FILE = server.php
 
 # --- Methods ---
-.PHONY: install build run stop restart watch test check help nats-sub
+.PHONY: install build run stop restart distclean watch test check help nats-sub
 
 help:
 	@echo "Usage:"
-	@echo "  make install  - Install composer and npm dependencies"
-	@echo "  make build    - Build frontend assets"
-	@echo "  make run      - Start the Swoole server"
-	@echo "  make stop     - Stop the Swoole server"
-	@echo "  make restart  - Restart the Swoole server"
-	@echo "  make watch    - Watch frontend changes"
-	@echo "  make test     - Run PHPUnit tests"
-	@echo "  make check    - Run full static analysis & quality gate (PHPStan, Lint, Rector)"
-	@echo "  make nats-sub - Subscribe to a NATS channel and show received messages"
+	@echo "  make install   - Install composer and npm dependencies"
+	@echo "  make build     - Build frontend assets"
+	@echo "  make run       - Start the Swoole server"
+	@echo "  make stop      - Stop the Swoole server"
+	@echo "  make restart   - Restart the Swoole server"
+	@echo "  make distclean - Clean frontend build (public/dist)"
+	@echo "  make watch     - Watch frontend changes"
+	@echo "  make test      - Run PHPUnit tests"
+	@echo "  make check     - Run full static analysis & quality gate (PHPStan, Lint, Rector)"
+	@echo "  make nats-sub  - Subscribe to a NATS channel and show received messages"
 
 
 install:
@@ -35,6 +36,9 @@ stop:
 	@killall $(PHP_BIN) || true
 
 restart: stop run
+
+distclean:
+	rm -rf public/dist
 
 watch:
 	npm run watch

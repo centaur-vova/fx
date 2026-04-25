@@ -1,0 +1,30 @@
+name: "crystal"
+author: "Centaur-Vova"
+description: "Precision-engineered transparency. Lightweight, clean, efficient."
+emoji: "💎"
+
+settings:
+  flow:
+    default_concurrent: 150
+    min_concurrent: 100
+    max_concurrent: 255
+    task_buttons:
+      - { label: "🔮 Prism 100", tasks: 100, class: "default", stress: false }
+      - { label: "🌀 Refraction 500", tasks: 500, class: "default", stress: false }
+      - { label: "⚠️💢 PRESSURE 1000", tasks: 1000, class: "warning", stress: true }
+      - { label: "💎🔥⚡ DIAMOND 1500", tasks: 1500, class: "accent", stress: true }
+
+  ui:
+    color_generator: "ice"
+    # Progress bar appearance
+    progress_bar:
+      # Disable on themes with high MC
+      height: 0
+    lod:
+      normal_max: 300
+      medium_max: 600
+      scale_normal: 1.1
+      scale_medium: 0.8
+      scale_dot: 0.5
+    # Label color — auto-contrast will work, but explicit is better for light theme
+    label_text_color: "#0f172a"  # Dark slate for max contrast on light backgrounds

@@ -2,9 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/dist/tailwind.css" />
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const theme = urlParams.get("theme") || "fast";
+      document.write(
+        `<link rel="stylesheet" href="/dist/themes/${theme}.css">`,
+      );
+      document.write(
+        `<script src="/dist/themes/${theme}.config.js"><\/script>`,
+      );
+    </script>
+
     <title>FAST.AF · Atomic Flow · KBL v3.0</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="stylesheet" href="dist/style.min.css" />
     <meta
       name="description"
       content="High‑load task orchestrator with real‑time visualization. PHP 8.4, Swoole, NATS JetStream, Go WebSocket. KBL v3.0 license."
@@ -274,7 +285,7 @@
                     >
                       Visual Engine:
                       <span
-                        :class="$store.app.renderEnabled ? 'text-green-500' : 'text-red-500'"
+                        :style="$store.app.renderEnabled ? 'color: var(--color-success)' : 'color: var(--color-error)'"
                         x-text="$store.app.renderEnabled ? 'Active' : 'Paused'"
                       ></span>
                     </span>
@@ -292,64 +303,33 @@
                   style="color: var(--text-muted)"
                 >
                   <span>Concurrent Limit</span>
-                  <span
-                    x-text="$store.app.mc"
-                    style="
-                      color: var(--color-success);
-                      text-shadow: 0 0 5px rgba(34, 197, 94, 0.4);
-                    "
-                  ></span>
+                  <div
+                    class="min-w-[24px] h-4 px-1 rounded-none flex items-center justify-center text-[8px] font-bold transition-colors"
+                    :style="{ backgroundColor: $store.app.mcColor, color: $store.app.labelColor }"
+                  >
+                    <span x-text="$store.app.mc"></span>
+                  </div>
                 </label>
                 <input
                   type="range"
                   id="max-concurrent-slider"
                   x-model="$store.app.mc"
                   class="block w-full cursor-pointer"
-                  min="1"
-                  max="10"
+                  :min="$store.app.flow.min"
+                  :max="$store.app.flow.max"
                 />
               </div>
 
               <!-- Task injection buttons -->
               <div class="grid grid-cols-2 gap-2 flex-grow">
-                <button
-                  class="task-button py-2"
-                  @click="$store.app.createTasks(1)"
-                >
-                  1 Task
-                </button>
-                <button
-                  class="task-button py-2"
-                  @click="$store.app.createTasks(10)"
-                >
-                  10 Tasks
-                </button>
-                <button
-                  class="task-button py-2"
-                  @click="$store.app.createTasks(50)"
-                >
-                  50 Tasks
-                </button>
-                <button
-                  class="task-button py-2"
-                  @click="$store.app.createTasks(100)"
-                >
-                  100 Tasks
-                </button>
-                <button
-                  class="task-button task-button-warning py-2"
-                  @click="$store.app.createTasks(500)"
-                  :disabled="$store.app.system.queue_capacity < 500"
-                >
-                  500 Tasks
-                </button>
-                <button
-                  class="task-button task-button-accent py-2"
-                  @click="$store.app.createTasks(1000)"
-                  :disabled="$store.app.system.queue_capacity < 1000"
-                >
-                  1k Batch
-                </button>
+                <template x-for="btn in $store.app.flow.buttons">
+                  <button
+                    class="task-button py-2"
+                    :class="'task-button-' + btn.class"
+                    @click="$store.app.createTasks(btn.tasks, btn.stress)"
+                    x-text="btn.label"
+                  ></button>
+                </template>
               </div>
             </div>
           </div>
@@ -505,6 +485,80 @@
           >
             Purge
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINKS TO OTHER STABLES (local dev) -->
+    <div
+      style="
+        text-align: center;
+        padding: 16px 0 8px;
+        border-top: 1px solid var(--border-default);
+        margin-top: 24px;
+      "
+    >
+      <div
+        style="
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: var(--text-muted);
+          margin-bottom: 8px;
+        "
+      >
+        🐎 other .af stables
+      </div>
+      <div
+        class="footer"
+        style="
+          text-align: center;
+          padding: 20px 0 10px;
+          border-top: 1px solid var(--border-default);
+          margin-top: 24px;
+        "
+      >
+        <div
+          style="
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+          "
+        >
+          🐎 other .af stables
+        </div>
+        <div
+          class="footer-links"
+          style="
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.7rem;
+            flex-wrap: wrap;
+          "
+        >
+          <a
+            href="?theme=crystal"
+            style="color: var(--text-muted); text-decoration: none"
+            >💎 crystal</a
+          >
+          <a
+            href="?theme=fast"
+            style="color: var(--text-muted); text-decoration: none"
+            >🚀 fast</a
+          >
+          <a
+            href="?theme=sin-city"
+            style="color: var(--text-muted); text-decoration: none"
+            >🖤 sin-city</a
+          >
+        </div>
+        <div
+          style="margin-top: 12px; font-size: 0.65rem; color: var(--text-muted)"
+        >
+          🐎 KBL v3.0 · Horses don't abandon horses
         </div>
       </div>
     </div>

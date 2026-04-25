@@ -1,0 +1,30 @@
+name: "sin-city"
+author: "Centaur-Vova"
+description: "Black, white, and red. No mercy. Critical tasks only."
+emoji: "🖤"
+
+settings:
+  flow:
+    default_concurrent: 50
+    min_concurrent: 10
+    max_concurrent: 100
+    task_buttons:
+      - { label: "🖤 10", tasks: 10, class: "default", stress: false }
+      - { label: "🖤 50", tasks: 50, class: "default", stress: false }
+      - { label: "🖤 100", tasks: 100, class: "default", stress: false }
+      - { label: "🔴 500", tasks: 500, class: "warning", stress: true }
+      - { label: "💀 1000", tasks: 1000, class: "accent", stress: true }
+
+  ui:
+    color_generator: "noir"
+    label_text_color: "#ffffff"
+
+    progress_bar:
+      height: 0  # No progress bar in sin-city
+
+    lod:
+      normal_max: 250
+      medium_max: 600
+      scale_normal: 1.0
+      scale_medium: 0.7
+      scale_dot: 0.5

@@ -2,17 +2,19 @@ import Alpine from 'alpinejs';
 import { state } from './modules/state';
 import { decodeMessage } from './modules/decoder.js';
 import { drawShape } from './modules/ui.js';
-import { tasks, clearTasks } from './modules/taskStore.js';
+import { tasks, clearTasks } from './modules/task-store.js';
 import { updateMessagesChart } from './modules/chart.js';
 import {
     WS,
     TASK,
-    PING_INTERVAL_MS,
-    COORDS,
     BRAND_LOGO,
-    TASK_LABELS,
-    UI,
+    PING_INTERVAL_MS,
+    STATUS_LABELS,
+    COORDS,
 } from './modules/config';
+import {
+    UI,
+} from './modules/theme-config.js';
 
 // Init store
 window.Alpine = Alpine;
@@ -46,7 +48,7 @@ const resize = () => {
 
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-    console.log(`Canvas resized: ${w}x${h}`);
+    // console.log(`Canvas resized: ${w}x${h}`);
 }; window.addEventListener('resize', resize);
 
 // Apply resize observer
@@ -83,7 +85,7 @@ const connect = () => {
     };
 
     ws.onmessage = (e) => {
-        const msg = decodeMessage(e.data, TASK_LABELS);
+        const msg = decodeMessage(e.data, STATUS_LABELS);
         if (!msg) return;
 
         const { event, data } = msg;

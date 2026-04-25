@@ -1,0 +1,51 @@
+:root {
+  /* Semantic color roles — Black & White + Accents */
+  --color-error: #ff3333; /* danger — red accent */
+  --color-warning: #cccccc; /* warnings — gray */
+  --color-success: #888888; /* success — white */
+  --color-info: #aaaaaa; /* information — light gray */
+  --color-accent: #ffffff; /* highlights — white */
+  --color-highlight: #dddddd; /* special states — silver */
+  --color-urgent: #ff3333; /* critical — red (same as error) */
+  --color-subtle: #888888; /* secondary — dark gray */
+  --color-bright: #ffffff; /* vivid — white */
+  --color-vivid: #ffffff; /* energetic — white */
+
+  /* Surface & background colors — pure monochrome */
+  --bg-primary: #0a0a0a; /* almost black */
+  --bg-secondary: #080808; /* deeper black */
+  --bg-elevated: #111111; /* dark gray */
+  --bg-control: rgba(20, 20, 20, 0.9);
+  --bg-control-disabled: rgba(30, 30, 30, 0.5);
+  --bg-overlay: rgba(0, 0, 0, 0.95);
+
+  /* Border colors */
+  --border-default: #222222;
+  --border-subtle: #1a1a1a;
+  --border-emphasized: #ff333366; /* red accent on Lock zone */
+  --border-disabled: #2a2a2a;
+
+  /* Text colors */
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --text-muted: #666666;
+  --text-accent: #ffffff;
+  --text-white: #ffffff;
+
+  /* UI elements */
+  --color-slider-track: #1a1a1a;
+  --worker-bar-idle: #2a2a2a;
+  --grid-dot: rgba(255, 255, 255, 0.05);
+  --divider-subtle: #1a1a1a;
+
+  /* Opacity variants */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+
+  /* Zone markers — don't touch */
+  --spacing-queue: 12.5%;
+  --spacing-lock: 37.5%;
+  --spacing-work: 62.5%;
+  --spacing-done: 87.5%;
+}

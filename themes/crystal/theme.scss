@@ -1,0 +1,136 @@
+canvas {
+  /* Subtle glow to make task shards look "backlit" */
+  filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.15));
+  background: var(--bg-primary);
+}
+
+.task-button {
+  /* Glassmorphism for buttons */
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  color: var(--text-primary); /* Fix: ensure text is readable */
+
+  &:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  &-warning {
+    background: color-mix(in srgb, var(--color-warning), transparent 88%);
+    color: var(--color-warning);
+    border-color: var(--color-warning);
+
+    &:hover {
+      background: var(--color-warning);
+      color: #ffffff;
+    }
+  }
+
+  &-accent {
+    background: var(--color-accent);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+    border: none;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-accent), #ffffff 15%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+    }
+  }
+
+  /* Fix for DIAMOND button (accent class) */
+  &.task-button-accent {
+    color: #ffffff !important;
+  }
+}
+
+.worker-bar {
+  /* Frosted glass block effect */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  border-radius: 3px;
+}
+
+/* Flash effects — Ice flare and Crystal pulse */
+.flash-success {
+  background: var(--color-success) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.flash-error {
+  background: var(--color-error) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Zone labels — clean typography */
+.zone-label {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  opacity: 0.65;
+  font-size: 9px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Slider track — crystal clear */
+#max-concurrent-slider {
+  background: var(--color-slider-track);
+
+  &::-webkit-slider-thumb {
+    background: var(--color-accent);
+    box-shadow: 0 0 12px var(--color-accent);
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Status block — crystal glow */
+.status-dot {
+  box-shadow: 0 0 6px var(--color-accent);
+}
+
+.is-online .status-dot {
+  background: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success);
+}
+
+/* Toast — glass style */
+.toast {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Task squares — subtle crystal border */
+.task {
+  transition: all 0.15s ease;
+
+  &:hover {
+    filter: brightness(0.98);
+    transform: scale(0.98);
+  }
+}
+
+/* Crystal-specific overrides */
+.task {
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  backdrop-filter: blur(2px);
+}
+
+.zone-bg {
+  backdrop-filter: blur(1px);
+}

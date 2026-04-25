@@ -24,7 +24,6 @@ class TaskController
         private readonly TaskQueue $taskQueue,
         private readonly RateLimiterService $rateLimiterService,
         private readonly LoggerInterface $logger,
-        private readonly int $stressMinTaskNum,
         private readonly int $taskMaxBatchSize,
         private readonly int $taskSemaphoreLimit,
     ) {
@@ -49,9 +48,9 @@ class TaskController
 
         // Guess mode
         go(function () use ($dto): void {
-            $mode = $dto->count < $this->stressMinTaskNum
-            ? ProcessorFactory::MODE_OBSERVATION
-            : ProcessorFactory::MODE_STRESS;
+            $mode = $dto->stressMode
+                ? ProcessorFactory::MODE_STRESS
+                : ProcessorFactory::MODE_OBSERVATION;
 
             $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $mode);
         });

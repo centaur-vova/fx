@@ -85,7 +85,6 @@ class Kernel
             taskMaxRetries:       $loader->getInt('TASK_MAX_RETRIES', 3),
             metricsIntervalMs:    $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
             shutdownTimeoutSec:   $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
-            stressMinTaskNum:     $loader->getInt('STRESS_MIN_TASK_NUM', 1000),
             natsHost:             $loader->getString('NATS_HOST', 'nutz'),
             natsPort:             $loader->getInt('NATS_PORT', 4222),
             natsToken:            $loader->getString('NATS_TOKEN', ''),
@@ -208,7 +207,6 @@ class Kernel
                 'options.task_max_retries' => $options->taskMaxRetries,
                 'options.task_retry_delay_sec' => $options->taskRetryDelaySec,
                 'options.task_lock_timeout_sec' => $options->taskLockTimeoutSec,
-                'options.stress_min_task_num' => $options->stressMinTaskNum,
                 'options.task_max_batch_size' => $options->taskMaxBatchSize,
                 'options.task_semaphore_limit' => $options->taskSemaphoreLimit,
 
@@ -246,7 +244,6 @@ class Kernel
                         get(TaskQueue::class),
                         get(RateLimiterService::class),
                         get(LoggerInterface::class),
-                        get('options.stress_min_task_num'),
                         get('options.task_max_batch_size'),
                         get('options.task_semaphore_limit'),
                     ),

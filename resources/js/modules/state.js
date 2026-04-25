@@ -1,5 +1,5 @@
-import { UI } from './config';
-import { clearTasks } from './taskStore.js';
+import { COLORS, LABEL_COLORS, LOD } from './config';
+import { clearTasks } from './task-store.js';
 
 const getDefaults = () => ({
     latency: '--',
@@ -24,6 +24,19 @@ const getDefaults = () => ({
     }
 });
 
+const getFlowDefaults = () => ({
+    min: 1,
+    max: 10,
+    buttons: [
+        { label: '1', tasks: 1, class: 'default', stress: false },
+        { label: '10', tasks: 10, class: 'default', stress: false },
+        { label: '50', tasks: 50, class: 'default', stress: false },
+        { label: '100', tasks: 100, class: 'default', stress: false },
+        { label: '500', tasks: 500, class: 'warning', stress: true },
+        { label: '1000', tasks: 1000, class: 'accent', stress: true },
+    ]
+});
+
 export const state = {
     // Defaults
     ...getDefaults(),
@@ -34,6 +47,9 @@ export const state = {
     scale: 1,
     renderEnabled: true,
     isLogPanelDisabled: false,
+
+    // Static Flow settings (Theme-based)
+    flow: getFlowDefaults(),
 
     // Connection status
     isOnline: false,
@@ -48,6 +64,28 @@ export const state = {
         success: true,
         content: '',
         timeout: null,
+    },
+
+    /**
+     * Sync with Theme YAML on start
+     */
+    init() {
+        const themeFlow = window.THEME_CONFIG?.settings?.flow || {};
+
+        this.flow.min = themeFlow.min_concurrent || 1;
+        this.flow.max = themeFlow.max_concurrent || 10;
+
+        this.mc = themeFlow.default_concurrent || this.flow.min;
+
+        // Replace buttons only when present in YAML
+        if (themeFlow.task_buttons?.length > 0) {
+            this.flow.buttons = themeFlow.task_buttons.map(btn => ({
+                label: btn.label || (btn.tasks || btn).toString(),
+                tasks: btn.tasks || btn,
+                stress: !!btn.stress,
+                class: btn.class || 'default'
+            }));
+        }
     },
 
     // Toast
@@ -136,19 +174,26 @@ export const state = {
         cancelBtn.addEventListener('click', cleanup);
     },
 
+    get mcColor() {
+        return COLORS[this.mc];
+    },
+
+    get labelColor() {
+        return LABEL_COLORS[this.mc];
+    },
+
     updateTaskNum(total, logThreshold) {
         this.metrics.taskNum = total;
 
         // LOD Logic
-        const lod = UI.LOD;
-        if (total <= lod.NORMAL_MAX) {
-            this.scale = lod.SCALE_NORMAL;
+        if (total <= LOD.normal_max) {
+            this.scale = LOD.scale_normal;
             this.mode = 'normal';
-        } else if (total <= lod.MEDIUM_MAX) {
-            this.scale = lod.SCALE_MEDIUM;
+        } else if (total <= LOD.medium_max) {
+            this.scale = LOD.scale_medium;
             this.mode = 'normal';
         } else {
-            this.scale = lod.SCALE_SMALL;
+            this.scale = LOD.scale_dot;
             this.mode = 'dot';
         }
 
@@ -156,12 +201,12 @@ export const state = {
     },
 
     // API - create tasks
-    async createTasks(count) {
+    async createTasks(count, forceStress) {
         try {
             const res = await fetch("/api/tasks/create", {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ count, max_concurrent: this.mc }),
+                body: JSON.stringify({ count, max_concurrent: this.mc, stress_mode: forceStress }),
             });
             const data = await res.json();
 
