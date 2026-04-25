@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -20,8 +21,9 @@ type ClientMessage struct {
 	Payload []byte
 }
 type Client struct {
-	Conn *websocket.Conn
-	Send chan ClientMessage
+	Conn   *websocket.Conn
+	Send   chan ClientMessage
+	closed atomic.Bool
 }
 type Hub struct {
 	clients   map[*Client]bool
@@ -44,6 +46,12 @@ func NewHub(cfg *protocol.AppConfig, nc *nats.Conn) *Hub {
 	return h
 }
 
+func (h *Hub) GetClientsCount() int {
+	h.clientsMu.RLock()
+	defer h.clientsMu.RUnlock()
+	return len(h.clients)
+}
+
 func (h *Hub) Add(conn *websocket.Conn) {
 	client := &Client{
 		Conn: conn,
@@ -57,6 +65,12 @@ func (h *Hub) Add(conn *websocket.Conn) {
 
 func (h *Hub) writePump(client *Client) {
 	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Panic in writePump for client: %v", r)
+		}
+	}()
+
+	defer func() {
 		h.Remove(client)
 		client.Conn.Close()
 	}()
@@ -69,14 +83,16 @@ func (h *Hub) writePump(client *Client) {
 }
 
 func (h *Hub) Remove(client *Client) {
-	h.clientsMu.Lock()
-	if _, exists := h.clients[client]; exists {
-		delete(h.clients, client)
-		h.clientsMu.Unlock()
-		close(client.Send)
-	} else {
-		h.clientsMu.Unlock()
+	if !client.closed.CompareAndSwap(false, true) {
+		// Already closed
+		return
 	}
+
+	h.clientsMu.Lock()
+	delete(h.clients, client)
+	h.clientsMu.Unlock()
+
+	close(client.Send)
 }
 
 func (h *Hub) Broadcast(data any) {
@@ -95,7 +111,7 @@ func (h *Hub) Broadcast(data any) {
 	for client := range h.clients {
 		select {
 		case client.Send <- msg:
-		default:
+		case <-time.After(5 * time.Second):
 			go h.Remove(client)
 		}
 	}
@@ -139,6 +155,13 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 		Conn: conn,
 		Send: make(chan ClientMessage, 256),
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Panic in HandleWS: %v", r)
+			h.Remove(client)
+		}
+	}()
 
 	h.clientsMu.Lock()
 	h.clients[client] = true
@@ -224,7 +247,7 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 		metrics := protocol.NewEvent(
 			"metrics.update",
 			protocol.SystemMetrics{
-				Connections: len(h.clients),
+				Connections: h.GetClientsCount(),
 				MemoryMb:    memRounded,
 				CPUUsage:    cpuRounded,
 				NatsStats:   natsStats,
