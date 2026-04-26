@@ -6,6 +6,7 @@ namespace App\Service\Provider\App;
 
 use App\Domain\Cache\Contract\CacheStorage;
 use App\Server\Options;
+use App\Service\Provider\Contract\Bootable;
 use App\Service\Provider\Contract\ServiceProvider;
 use App\Service\Provider\Contract\WorkerStartAware;
 use App\Service\Storage\Swoole\SwooleTableKeyValueStorage;
@@ -14,7 +15,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Server;
 
-class AppServiceProvider implements ServiceProvider, WorkerStartAware
+class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
 {
     private const string CACHE_DRIVER_SWOOLE_TABLE = 'swoole_table';
 
@@ -36,6 +37,12 @@ class AppServiceProvider implements ServiceProvider, WorkerStartAware
 
             $storage->startCleaner($options->cacheAutoCleanSec);
         }
+    }
+
+    public function boot(ContainerInterface $container): void
+    {
+        // Force CacheStorage initialization in master process before worker fork
+        $container->get(CacheStorage::class);
     }
 
     private function registerCacheStorage(ContainerInterface $c): CacheStorage
