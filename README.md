@@ -93,14 +93,20 @@ The threshold (`STRESS_MIN_TASK_NUM`) is configurable in `.env`.
 
 ## 🐎 Quick start
 
+### 🐎 Run from pre-built images (GHCR)
+
 ```bash
 git clone https://github.com/shmandalf/fast-atomic-flow.git
 cd fast-atomic-flow
 cp .env.example .env
-docker compose up -d
+docker compose -f docker-compose.prod.yaml up
 ```
 
 After starting, open [http://localhost:9501](http://localhost:9501)
+
+### 🐎 Local development
+
+For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go without Docker, three terminals) — see [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 
@@ -113,7 +119,7 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 | `NATS_HOST`         | `deez-nutz`  | NATS server host      |
 | `NATS_PORT`         | `4222`       | NATS port             |
 | `NATS_TOKEN`        | `alfa-omega` | Access token          |
-| `NATS_TIMEOUT_SEC`  | `10`         | Response timeout      |
+| `NATS_TIMEOUT_SEC`  | `1`          | Response timeout      |
 | `NATS_STREAM_TASKS` | `tasks`      | Stream name for tasks |
 
 ### 🐎 Swoole
@@ -121,8 +127,8 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 | Variable                   | Default | Description             |
 | -------------------------- | ------- | ----------------------- |
 | `SERVER_PORT`              | `9501`  | HTTP API port           |
-| `SERVER_WORKER_NUM`        | `2`     | Number of workers       |
-| `TASK_SEMAPHORE_MAX_LIMIT` | `10`    | Maximum semaphore limit |
+| `SERVER_WORKER_NUM`        | `6`     | Number of workers       |
+| `TASK_SEMAPHORE_MAX_LIMIT` | `255`    | Maximum semaphore limit |
 
 ### 🐎 Go WebSocket Proxy
 
@@ -138,7 +144,7 @@ These settings control how tasks behave when the semaphore is busy:
 | Variable                | Default | Description                                                                     |
 | ----------------------- | ------- | ------------------------------------------------------------------------------- |
 | `TASK_LOCK_TIMEOUT_SEC` | 5       | Maximum time a task waits for a semaphore slot before giving up                 |
-| `TASK_RETRY_DELAY_SEC`  | 1       | Delay before re‑queueing a task after a failed lock attempt                     |
+| `TASK_RETRY_DELAY_SEC`  | 2       | Delay before re‑queueing a task after a failed lock attempt                     |
 | `TASK_MAX_RETRIES`      | 3       | How many times a failed task is retried before being marked as `retries_failed` |
 
 ⚠️ **Important:** These settings affect task fairness. Too many retries can overload the queue.

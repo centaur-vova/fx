@@ -93,14 +93,20 @@ WebSocket-прокси (Go) общается с фронтом через **би
 
 ## 🐎 Быстрый старт
 
+### 🐎 Запуск из готовых образов (GHCR)
+
 ```bash
 git clone https://github.com/shmandalf/fast-atomic-flow.git
 cd fast-atomic-flow
 cp .env.example .env
-docker compose up -d
+docker compose -f docker-compose.prod.yaml up
 ```
 
 После запуска открой [http://localhost:9501](http://localhost:9501)
+
+### 🐎 Локальная разработка
+
+Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go без Docker, три терминала) — см. see [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 
@@ -113,7 +119,7 @@ docker compose up -d
 | `NATS_HOST`         | `deez-nutz`  | Хост NATS-сервера    |
 | `NATS_PORT`         | `4222`       | Порт NATS            |
 | `NATS_TOKEN`        | `alfa-omega` | Токен доступа        |
-| `NATS_TIMEOUT_SEC`  | `10`         | Таймаут ответа       |
+| `NATS_TIMEOUT_SEC`  | `1`          | Таймаут ответа       |
 | `NATS_STREAM_TASKS` | `tasks`      | Имя стрима для задач |
 
 ### 🐎 Swoole
@@ -121,8 +127,8 @@ docker compose up -d
 | Переменная                 | По умолчанию | Описание                    |
 | -------------------------- | ------------ | --------------------------- |
 | `SERVER_PORT`              | `9501`       | Порт HTTP API               |
-| `SERVER_WORKER_NUM`        | `2`          | Количество воркеров         |
-| `TASK_SEMAPHORE_MAX_LIMIT` | `10`         | Максимальный лимит семафора |
+| `SERVER_WORKER_NUM`        | `6`          | Количество воркеров         |
+| `TASK_SEMAPHORE_MAX_LIMIT` | `255`        | Максимальный лимит семафора (max 255) |
 
 ### 🐎 Go WebSocket Proxy
 
@@ -138,7 +144,7 @@ docker compose up -d
 | Переменная              | По умолчанию | Описание                                                                       |
 | ----------------------- | ------------ | ------------------------------------------------------------------------------ |
 | `TASK_LOCK_TIMEOUT_SEC` | 5            | Максимальное время ожидания свободного слота семафора                          |
-| `TASK_RETRY_DELAY_SEC`  | 1            | Задержка перед повторной постановкой задачи в очередь после неудачного захвата |
+| `TASK_RETRY_DELAY_SEC`  | 2            | Задержка перед повторной постановкой задачи в очередь после неудачного захвата |
 | `TASK_MAX_RETRIES`      | 3            | Сколько раз задача будет повторена перед статусом `retries_failed`             |
 
 ⚠️ **Важно:** Слишком большое количество ретраев может перегрузить очередь.
