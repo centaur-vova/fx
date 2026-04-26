@@ -33,6 +33,14 @@ class RateLimiterService
 
         $ttl = $this->config->getTtl($limiterName);
         $maxAttempts = $this->config->getMaxAttempts($limiterName);
+
+        $this->logger?->debug('Rate limiter check', [
+            'limiter' => $limiterName,
+            'key' => $key,
+            'ttl' => $ttl,
+            'max' => $maxAttempts,
+        ]);
+
         if ($ttl <= 0 || $maxAttempts <= 0) {
             $this->logger?->warning('Rate limiter misconfigured', [
                 'limiter' => $limiterName,
@@ -44,6 +52,12 @@ class RateLimiterService
 
         $storageKey = "{$limiterName}:{$key}";
         $current = $this->storage->get($storageKey);
+
+        $this->logger?->debug('Rate limiter storage get', [
+                'limiter' => $limiterName,
+                'storageKey' => $storageKey,
+                'current' => $current,
+        ]);
 
         if ($current === null) {
             $this->storage->set($storageKey, '1', $ttl);
@@ -57,6 +71,14 @@ class RateLimiterService
         }
 
         $success = $this->storage->set($storageKey, (string) ($attempts + 1), $ttl);
+
+        $this->logger?->debug('Rate limiter storage set', [
+            'limiter' => $limiterName,
+            'storageKey' => $storageKey,
+            'newValue' => (string) ($attempts + 1),
+            'success' => $success,
+        ]);
+
         if (!$success) {
             $this->logger?->warning('Rate limiter: failed to store', ['key' => $storageKey]);
         }

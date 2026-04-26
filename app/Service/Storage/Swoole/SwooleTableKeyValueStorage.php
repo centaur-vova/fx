@@ -30,13 +30,33 @@ class SwooleTableKeyValueStorage implements CacheStorage
     public function get(string $key): ?string
     {
         $row = $this->table->get($key);
+
+        $this->logger->debug('Swoole storage get raw', [
+            'key' => $key,
+            'row_exists' => $row !== false,
+            'pid' => getmypid(),
+        ]);
+
         if ($row === null || !is_array($row)) {
             return null;
         }
 
         // TTL check
-        if ($row['expires'] < time()) {
+        $now = time();
+        $expired = $row['expires'] < $now;
+
+        $this->logger->debug('Swoole storage get detail', [
+            'key' => $key,
+            'value' => $row['value'],
+            'expires_at' => $row['expires'],
+            'now' => $now,
+            'expired' => $expired,
+            'pid' => getmypid(),
+        ]);
+
+        if ($expired) {
             $this->table->del($key);
+            $this->logger->debug('Swoole storage get deleted expired', ['key' => $key, 'pid' => getmypid()]);
             return null;
         }
 
@@ -51,16 +71,32 @@ class SwooleTableKeyValueStorage implements CacheStorage
         // For UTF-8 use mb_strlen($value, '8bit') — adds ~3-5ms per 65k sets, negligible.
         if (strlen($value) > $this->maxValueSize) {
             $this->logger->warning(
-                'Value too large for cache, consider increasing CACHE_VALUE_MAX_SIZE in .env',
+                'Swoole storage value too large for cache, consider increasing CACHE_VALUE_MAX_SIZE in .env',
                 ['key' => $key, 'size' => strlen($value)]
             );
             return false;
         }
 
         $expires = time() + ($ttl ?? $this->ttl);
+
+        $this->logger->debug('Swoole storage set', [
+            'key' => $key,
+            'value' => $value,
+            'expires_at' => $expires,
+            'ttl_arg' => $ttl,
+            'default_ttl' => $this->ttl,
+            'pid' => getmypid(),
+        ]);
+
         $result = @$this->table->set($key, [
             'value' => $value,
             'expires' => $expires,
+        ]);
+
+        $this->logger->debug('Swoole storage set result', [
+            'key' => $key,
+            'success' => $result,
+            'pid' => getmypid(),
         ]);
 
         if ($result) {
@@ -68,7 +104,7 @@ class SwooleTableKeyValueStorage implements CacheStorage
         }
 
         $this->logger->warning(
-            'Failed to set cache key (table full?). Consider increasing CACHE_MAX_SIZE in .env',
+            'Swoole storage failed to set cache key (table full?). Consider increasing CACHE_MAX_SIZE in .env',
             ['key' => $key]
         );
         return false;
@@ -76,21 +112,33 @@ class SwooleTableKeyValueStorage implements CacheStorage
 
     public function delete(string $key): bool
     {
-        return $this->table->del($key);
+        $result = $this->table->del($key);
+
+        $this->logger->debug('Swoole storage delete', [
+            'key' => $key,
+            'success' => $result,
+            'pid' => getmypid(),
+        ]);
+
+        return $result;
     }
 
     public function has(string $key): bool
     {
         $row = $this->table->get($key);
         if ($row === null || !is_array($row)) {
+            $this->logger->debug('Swoole storage has false', ['key' => $key, 'reason' => 'no_row', 'pid' => getmypid()]);
             return false;
         }
 
-        if ($row['expires'] < time()) {
+        $now = time();
+        if ($row['expires'] < $now) {
             $this->table->del($key);
+            $this->logger->debug('Swoole storage has false', ['key' => $key, 'reason' => 'expired', 'pid' => getmypid()]);
             return false;
         }
 
+        $this->logger->debug('Swoole storage has true', ['key' => $key, 'pid' => getmypid()]);
         return true;
     }
 
@@ -109,6 +157,7 @@ class SwooleTableKeyValueStorage implements CacheStorage
                 /** @var string $key */
                 $this->table->del($key);
                 $deleted++;
+                $this->logger->debug('Swoole storage clean deleted', ['key' => $key, 'pid' => getmypid()]);
             }
         }
 
