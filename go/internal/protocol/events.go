@@ -11,6 +11,7 @@ const (
 	StatusLockAcquired              // 5
 	StatusLockFailed                // 6
 	StatusRetriesFailed             // 7
+	StatusRetry                     // 8
 )
 
 var StatusMap = map[string]byte{
@@ -22,4 +23,5 @@ var StatusMap = map[string]byte{
 	"lock_acquired":  StatusLockAcquired,
 	"lock_failed":    StatusLockFailed,
 	"retries_failed": StatusRetriesFailed,
+	"retry":          StatusRetry,
 }

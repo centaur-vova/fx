@@ -19,6 +19,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
     public const string EVENT_LOCK_ACQUIRED = 'lock_acquired';
     public const string EVENT_LOCK_FAILED = 'lock_failed';
     public const string EVENT_RETRIES_FAILED = 'retries_failed';
+    public const string EVENT_RETRY = 'retry';
 
     public function __construct(
         public int $id,
@@ -33,6 +34,11 @@ final readonly class TaskStatusUpdate implements JsonSerializable
     public static function queued(int $id, int $mc): self
     {
         return new self($id, self::EVENT_QUEUED, 'In queue', $mc);
+    }
+
+    public static function retry(int $id, int $mc): self
+    {
+        return new self($id, self::EVENT_RETRY, 'Retry', $mc);
     }
 
     public static function processing(int $id, int $mc): self

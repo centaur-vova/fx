@@ -77,7 +77,7 @@ class TaskService
                     // Ack
                     $this->manager->ack($payload);
 
-                    $this->notify(TaskStatusUpdate::queued($payload->id, $payload->mc));
+                    $this->notify(TaskStatusUpdate::retry($payload->id, $payload->mc));
                 });
 
                 return;

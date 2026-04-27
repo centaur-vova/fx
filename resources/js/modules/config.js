@@ -55,6 +55,13 @@ export const COORDS = new Proxy({}, {
     get: (target, prop) => getUISetting('ZONE_COORDS', prop)
 });
 
+/**
+ * Proxy for task remove delays (milliseconds)
+ */
+export const REMOVE_DELAYS = new Proxy({}, {
+    get: (target, prop) => getUISetting('REMOVE_DELAYS', prop)
+});
+
 // WebSocket Protocol
 export const WS = {
     EVENT: {
@@ -80,7 +87,8 @@ export const TASK = {
         4: 'completed',
         5: 'lock_acquired',
         6: 'lock_failed',
-        7: 'retries_failed'
+        7: 'retries_failed',
+        8: 'retry'
     },
-    LOG_THRESHOLD: 300
+    LOG_THRESHOLD: 200
 };

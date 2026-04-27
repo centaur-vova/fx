@@ -11,6 +11,7 @@ import {
     PING_INTERVAL_MS,
     STATUS_LABELS,
     COORDS,
+    REMOVE_DELAYS,
 } from './modules/config';
 import {
     UI,
@@ -136,8 +137,10 @@ const handleUpdateTasks = (data) => {
     if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
 
     if (status === 'completed' || status === 'retries_failed') {
-        task.endTime = Date.now();
+        task.endTime = Date.now() + REMOVE_DELAYS.completed;
         store.flashWorker(worker, status === 'retries_failed');
+    } else if (status === 'retry') {
+        task.endTime = Date.now() + REMOVE_DELAYS.retry_stall;
     }
 };
 
@@ -160,7 +163,7 @@ const render = () => {
     const now = Date.now();
     tasks.forEach((task, id) => {
         task.currentX += (task.targetX - task.currentX) * 0.1;
-        if ((task.status === 'completed' || task.status === 'retries_failed') && now - task.endTime > 1000) {
+        if ((task.status === 'completed' || task.status === 'retries_failed' || task.status === 'retry') && now > task.endTime) {
             tasks.delete(id);
             return;
         }
@@ -174,6 +177,7 @@ const render = () => {
 
 // Helpers
 const addLog = (taskId, mc, status, msg, progress = null) => {
+    // console.li
     const logContainer = document.getElementById("log-panel");
     if (!logContainer || store.isLogPanelDisabled) return;
 
@@ -185,12 +189,16 @@ const addLog = (taskId, mc, status, msg, progress = null) => {
     // Status color mapping based on semantic roles
     let statusColor = 'var(--text-muted)';  // default
 
+    /**
+     * TODO: needs refactoring, some statuses listed below are not even used lol.
+     */
     switch (status) {
         case 'error':
         case 'failed':
             statusColor = 'var(--color-error)';
             break;
         case 'warning':
+        case 'retry':
             statusColor = 'var(--color-warning)';
             break;
         case 'success':
