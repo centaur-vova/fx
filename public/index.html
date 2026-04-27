@@ -6,11 +6,13 @@
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const theme = urlParams.get("theme") || "fast";
+      const allowedThemes = ["fast", "crystal", "sin-city"]; // TODO
+      const safeTheme = allowedThemes.includes(theme) ? theme : "fast";
       document.write(
-        `<link rel="stylesheet" href="/dist/themes/${theme}.css">`,
+        `<link rel="stylesheet" href="/dist/themes/${safeTheme}.css">`,
       );
       document.write(
-        `<script src="/dist/themes/${theme}.config.js"><\/script>`,
+        `<script src="/dist/themes/${safeTheme}.config.js"><\/script>`,
       );
     </script>
 

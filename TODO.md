@@ -62,6 +62,10 @@
 - [ ] **Load & Stress Testing**:
   - [ ] Implement **k6** or **Locust** scripts to simulate 1,000+ concurrent WebSocket clients.
   - [ ] Measure memory stability and `Swoole\Table` contention under high-frequency broadcasting.
+- [ ] **Theme Fallback**: Add client-side validation for `?theme=` parameter
+  - [ ] Check `allowedThemes = ['fast', 'crystal', 'sin-city']` in the inline script
+  - [ ] Fallback to `fast` theme when an unknown theme name is provided
+  - [ ] Prevent loading of missing CSS/JS files that break layout and coordinates
 - [x] **Architectural Refactoring**:
   - [x] Decouple `server.php` by moving event handlers into dedicated classes.
   - [x] Implement a simple Dependency Injection (DI) container for cleaner bootstrap.
