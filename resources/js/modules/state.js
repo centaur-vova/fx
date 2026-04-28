@@ -5,6 +5,7 @@ const getDefaults = () => ({
     latency: '--',
     metrics: {
         memory: '--MB',
+        freeMem: '--MB',
         connections: '--',
         cpu: '--%',
         taskNum: '--',
@@ -134,9 +135,10 @@ export const state = {
 
     // Metrics
     updateMetrics(data) {
-        this.metrics.memory = data.memory_mb + 'MB';
+        this.metrics.memory = Math.round(data.memory_mb) + 'MB';
+        this.metrics.freeMem = Math.round(data.free_mem) + 'MB';
         this.metrics.connections = data.connections;
-        this.metrics.cpu = data.cpu_usage + '%';
+        this.metrics.cpu = Math.round(data.cpu_usage) + '%';
         this.metrics.natsStats = data.nats_stats;
     },
 

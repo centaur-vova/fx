@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"net/http"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -218,9 +217,14 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
 		// RAM
-		var m runtime.MemStats
-		runtime.ReadMemStats(&m)
-		memoryMb := float64(m.Alloc) / 1024 / 1024
+		memoryMb, err := GetVmRSS()
+		if err != nil {
+			memoryMb = 0
+		}
+		freeMemory, err := GetFreeMemory()
+		if err != nil {
+			freeMemory = 0
+		}
 
 		// Avg cpu usage
 		c, _ := cpu.Percent(0, false)
@@ -231,6 +235,7 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 
 		cpuRounded := math.Round(cpuPercent*100) / 100
 		memRounded := math.Round(memoryMb*100) / 100
+		freeMemRounded := math.Round(freeMemory*100) / 100
 
 		// NATS stats
 		js, _ := h.nc.JetStream()
@@ -249,6 +254,7 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 			protocol.SystemMetrics{
 				Connections: h.GetClientsCount(),
 				MemoryMb:    memRounded,
+				FreeMemMb:   freeMemRounded,
 				CPUUsage:    cpuRounded,
 				NatsStats:   natsStats,
 			},

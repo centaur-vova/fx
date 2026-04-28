@@ -133,6 +133,21 @@
                   >
                 </div>
 
+                <!-- Free RAM -->
+                <div class="text-xs">
+                  <span
+                    class="block text-[9px] font-bold mb-1 uppercase"
+                    style="color: var(--text-muted)"
+                    >Free RAM</span
+                  >
+                  <b
+                    x-text="$store.app.metrics.freeMem"
+                    class="block font-mono text-sm min-w-[70px]"
+                    style="color: var(--color-info)"
+                    >--MB</b
+                  >
+                </div>
+
                 <!-- Clients -->
                 <div class="text-xs">
                   <span

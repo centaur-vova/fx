@@ -35,6 +35,7 @@ type NatsStats struct {
 type SystemMetrics struct {
 	Connections int     `json:"connections"`
 	MemoryMb    float64 `json:"memory_mb"`
+	FreeMemMb   float64 `json:"free_mem"`
 	CPUUsage    float64 `json:"cpu_usage"`
 	NatsStats   `json:"nats_stats"`
 }
