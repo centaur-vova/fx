@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Provider\Nats;
 
 use App\Contract\Messaging\MessageSerializer;
+use App\Contract\Queue\Consumer;
 use App\Contract\Queue\Message;
 use App\Contract\Queue\Queue;
 use App\Contract\Task\TaskQueue;
@@ -14,7 +15,7 @@ class NatsTaskQueue implements TaskQueue
     public function __construct(
         private readonly Queue $queue,
         private readonly MessageSerializer $serializer,
-        private readonly string $consumerName,
+        private readonly Consumer $consumer,
         private readonly string $subject,
     ) {
     }
@@ -26,8 +27,7 @@ class NatsTaskQueue implements TaskQueue
 
     public function pull(int $limit = 10): \Generator
     {
-        $consumer = $this->queue->consume($this->consumerName);
-        $messages = $consumer->pull($limit);
+        $messages = $this->consumer->pull($limit);
 
         foreach ($messages as $msg) {
             $data = $msg->getData();

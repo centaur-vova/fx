@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Provider\Nats;
 
 use App\Contract\Messaging\MessageSerializer;
+use App\Contract\Queue\Consumer;
 use App\Contract\Queue\Queue;
 use App\Contract\Task\TaskQueue;
 use App\Server\Options;
@@ -33,11 +34,13 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
                 $serializer = $c->get(MessageSerializer::class);
                 /** @var Options $options */
                 $options = $c->get(Options::class);
+                /** @var Consumer $consumer */
+                $consumer = $queue->consume($options->taskQueueConsumer);
 
                 return new NatsTaskQueue(
                     queue: $queue,
                     serializer: $serializer,
-                    consumerName: $options->taskQueueConsumer,
+                    consumer: $consumer,
                     subject: $options->taskQueueSubject,
                 );
             },
