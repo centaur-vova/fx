@@ -202,7 +202,7 @@
                   >
                   <b
                     x-text="$store.app.system.cpu_cores"
-                    class="block font-mono text-sm drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] min-w-[30px]"
+                    class="block font-mono text-sm min-w-[30px]"
                     style="color: var(--color-bright)"
                     >--</b
                   >
@@ -503,7 +503,10 @@
           <button
             id="cancel-purge"
             class="px-4 py-2 rounded transition-colors"
-            style="background-color: #374151; color: var(--text-muted)"
+            style="
+              background-color: var(--bg-secondary);
+              color: var(--text-muted);
+            "
           >
             Cancel
           </button>
