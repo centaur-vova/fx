@@ -36,6 +36,20 @@ A demo project that visualizes semaphores and queues in a real‑world high‑lo
 
 ---
 
+## 🐎 Design Philosophy
+
+The project is built so each component minds its own business and doesn't poke into others' stalls.
+
+### Low Coupling
+
+Components communicate via DTOs and NATS messages. Want to change the transport or storage layer? You won't need to rewrite business logic. The horse isn't tied to one cart.
+
+### High Cohesion
+
+Each service does one thing, but with surgical precision. The Worker processes tasks. The Proxy holds connections. The Orchestrator conducts. No mess, no confusion.
+
+---
+
 ## 🐎 Architecture
 
 | Component         | Technology        | Purpose                             |
