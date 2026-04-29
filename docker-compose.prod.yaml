@@ -19,7 +19,7 @@ services:
       - atomic-network
 
   deez-nutz:
-    image: nats:latest
+    image: nats:2.12.8-alpine
     container_name: fast-deez-nutz
     command: -js
     restart: always
