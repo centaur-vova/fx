@@ -314,14 +314,14 @@
             <!-- Panel content -->
             <div class="p-4 flex flex-col gap-4">
               <!-- Concurrency slider -->
-              <div class="slider-group w-full">
+              <div class="slider-group w-full select-none">
                 <label
                   class="flex justify-between items-center text-[10px] font-mono font-black uppercase mb-2 tracking-widest"
                   style="color: var(--text-muted)"
                 >
                   <span>Concurrent Limit</span>
                   <div
-                    class="min-w-[24px] h-4 px-1 rounded-none flex items-center justify-center text-[8px] font-bold transition-colors"
+                    class="min-w-[24px] h-4 px-1 rounded flex items-center justify-center text-[8px] font-bold transition-colors"
                     :style="{ backgroundColor: $store.app.mcColor, color: $store.app.labelColor }"
                   >
                     <span x-text="$store.app.mc"></span>
