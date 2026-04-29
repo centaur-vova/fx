@@ -72,14 +72,14 @@ for (const theme of themes) {
 
     let scssContent = '';
 
-    // 1. Variables
-    if (fs.existsSync(varsScss)) {
-        scssContent += fs.readFileSync(varsScss, 'utf8') + '\n\n';
-    }
-
-    // 2. Base styles (always)
+    // 1. Base styles (always)
     if (fs.existsSync(baseScss)) {
         scssContent += fs.readFileSync(baseScss, 'utf8') + '\n\n';
+    }
+
+    // 2. Variables
+    if (fs.existsSync(varsScss)) {
+        scssContent += fs.readFileSync(varsScss, 'utf8') + '\n\n';
     }
 
     // 3. Theme overrides (if exists)

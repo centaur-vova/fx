@@ -1,4 +1,56 @@
-/* Your custom styles */
+/* ===== Default Theme Variables (from fast) ===== */
+:root {
+  /* Semantic color roles */
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #10b981;
+  --color-info: #3b82f6;
+  --color-accent: #fbbf24;
+  --color-highlight: #d946ef;
+  --color-urgent: #f43f5e;
+  --color-subtle: #8b5cf6;
+  --color-bright: #06b6d4;
+  --color-vivid: #84cc16;
+
+  /* Surface & background colors */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #080808;
+  --bg-elevated: #111111;
+  --bg-control: rgba(10, 10, 10, 0.8);
+  --bg-control-disabled: rgba(20, 20, 20, 0.5);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Border colors */
+  --border-default: #222222;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-emphasized: rgba(255, 255, 255, 0.2);
+  --border-disabled: #333333;
+
+  /* Text colors */
+  --text-primary: #e5e5e5;
+  --text-secondary: #888888;
+  --text-muted: #9ca3af;
+  --text-accent: var(--color-accent);
+  --text-white: #ffffff;
+
+  /* UI element colors */
+  --color-slider-track: #1a1a1a;
+  --worker-bar-idle: #222222;
+  --grid-dot: rgba(255, 255, 255, 0.03);
+  --divider-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Opacity variants */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+
+  /* Zone position markers */
+  --spacing-queue: 12.5%;
+  --spacing-lock: 37.5%;
+  --spacing-work: 62.5%;
+  --spacing-done: 87.5%;
+}
+
 @theme {
   /* Variables will be injected from theme */
 }
@@ -435,4 +487,11 @@ body {
     background-color: transparent;
     color: var(--color-accent);
   }
+}
+
+.terminal-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+  border-radius: 0.75rem;
 }

@@ -32,7 +32,7 @@
   <body
     x-data
     x-cloak
-    class="flex flex-col"
+    class="flex flex-col flex-grow-1 overflow-hidden p-3 pb-8"
     style="background-color: var(--bg-primary)"
   >
     <div
@@ -45,7 +45,7 @@
       x-html="$store.app.toast.content"
     ></div>
 
-    <div class="flex-grow-1 overflow-hidden p-3">
+    <div class="flex-grow-1 p-3">
       <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
         <!-- HEADER -->
         <div
@@ -234,235 +234,250 @@
           </div>
         </div>
 
-        <!-- PIPELINE -->
-        <div class="main-section">
-          <div class="pipeline-background">
-            <div class="zone-bg zone-queue"></div>
-            <div class="zone-bg zone-lock"></div>
-            <div class="zone-bg zone-work"></div>
-            <div class="zone-bg zone-done"></div>
+        <!-- PIPELINE & CONTROLS WRAPPER -->
+        <div class="relative flex flex-col gap-3">
+          <!-- PIPELINE -->
+          <div
+            class="main-section rounded-xl border overflow-hidden"
+            style="border-color: var(--border-default)"
+          >
+            <div class="pipeline-background">
+              <div class="zone-bg zone-queue"></div>
+              <div class="zone-bg zone-lock"></div>
+              <div class="zone-bg zone-work"></div>
+              <div class="zone-bg zone-done"></div>
+            </div>
+
+            <div id="pipeline" class="relative h-full w-full z-10"></div>
+
+            <!-- Zone labels -->
+            <div class="zone-label label-queue">Queue</div>
+            <div class="zone-label label-lock">Check Lock</div>
+            <div class="zone-label label-work">In Progress</div>
+            <div class="zone-label label-done">Complete</div>
           </div>
 
-          <div id="pipeline" class="relative h-full w-full z-10"></div>
-
-          <!-- Zone labels -->
-          <div class="zone-label label-queue">Queue</div>
-          <div class="zone-label label-lock">Check Lock</div>
-          <div class="zone-label label-work">In Progress</div>
-          <div class="zone-label label-done">Complete</div>
-        </div>
-
-        <!-- Grid: Controls (4) + Terminal (8) -->
-        <div class="grid grid-cols-12 gap-4">
-          <!-- LEFT: CONTROL PANEL -->
-          <div
-            class="col-span-4 rounded-xl overflow-hidden flex flex-col shadow-2xl"
-            style="
-              background-color: var(--bg-elevated);
-              border: 1px solid var(--border-default);
-            "
-          >
-            <!-- Panel header (same style as terminal) -->
+          <!-- Grid: Controls (4) + Terminal (8) -->
+          <div class="grid grid-cols-12 gap-4">
+            <!-- LEFT: CONTROL PANEL -->
             <div
-              class="px-3 py-2 flex justify-between gap-2 shrink-0 select-none"
-              style="
-                background-color: var(--bg-elevated);
-                border-bottom: 1px solid var(--border-default);
-              "
+              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
             >
-              <span
-                class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
-                style="color: var(--text-muted)"
-                >CONTROL.PANEL</span
+              <!-- Panel header (same style as terminal) -->
+              <div
+                class="px-3 py-2 flex justify-between gap-2 shrink-0 select-none"
+                style="
+                  background-color: var(--bg-elevated);
+                  border-bottom: 1px solid var(--border-default);
+                "
               >
-              <span
-                class="text-[8px] font-mono uppercase tracking-widest"
-                style="color: var(--text-secondary)"
-              >
-                <div class="flex flex-col items-end gap-2 pointer-events-auto">
-                  <!-- RENDER TOGGLE -->
-                  <label
-                    class="flex items-center gap-2 cursor-pointer group select-none"
-                  >
-                    <input
-                      type="checkbox"
-                      x-model="$store.app.renderEnabled"
-                      class="hidden peer"
-                    />
-                    <div
-                      class="w-2 h-2 rounded-full transition-all"
-                      style="
-                        border: 1px solid var(--text-secondary);
-                        box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
-                      "
-                    ></div>
-                    <span
-                      class="text-[8px] font-mono uppercase tracking-tighter"
-                      style="color: var(--text-muted)"
-                    >
-                      Visual Engine:
-                      <span
-                        :style="$store.app.renderEnabled ? 'color: var(--color-success)' : 'color: var(--color-error)'"
-                        x-text="$store.app.renderEnabled ? 'Active' : 'Paused'"
-                      ></span>
-                    </span>
-                  </label>
-                </div>
-              </span>
-            </div>
-
-            <!-- Panel content -->
-            <div class="p-4 flex flex-col gap-4">
-              <!-- Concurrency slider -->
-              <div class="slider-group w-full select-none">
-                <label
-                  class="flex justify-between items-center text-[10px] font-mono font-black uppercase mb-2 tracking-widest"
-                  style="color: var(--text-muted)"
-                >
-                  <span>Concurrent Limit</span>
-                  <div
-                    class="min-w-[24px] h-4 px-1 rounded flex items-center justify-center text-[8px] font-bold transition-colors"
-                    :style="{ backgroundColor: $store.app.mcColor, color: $store.app.labelColor }"
-                  >
-                    <span x-text="$store.app.mc"></span>
-                  </div>
-                </label>
-                <input
-                  type="range"
-                  id="max-concurrent-slider"
-                  x-model="$store.app.mc"
-                  class="block w-full cursor-pointer"
-                  :min="$store.app.flow.min"
-                  :max="$store.app.flow.max"
-                />
-              </div>
-
-              <!-- Task injection buttons -->
-              <div class="grid grid-cols-2 gap-2 flex-grow">
-                <template x-for="btn in $store.app.flow.buttons">
-                  <button
-                    class="task-button py-2"
-                    :class="'task-button-' + btn.class"
-                    @click="$store.app.createTasks(btn.tasks, btn.stress)"
-                    x-text="btn.label"
-                  ></button>
-                </template>
-              </div>
-            </div>
-          </div>
-
-          <!-- CENTER: STATS (Nutz) -->
-          <div
-            class="col-span-4 rounded-xl overflow-hidden flex flex-col shadow-2xl"
-            style="
-              background-color: var(--bg-elevated);
-              border: 1px solid var(--border-default);
-            "
-          >
-            <!-- Stats Header -->
-            <div
-              class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
-              style="
-                background-color: var(--bg-elevated);
-                border-bottom: 1px solid var(--border-default);
-              "
-            >
-              <span
-                class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
-                style="color: var(--text-muted)"
-                >DEEZ-NUTZ.STATS</span
-              >
-              <span
-                class="text-[8px] font-mono uppercase tracking-widest"
-                style="color: var(--text-secondary)"
-              >
-                Stream created:
-                <span x-text="$store.app.system.stream_created_at ?? ''"></span>
-              </span>
-            </div>
-
-            <!-- Stats Content -->
-            <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
-              <div class="flex justify-between">
-                <span style="color: var(--text-muted)">Messages:</span>
-                <span
-                  style="color: var(--color-success)"
-                  x-text="$store.app.metrics.natsStats?.messages ?? 0"
-                ></span>
-              </div>
-              <div class="flex justify-between">
-                <span style="color: var(--text-muted)">Size:</span>
-                <span
-                  style="color: var(--color-success)"
-                  x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
-                ></span>
-              </div>
-              <div class="flex justify-center mt-auto">
-                <canvas id="msg-chart"></canvas>
-              </div>
-              <button
-                class="task-button task-button-danger w-full mt-2 py-2"
-                @click="$store.app.confirmPurge()"
-              >
-                Clear Queue
-              </button>
-            </div>
-          </div>
-
-          <!-- RIGHT: TERMINAL (Neon Log Mode) -->
-          <div
-            class="col-span-4 rounded-xl overflow-hidden flex flex-col shadow-2xl min-h-[220px]"
-            style="
-              background-color: var(--bg-primary);
-              border: 1px solid var(--border-default);
-            "
-          >
-            <!-- Terminal Header -->
-            <div
-              class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
-              style="
-                background-color: var(--bg-elevated);
-                border-bottom: 1px solid var(--border-default);
-              "
-            >
-              <div class="flex items-center gap-2">
                 <span
                   class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
                   style="color: var(--text-muted)"
-                  >SYSTEM.TERMINAL_LOG</span
+                  >CONTROL.PANEL</span
                 >
-              </div>
-              <div
-                class="text-[8px] font-mono uppercase tracking-widest"
-                style="color: var(--text-secondary)"
-              >
-                <a
-                  href="https://github.com/shmandalf/fast-atomic-flow"
-                  target="_blank"
-                  class="version-link"
-                  ><span
-                    id="app-version"
-                    x-html="$store.app.system.app_version"
-                  ></span
-                ></a>
-                /
                 <span
-                  id="build-date"
-                  x-html="$store.app.system.build_date"
-                ></span>
+                  class="text-[8px] font-mono uppercase tracking-widest"
+                  style="color: var(--text-secondary)"
+                >
+                  <div
+                    class="flex flex-col items-end gap-2 pointer-events-auto"
+                  >
+                    <!-- RENDER TOGGLE -->
+                    <label
+                      class="flex items-center gap-2 cursor-pointer group select-none"
+                    >
+                      <input
+                        type="checkbox"
+                        x-model="$store.app.renderEnabled"
+                        class="hidden peer"
+                      />
+                      <div
+                        class="w-2 h-2 rounded-full transition-all"
+                        style="
+                          border: 1px solid var(--text-secondary);
+                          box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
+                        "
+                      ></div>
+                      <span
+                        class="text-[8px] font-mono uppercase tracking-tighter"
+                        style="color: var(--text-muted)"
+                      >
+                        Visual Engine:
+                        <span
+                          :style="$store.app.renderEnabled ? 'color: var(--color-success)' : 'color: var(--color-error)'"
+                          x-text="$store.app.renderEnabled ? 'Active' : 'Paused'"
+                        ></span>
+                      </span>
+                    </label>
+                  </div>
+                </span>
+              </div>
+
+              <!-- Panel content -->
+              <div class="p-4 flex flex-col gap-4">
+                <!-- Concurrency slider -->
+                <div class="slider-group w-full select-none">
+                  <label
+                    class="flex justify-between items-center text-[10px] font-mono font-black uppercase mb-2 tracking-widest"
+                    style="color: var(--text-muted)"
+                  >
+                    <span>Concurrent Limit</span>
+                    <div
+                      class="min-w-[24px] h-4 px-1 rounded flex items-center justify-center text-[8px] font-bold transition-colors"
+                      :style="{ backgroundColor: $store.app.mcColor, color: $store.app.labelColor }"
+                    >
+                      <span x-text="$store.app.mc"></span>
+                    </div>
+                  </label>
+                  <input
+                    type="range"
+                    id="max-concurrent-slider"
+                    x-model="$store.app.mc"
+                    class="block w-full cursor-pointer"
+                    :min="$store.app.flow.min"
+                    :max="$store.app.flow.max"
+                  />
+                </div>
+
+                <!-- Task injection buttons -->
+                <div class="grid grid-cols-2 gap-2 flex-grow">
+                  <template x-for="btn in $store.app.flow.buttons">
+                    <button
+                      class="task-button py-2"
+                      :class="'task-button-' + btn.class"
+                      @click="$store.app.createTasks(btn.tasks, btn.stress)"
+                      x-text="btn.label"
+                    ></button>
+                  </template>
+                </div>
               </div>
             </div>
 
-            <!-- Log Panel -->
-            <div class="relative flex-1">
+            <!-- CENTER: STATS (Nutz) -->
+            <div
+              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
+            >
+              <!-- Stats Header -->
               <div
-                id="log-panel"
-                :class="{ 'log-panel-disabled': $store.app.isLogPanelDisabled }"
-                class="absolute inset-0 p-3 font-mono text-[9px] overflow-y-auto"
-              ></div>
+                class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
+                style="
+                  background-color: var(--bg-elevated);
+                  border-bottom: 1px solid var(--border-default);
+                "
+              >
+                <span
+                  class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
+                  style="color: var(--text-muted)"
+                  >DEEZ-NUTZ.STATS</span
+                >
+                <span
+                  class="text-[8px] font-mono uppercase tracking-widest"
+                  style="color: var(--text-secondary)"
+                >
+                  Stream created:
+                  <span
+                    x-text="$store.app.system.stream_created_at ?? ''"
+                  ></span>
+                </span>
+              </div>
+
+              <!-- Stats Content -->
+              <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
+                <div class="flex justify-between">
+                  <span style="color: var(--text-muted)">Messages:</span>
+                  <span
+                    style="color: var(--color-success)"
+                    x-text="$store.app.metrics.natsStats?.messages ?? 0"
+                  ></span>
+                </div>
+                <div class="flex justify-between">
+                  <span style="color: var(--text-muted)">Size:</span>
+                  <span
+                    style="color: var(--color-success)"
+                    x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
+                  ></span>
+                </div>
+                <div class="flex justify-center mt-auto">
+                  <canvas id="msg-chart"></canvas>
+                </div>
+                <button
+                  class="task-button task-button-danger w-full mt-2 py-2"
+                  @click="$store.app.confirmPurge()"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            <!-- RIGHT: TERMINAL (Neon Log Mode) -->
+            <div
+              class="col-span-4 rounded-xl flex flex-col shadow-2xl min-h-[220px] terminal-card"
+            >
+              <!-- Terminal Header -->
+              <div
+                class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
+                style="
+                  background-color: var(--bg-elevated);
+                  border-bottom: 1px solid var(--border-default);
+                "
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
+                    style="color: var(--text-muted)"
+                    >SYSTEM.TERMINAL_LOG</span
+                  >
+                </div>
+                <div
+                  class="text-[8px] font-mono uppercase tracking-widest"
+                  style="color: var(--text-secondary)"
+                >
+                  <a
+                    href="https://github.com/shmandalf/fast-atomic-flow"
+                    target="_blank"
+                    class="version-link"
+                    ><span
+                      id="app-version"
+                      x-html="$store.app.system.app_version"
+                    ></span
+                  ></a>
+                  /
+                  <span
+                    id="build-date"
+                    x-html="$store.app.system.build_date"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Log Panel -->
+              <div class="relative flex-1">
+                <div
+                  id="log-panel"
+                  :class="{ 'log-panel-disabled': $store.app.isLogPanelDisabled }"
+                  class="absolute inset-0 p-3 font-mono text-[9px] overflow-y-auto"
+                ></div>
+              </div>
             </div>
           </div>
+
+          <!-- RECONNECTING/OFFLINE OVERLAY -->
+          <div
+            x-show="!$store.app.isOnline"
+            x-transition.opacity.duration.500ms
+            class="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-sm"
+            style="background-color: var(--bg-overlay); margin: 0"
+          >
+            <span
+              class="text-sm font-mono tracking-widest uppercase animate-pulse"
+              style="color: var(--text-primary)"
+            >
+              Reconnecting...
+            </span>
+          </div>
+          <!-- END OF PIPELINE & CONTROLS WRAPPER -->
         </div>
+        <!-- END OF PIPELINE & CONTROLS WRAPPER -->
       </div>
     </div>
 
@@ -513,7 +528,6 @@
         text-align: center;
         padding: 20px 0 10px;
         border-top: 1px solid var(--border-default);
-        margin-top: 24px;
       "
     >
       <div

@@ -1,8 +1,5 @@
 :root {
   /* Semantic color roles — Pure Light & Crystal Accents */
-  --color-error: #ef4444; /* red */
-  --color-warning: #f59e0b; /* amber */
-  --color-success: #10b981; /* emerald */
   --color-info: #0ea5e9; /* sky */
   --color-accent: #0ea5e9; /* primary brand color */
   --color-highlight: #f8fafc;
@@ -14,13 +11,13 @@
   /* Surface & background colors — Apple-style White */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
-  --bg-elevated: #f1f5f9;
+  --bg-elevated: #e2e8f0;
   --bg-control: rgba(255, 255, 255, 0.9);
   --bg-control-disabled: rgba(241, 245, 249, 0.5);
-  --bg-overlay: rgba(255, 255, 255, 0.95);
+  --bg-overlay: rgba(255, 255, 255, 0.5);
 
   /* Border colors */
-  --border-default: #e2e8f0;
+  --border-default: #cbd5e1;
   --border-subtle: #f1f5f9;
   --border-emphasized: #0ea5e966;
   --border-disabled: #f1f5f9;
@@ -42,12 +39,6 @@
   --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
   --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
   --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
-
-  /* Zone markers — Perfectly synced */
-  --spacing-queue: 12.5%;
-  --spacing-lock: 37.5%;
-  --spacing-work: 62.5%;
-  --spacing-done: 87.5%;
 
   /* Flash when creating tasks */
   --flash-bg: rgba(0, 0, 0, 0.15);
