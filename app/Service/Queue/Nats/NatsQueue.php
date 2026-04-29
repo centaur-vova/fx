@@ -46,8 +46,6 @@ class NatsQueue implements Queue
 
     /**
      * Create a consumer
-     *
-     * @TODO - rename this method to getConsumer
      */
     public function getConsumer(string $name): Consumer
     {
