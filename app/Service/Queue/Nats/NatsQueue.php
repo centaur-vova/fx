@@ -44,7 +44,12 @@ class NatsQueue implements Queue
         }
     }
 
-    public function consume(string $name): Consumer
+    /**
+     * Create a consumer
+     *
+     * @TODO - rename this method to getConsumer
+     */
+    public function getConsumer(string $name): Consumer
     {
         $consumer = $this->stream->getConsumer($name);
 

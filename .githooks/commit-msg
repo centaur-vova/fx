@@ -28,7 +28,7 @@ $message = trim(file_get_contents($commitMsgFile));
  */
 $pattern = '/^(\p{Emoji}\s*)+(🚨 \e\[1;31mСРОЧНО\e\[0m|ci|feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/ui';
 
-echo "[Commit-msg] Checking message for Conventional Commits standard...\n";
+echo "[Commit-msg] Checking message for Emojinal Commits standard...\n";
 
 if (!preg_match($pattern, $message)) {
     echo "\n[Commit-msg Error] Your message does not match the sacred format!\n";

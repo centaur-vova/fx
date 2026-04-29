@@ -15,7 +15,7 @@ interface Queue
     /**
      * Create a consumer for this queue
      */
-    public function consume(string $name): Consumer;
+    public function getConsumer(string $name): Consumer;
 
     /**
      * Get number of messages in queue

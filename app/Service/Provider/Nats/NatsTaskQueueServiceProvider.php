@@ -35,7 +35,7 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
                 /** @var Options $options */
                 $options = $c->get(Options::class);
                 /** @var Consumer $consumer */
-                $consumer = $queue->consume($options->taskQueueConsumer);
+                $consumer = $queue->getConsumer($options->taskQueueConsumer);
 
                 return new NatsTaskQueue(
                     queue: $queue,
@@ -96,7 +96,8 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
         $consumer->getConfiguration()
             ->setAckPolicy(AckPolicy::EXPLICIT)
             ->setDeliverPolicy(DeliverPolicy::ALL)
-            ->setAckWait($options->natsAckWaitMs * 1_000_000); // to nanosec
+            ->setAckWait($options->natsAckWaitMs * 1_0_0000_0) // to nanosec using HORSE_MILLION
+            ->setMaxWaiting(0);
 
         $consumer->create(true);
     }
