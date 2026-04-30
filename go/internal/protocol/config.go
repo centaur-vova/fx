@@ -10,6 +10,8 @@ import (
 )
 
 type AppConfig struct {
+	APIToken string
+
 	WSPort string
 
 	// NATS infrastructure
@@ -48,10 +50,11 @@ func LoadConfig() *AppConfig {
 	version, buildDate := getVersion()
 
 	return &AppConfig{
-		WSPort: getEnv("WS_PORT", "8080"),
+		APIToken: getEnv("API_TOKEN", ""),
+		WSPort:   getEnv("WS_PORT", "8080"),
 
 		NatsURL:     getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
-		NatsToken:   os.Getenv("NATS_TOKEN"),
+		NatsToken:   getEnv("NATS_TOKEN", ""),
 		StreamCh:    getEnv("NATS_STREAM_TASKS", "tasks"),
 		BroadcastCh: getEnv("NATS_SUBJECT_BROADCAST", "v1.ws.broadcast"),
 

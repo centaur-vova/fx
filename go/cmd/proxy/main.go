@@ -147,8 +147,8 @@ func main() {
 	// === HTTP HANDLERS ===
 	semPool := semaphore.NewPool()
 	semHandler := semaphore.NewHandler(semPool)
-	http.HandleFunc("/semaphore/acquire", semHandler.Acquire)
-	http.HandleFunc("/semaphore/release", semHandler.Release)
+	http.HandleFunc("/semaphore/acquire", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Acquire))
+	http.HandleFunc("/semaphore/release", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Release))
 
 	// ==== INIT WEBSOCKET SERVER ====
 	srv := &http.Server{

@@ -83,3 +83,18 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 	h.pool.Release(req.UID)
 	w.WriteHeader(http.StatusOK)
 }
+
+// AuthMiddleware wraps a handler to check for a valid Bearer token
+func (h *Handler) AuthMiddleware(apiToken string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer "+apiToken {
+			slog.Warn("forbidden: invalid or missing auth token",
+				"remote_addr", r.RemoteAddr,
+				"path", r.URL.Path,
+			)
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}

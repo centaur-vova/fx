@@ -6,112 +6,115 @@ namespace App\Service\Api;
 
 use App\Exception\Api\ApiException;
 use Psr\Log\LoggerInterface;
+use Swoole\ConnectionPool;
 use Swoole\Coroutine\Http\Client;
 
 class ApiClient
 {
     public function __construct(
-        private readonly string $baseUrl,
-        private readonly string $apiToken,
+        private readonly ConnectionPool $pool,
         private readonly LoggerInterface $logger,
     ) {
     }
 
     /**
-     * @param array<string, mixed> $query
+     * @param array<string, mixed> $data
      * @return ?array<string, mixed>
      */
-    public function get(string $path, array $query = []): ?array
+    public function get(string $path, array $data = []): ?array
     {
         /**
          * @var ?array<string, mixed> $result
          */
-        $result = $this->request('GET', $path, $query);
+        $result = $this->request('GET', $path, $data);
         return $result;
     }
 
     /**
-     * @param array<string, mixed> $query
+     * @param array<string, mixed> $data
      * @return ?array<string, mixed>
      */
-    public function post(string $path, array $query = []): ?array
+    public function post(string $path, array $data = []): ?array
     {
         /**
          * @var ?array<string, mixed> $result
          */
-        $result = $this->request('POST', $path, $query);
+        $result = $this->request('POST', $path, $data);
         return $result;
     }
 
     /**
-     * @param array<string, mixed> $query
-     * @return ?array<string, mixed>
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|null
      *
      * @throws ApiException
+     * @throws \JsonException
      */
-    private function request(string $method, string $path, array $query = []): ?array
+    private function request(string $method, string $path, array $data = []): ?array
     {
-        $url = rtrim($this->baseUrl, '/') . '/' . ltrim($path, '/');
-        $urlParts = parse_url($url);
-
-        if (!isset($urlParts['host'])) {
-            $this->logger->error('Invalid URL', ['url' => $url]);
+        // Get a pre-configured persistent client from the pool
+        /** @var Client|false $client */
+        $client = $this->pool->get();
+        if (!$client) {
+            $this->logger->error('Failed to get HTTP client from pool');
             return null;
         }
 
-        $ssl = ($urlParts['scheme'] ?? 'http') === 'https';
-        $host = $urlParts['host'];
-        $port = $urlParts['port'] ?? ($ssl ? 443 : 80);
-        $path = $urlParts['path'] ?? '/';
+        try {
+            $client->setMethod($method);
 
-        if ($method === 'GET' && !empty($query)) {
-            $path .= '?' . http_build_query($query);
+            // Prepare request path and query string
+            $requestPath = '/' . ltrim($path, '/');
+            if ($method === 'GET' && !empty($data)) {
+                $requestPath .= '?' . http_build_query($data);
+            }
+
+            if ($method === 'POST') {
+                $client->setData(json_encode($data, JSON_THROW_ON_ERROR));
+            }
+
+            // Execute request using keep-alive connection
+            $client->execute($requestPath);
+
+            // Check for low-level socket or timeout errors
+            if ($client->errCode !== 0) {
+                // Fetching properties as local variables helps PHPStan understand they are not mixed
+                $errCode = (int) $client->errCode;
+                $errMsg = (string) $client->errMsg;
+
+                $this->logger->error('HTTP request failed', [
+                    'path' => $requestPath,
+                    'error' => $errMsg,
+                    'code' => $errCode,
+                ]);
+
+                $client = null;
+                return null;
+            }
+
+            /** @var string|null $body */
+            $body = $client->body;
+            if (empty($body)) {
+                return null;
+            }
+
+            /** @var int $statusCode */
+            $statusCode = $client->statusCode;
+            if ($statusCode !== 200) {
+                throw new ApiException('Api error: ' . $body);
+            }
+
+            /** @var array<string, mixed> $responseData */
+            $responseData = json_decode((string)$body, true, 512, JSON_THROW_ON_ERROR);
+
+            /** @var ?array<string, mixed> $responseData */
+            return $responseData;
+        } catch (\JsonException $e) {
+            $this->logger->error('Failed to decode JSON response', ['error' => $e->getMessage()]);
+            throw new ApiException('Failed to decode JSON response: ' . $e->getMessage());
+        } finally {
+            // Crucial: Always return the client to the pool
+            $this->pool->put($client);
         }
-
-        $client = new Client($host, $port, $ssl);
-        $client->setMethod($method);
-        $client->setHeaders([
-            'Authorization' => 'Bearer ' . $this->apiToken,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-
-        if ($method === 'POST') {
-            $client->setData(json_encode($query, JSON_THROW_ON_ERROR));
-        }
-
-        $client->execute($path);
-
-        if ($client->errCode !== 0) {
-            $this->logger->error('HTTP request failed', [
-                'url' => $url,
-                'error' => $client->errMsg,
-                'statusCode' => $client->statusCode,
-            ]);
-            $client->close();
-            return null;
-        }
-
-        $body = $client->body;
-        $client->close();
-        if (empty($body)) {
-            return null;
-        }
-
-        if ($client->statusCode !== 200) {
-            throw new ApiException('Api error: ' . $body);
-        }
-
-        $data = json_decode((string) $body, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->logger->error('Failed to decode JSON response', [
-                'body' => $body,
-                'error' => json_last_error_msg(),
-            ]);
-            throw new ApiException('Failed to decode JSON response: ' . json_last_error_msg());
-        }
-
-        /** @var ?array<string, mixed> $data */
-        return $data;
     }
 }
