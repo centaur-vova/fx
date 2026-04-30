@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Service\Provider\Nats;
 
 use App\Contract\Messaging\Broadcaster;
+use App\Contract\Provider\ServiceProvider;
 use App\Service\Messaging\Nats\NatsBroadcaster;
-use App\Service\Provider\Contract\ServiceProvider;
 
 use function DI\autowire;
 

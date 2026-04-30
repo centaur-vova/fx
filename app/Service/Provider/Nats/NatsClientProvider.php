@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service\Provider\Nats;
 
+use App\Contract\Provider\ServiceProvider;
+use App\Contract\Provider\WorkerStartAware;
 use App\Server\Options;
 use App\Service\Messaging\Nats\ReconnectableClient;
-use App\Service\Provider\Contract\ServiceProvider;
-use App\Service\Provider\Contract\WorkerStartAware;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Configuration as NatsConfiguration;
 

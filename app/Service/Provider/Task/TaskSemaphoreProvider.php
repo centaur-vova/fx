@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Service\Provider\Task;
 
+use App\Contract\Provider\Bootable;
+use App\Contract\Provider\ServiceProvider;
 use App\Contract\Task\TaskSemaphore;
 use App\Server\Options;
 use App\Service\Api\SemaphoreApi;
-use App\Service\Provider\Contract\Bootable;
-use App\Service\Provider\Contract\ServiceProvider;
 use App\Service\Task\Semaphore\DistributedSemaphore;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use DI\ContainerBuilder;

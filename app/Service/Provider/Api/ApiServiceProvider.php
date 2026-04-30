@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service\Provider\Api;
 
+use App\Contract\Provider\ServiceProvider;
 use App\Server\Options;
 use App\Service\Api\ApiClient;
-use App\Service\Provider\Contract\ServiceProvider;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

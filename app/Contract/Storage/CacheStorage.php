@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Cache\Contract;
-
-use App\Contract\Storage\TtlKeyValueStorage;
+namespace App\Contract\Storage;
 
 interface CacheStorage extends TtlKeyValueStorage
 {

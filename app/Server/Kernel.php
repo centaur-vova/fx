@@ -6,6 +6,8 @@ namespace App\Server;
 
 use App\ConfigLoader;
 use App\Contract\Messaging\MessageSerializer;
+use App\Contract\Provider\Bootable;
+use App\Contract\Provider\WorkerStartAware;
 use App\Contract\Task\TaskQueue;
 use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
@@ -14,8 +16,6 @@ use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
-use App\Service\Provider\Contract\Bootable;
-use App\Service\Provider\Contract\WorkerStartAware;
 use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
 use App\Service\Provider\Nats\NatsClientProvider;
 use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;

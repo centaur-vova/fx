@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service\Provider\App;
 
-use App\Domain\Cache\Contract\CacheStorage;
+use App\Contract\Provider\ServiceProvider;
+use App\Contract\Storage\CacheStorage;
 use App\Server\Options;
-use App\Service\Provider\Contract\ServiceProvider;
 use App\Service\RateLimiter\RateLimiterConfig;
 use App\Service\RateLimiter\RateLimiterService;
 use DI\ContainerBuilder;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Storage\Swoole;
 
-use App\Domain\Cache\Contract\CacheStorage;
+use App\Contract\Storage\CacheStorage;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Table;

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service\Task;
 
+use App\Contract\Storage\CacheStorage;
 use App\Contract\Support\Concern\LoopedLogger;
 use App\Contract\Support\Identifiable;
 use App\Contract\Task\TaskQueue;
-use App\Domain\Cache\Contract\CacheStorage;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Server\Options;
 use Psr\Log\LoggerInterface;
