@@ -33,7 +33,7 @@ class GlobalSharedSemaphore implements TaskSemaphore
             ) {
             }
 
-            public function acquire(float $timeout): bool
+            public function acquire(float $lockWaitTimeoutSec): bool
             {
                 $atomic = $this->atomic;
                 if (!$atomic) {
@@ -43,7 +43,7 @@ class GlobalSharedSemaphore implements TaskSemaphore
                 $start = microtime(true);
 
                 // Poll until slot is free or timeout reached
-                while (microtime(true) - $start < $timeout) {
+                while (microtime(true) - $start < $lockWaitTimeoutSec) {
                     // Try to take a slot immediately
                     $current = $atomic->add(1);
 

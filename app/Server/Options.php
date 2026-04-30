@@ -41,6 +41,14 @@ readonly class Options
         // ========== Logging ==========
         public string $logLevel,
 
+        // ========== API ==========
+        public string $apiUrl,
+        public string $apiToken,
+
+        // ========== Semaphores ==========
+        public int $semaphorePermitTtl, // for demo only
+        public string $semaphoreDriver, // api/local/shared
+
         // ========== Queue ==========
         public int $queueCapacity,
         public int $queuePrefetchBatch,

@@ -6,7 +6,7 @@ namespace App\Contract\Task;
 
 interface SemaphorePermit
 {
-    public function acquire(float $timeout): bool;
+    public function acquire(float $lockWaitTimeoutSec): bool;
 
     public function release(): void;
 }

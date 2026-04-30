@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fast-atomic-flow/go/internal/gateway"
 	"fast-atomic-flow/go/internal/protocol"
+	"fast-atomic-flow/go/internal/semaphore"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -87,6 +89,13 @@ func main() {
 	cfg = protocol.LoadConfig()
 	cfg.Validate()
 
+	// === LOGGER ===
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}
+	logger := slog.New(slog.NewTextHandler(os.Stdout, opts))
+	slog.SetDefault(logger)
+
 	// ==== INIT ROUTER ====
 	router := gateway.NewRouter()
 
@@ -135,6 +144,12 @@ func main() {
 		hub.HandleWS(w, r, router)
 	})
 
+	// === HTTP HANDLERS ===
+	semPool := semaphore.NewPool()
+	semHandler := semaphore.NewHandler(semPool)
+	http.HandleFunc("/semaphore/acquire", semHandler.Acquire)
+	http.HandleFunc("/semaphore/release", semHandler.Release)
+
 	// ==== INIT WEBSOCKET SERVER ====
 	srv := &http.Server{
 		Addr:    ":" + cfg.WSPort,
@@ -143,7 +158,8 @@ func main() {
 
 	// ==== RUN WS SERVER IN GOROUTINE ====
 	go func() {
-		log.Printf("WebSocket Gateway ready on %s/ws\n", cfg.WSPort)
+		log.Printf("WebSocket Gateway ready on :%s/ws\n", cfg.WSPort)
+		log.Printf("Semaphore service started on :%s\n", cfg.WSPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}

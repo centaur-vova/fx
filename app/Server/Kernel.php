@@ -7,11 +7,11 @@ namespace App\Server;
 use App\ConfigLoader;
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Task\TaskQueue;
-use App\Contract\Task\TaskSemaphore;
 use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Router;
 use App\Service\Messaging\MappedMessageSerializer;
+use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\Contract\Bootable;
@@ -19,9 +19,9 @@ use App\Service\Provider\Contract\WorkerStartAware;
 use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
 use App\Service\Provider\Nats\NatsClientProvider;
 use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
+use App\Service\Provider\Task\TaskSemaphoreProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
-use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
 
@@ -51,9 +51,11 @@ class Kernel
 
     private const array PROVIDERS = [
         AppServiceProvider::class,
+        ApiServiceProvider::class,
         NatsClientProvider::class,
         NatsBroadcasterServiceProvider::class,
         NatsTaskQueueServiceProvider::class,
+        TaskSemaphoreProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,
     ];
@@ -93,6 +95,11 @@ class Kernel
             cacheMaxSize:         $loader->getInt('CACHE_MAX_SIZE', 131072),
             cacheAutoCleanSec:    $loader->getInt('CACHE_AUTO_CLEAN_SEC', 60),
             cacheValueMaxSize:    $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
+            // API
+            apiUrl:               $loader->getString('API_URL'),
+            apiToken:             $loader->getString('API_TOKEN'),
+            semaphorePermitTtl:   $loader->getInt('SEMAPHORE_PERMIT_TTL', 10),
+            semaphoreDriver:      $loader->getString('SEMAPHORE_DRIVER', 'shared'),
             // Queue
             queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
             queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
@@ -178,21 +185,6 @@ class Kernel
         $tasksAtomic = new Atomic(0);
 
         /**
-         * Pre-allocate Shared Memory Semaphores.
-         * The index $i represents the 'max_concurrency' level.
-         *
-         * Each Atomic object is a shared counter across all Swoole workers.
-         * @see GlobalSharedSemaphore
-         */
-        $semaphoreLimit = max(1, $options->taskSemaphoreLimit);
-        $semaphoreAtomics = [];
-
-        for ($i = 1; $i <= $semaphoreLimit; $i++) {
-            // Each index represents a specific max_concurrent limit
-            $semaphoreAtomics[$i] = new Atomic(0);
-        }
-
-        /**
          * DI container setup
          */
         $builder = new ContainerBuilder()
@@ -218,16 +210,11 @@ class Kernel
                 'options.nats_ack_wait_ms' => $options->natsAckWaitMs,
 
                 'shared.atomic.tasks' => $tasksAtomic,
-                'shared.semaphores.atomics' => $semaphoreAtomics,
 
                 // Logger
                 StdoutLogger::class => create()
                     ->constructor(fn (Options $opt) => $opt->logLevel),
                 LoggerInterface::class => get(StdoutLogger::class),
-
-                // Semaphore
-                TaskSemaphore::class => create(GlobalSharedSemaphore::class)
-                    ->constructor(get('shared.semaphores.atomics')),
 
                 // Task Service
                 TaskService::class => autowire()
