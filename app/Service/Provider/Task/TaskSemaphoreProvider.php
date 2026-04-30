@@ -15,10 +15,10 @@ use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Swoole\Atomic;
 
-class TaskSemaphoreProvider implements ServiceProvider, Bootable
+final readonly class TaskSemaphoreProvider implements ServiceProvider, Bootable
 {
     private const string DRIVER_API = 'api';
-    // private const string DRIVER_SHARED = 'shared';
+    private const string DRIVER_SHARED = 'shared';
 
     public function register(ContainerBuilder $builder): array
     {
@@ -36,9 +36,17 @@ class TaskSemaphoreProvider implements ServiceProvider, Bootable
         ];
     }
 
-    public function boot(ContainerInterface $container): void
+    public function boot(ContainerInterface $c): void
     {
-        $container->get(TaskSemaphore::class); // pre-warm the semaphore
+        /** @var Options $options */
+        $options = $c->get(Options::class);
+
+        // We only trigger the container if we KNOW it's a shared driver
+        // that needs Master-process allocation.
+        if ($options->semaphoreDriver === self::DRIVER_SHARED) {
+            $c->get(TaskSemaphore::class);
+            // Now it's warmed up.
+        }
     }
 
     private function initDistributedSemaphore(ContainerInterface $c): TaskSemaphore

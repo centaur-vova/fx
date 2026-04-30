@@ -14,7 +14,7 @@ use DI\ContainerBuilder;
 
 use function DI\get;
 
-class NatsBroadcasterServiceProvider implements ServiceProvider
+final readonly class NatsBroadcasterServiceProvider implements ServiceProvider
 {
     public function register(ContainerBuilder $builder): array
     {

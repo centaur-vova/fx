@@ -24,7 +24,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Server;
 
-class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
+final readonly class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
 {
     public function register(ContainerBuilder $builder): array
     {

@@ -15,7 +15,7 @@ use Swoole\ConnectionPool;
 use Swoole\Coroutine\Http\Client;
 use Swoole\Server;
 
-class ApiServiceProvider implements ServiceProvider, WorkerStartAware
+final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartAware
 {
     private const int CONNECTION_POOL_SIZE = 64;
 

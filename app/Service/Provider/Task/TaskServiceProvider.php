@@ -14,7 +14,7 @@ use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Swoole\Server;
 
-class TaskServiceProvider implements ServiceProvider, WorkerStartAware
+final readonly class TaskServiceProvider implements ServiceProvider, WorkerStartAware
 {
     public function register(ContainerBuilder $builder): array
     {

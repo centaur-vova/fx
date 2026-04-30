@@ -20,7 +20,7 @@ use function DI\get;
 use Psr\Container\ContainerInterface;
 use Swoole\Server;
 
-class NatsClientProvider implements ServiceProvider, WorkerStartAware
+final readonly class NatsClientProvider implements ServiceProvider, WorkerStartAware
 {
     public function register(ContainerBuilder $builder): array
     {
