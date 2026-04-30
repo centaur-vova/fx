@@ -45,7 +45,11 @@ class NatsQueue implements Queue
     }
 
     /**
-     * Create a consumer
+     * Return the consumer instance, which must be already configured in the service provider.
+     *
+     * @see \App\Service\Provider\Nats\NatsTaskQueueServiceProvider
+     *
+     * The underlying library returns the existing consumer from its internal pool.
      */
     public function getConsumer(string $name): Consumer
     {
