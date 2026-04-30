@@ -15,6 +15,8 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 )
 
+const clientSendBufferSize = 1024
+
 type ClientMessage struct {
 	Kind    int // websocket.BinaryMessage или websocket.TextMessage
 	Payload []byte
@@ -54,7 +56,7 @@ func (h *Hub) GetClientsCount() int {
 func (h *Hub) Add(conn *websocket.Conn) {
 	client := &Client{
 		Conn: conn,
-		Send: make(chan ClientMessage, 256),
+		Send: make(chan ClientMessage, clientSendBufferSize),
 	}
 	h.clientsMu.Lock()
 	h.clients[client] = true
