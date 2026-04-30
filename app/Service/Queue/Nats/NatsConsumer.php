@@ -6,11 +6,12 @@ namespace App\Service\Queue\Nats;
 
 use App\Contract\Queue\Consumer;
 use App\Contract\Queue\Message;
+use App\Contract\Task\TaskQueueConsumer;
 use Basis\Nats\Consumer\Consumer as NatsStreamConsumer;
 use Basis\Nats\Message\Msg;
 use Basis\Nats\Queue;
 
-class NatsConsumer implements Consumer
+class NatsConsumer implements Consumer, TaskQueueConsumer
 {
     private ?Queue $queue = null;
 

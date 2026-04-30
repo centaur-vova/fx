@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Service\Provider\Nats;
 
 use App\Contract\Messaging\MessageSerializer;
-use App\Contract\Queue\Consumer;
 use App\Contract\Queue\Queue;
 use App\Contract\Task\TaskQueue;
+use App\Contract\Task\TaskQueueConsumer;
 use App\Server\Options;
 use App\Service\Provider\Contract\ServiceProvider;
 use App\Service\Provider\Contract\WorkerStartAware;
+use App\Service\Queue\Nats\NatsQueue;
+use App\Service\Queue\Nats\NatsTaskQueue;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Consumer\AckPolicy;
 use Basis\Nats\Consumer\DeliverPolicy;
@@ -27,15 +29,31 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
     public function register(ContainerBuilder $builder): array
     {
         return [
-            TaskQueue::class => function (ContainerInterface $c): NatsTaskQueue {
+            // General Queue class
+            Queue::class => function (ContainerInterface $c): Queue {
+                /** @var NatsClient $client */
+                $client = $c->get(NatsClient::class);
+                /** @var Options $options */
+                $options = $c->get(Options::class);
+                /** @var MessageSerializer */
+                $serializer = $c->get(MessageSerializer::class);
+
+                return new NatsQueue(
+                    client: $client,
+                    serializer: $serializer,
+                    streamName: $options->taskQueueStream,
+                );
+            },
+            // Task Queue
+            TaskQueue::class => function (ContainerInterface $c): TaskQueue {
                 /** @var Queue $queue */
                 $queue = $c->get(Queue::class);
                 /** @var MessageSerializer $serializer */
                 $serializer = $c->get(MessageSerializer::class);
                 /** @var Options $options */
                 $options = $c->get(Options::class);
-                /** @var Consumer $consumer */
-                $consumer = $queue->getConsumer($options->taskQueueConsumer);
+                /** @var TaskQueueConsumer $consumer */
+                $consumer = $c->get(TaskQueueConsumer::class);
 
                 return new NatsTaskQueue(
                     queue: $queue,
@@ -43,6 +61,16 @@ class NatsTaskQueueServiceProvider implements ServiceProvider, WorkerStartAware
                     consumer: $consumer,
                     subject: $options->taskQueueSubject,
                 );
+            },
+            TaskQueueConsumer::class => function (ContainerInterface $c): TaskQueueConsumer {
+                /** @var Queue $queue */
+                $queue = $c->get(Queue::class);
+                /** @var Options $options */
+                $options = $c->get(Options::class);
+                /** @var TaskQueueConsumer $consumer */
+                $consumer = $queue->getConsumer($options->taskQueueConsumer);
+
+                return $consumer;
             },
         ];
     }

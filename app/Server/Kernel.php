@@ -18,7 +18,6 @@ use App\Service\Provider\Contract\Bootable;
 use App\Service\Provider\Contract\WorkerStartAware;
 use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
 use App\Service\Provider\Nats\NatsClientProvider;
-use App\Service\Provider\Nats\NatsQueueServiceProvider;
 use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
@@ -54,7 +53,6 @@ class Kernel
         AppServiceProvider::class,
         NatsClientProvider::class,
         NatsBroadcasterServiceProvider::class,
-        NatsQueueServiceProvider::class,
         NatsTaskQueueServiceProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,

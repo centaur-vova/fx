@@ -23,7 +23,7 @@ final readonly class NatsKeyValueStorageServiceProvider implements ServiceProvid
     public function register(ContainerBuilder $builder): array
     {
         return [
-            KeyValueStorage::class => function (NatsClient $nats, array $config): NatsKeyValueStorage {
+            KeyValueStorage::class => function (NatsClient $nats, array $config): KeyValueStorage {
                 /** @var array{bucket?: string, ttl_ms?: int, storage_mb?: int} $config */
 
                 $api = $nats->getApi();

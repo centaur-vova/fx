@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Provider\Nats;
+namespace App\Service\Queue\Nats;
 
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Queue\Consumer;
