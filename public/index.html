@@ -50,7 +50,7 @@
       <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
         <!-- HEADER -->
         <div
-          class="rounded-xl shadow-2xl p-4"
+          class="rounded-xl shadow-2xl p-4 select-none"
           style="
             background-color: var(--bg-elevated);
             border: 1px solid var(--border-default);
@@ -258,15 +258,15 @@
             <div class="zone-label label-done">Complete</div>
           </div>
 
-          <!-- Grid: Controls (4) + Terminal (8) -->
+          <!-- Grid: Nutz Statz (4) + Controls (4) + Terminal (4) -->
           <div class="grid grid-cols-12 gap-4">
             <!-- LEFT: STATS (Nutz) -->
             <div
-              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
+              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card select-none"
             >
               <!-- Stats Header -->
               <div
-                class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
+                class="px-3 py-2 flex justify-between items-center shrink-0"
                 style="
                   background-color: var(--bg-elevated);
                   border-bottom: 1px solid var(--border-default);
@@ -318,11 +318,11 @@
 
             <!-- CENTER: CONTROL PANEL -->
             <div
-              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
+              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card select-none"
             >
               <!-- Panel header (same style as terminal) -->
               <div
-                class="px-3 py-2 flex justify-between gap-2 shrink-0 select-none"
+                class="px-3 py-2 flex justify-between gap-2 shrink-0"
                 style="
                   background-color: var(--bg-elevated);
                   border-bottom: 1px solid var(--border-default);
@@ -341,9 +341,7 @@
                     class="flex flex-col items-end gap-2 pointer-events-auto"
                   >
                     <!-- RENDER TOGGLE -->
-                    <label
-                      class="flex items-center gap-2 cursor-pointer group select-none"
-                    >
+                    <label class="flex items-center gap-2 cursor-pointer group">
                       <input
                         type="checkbox"
                         x-model="$store.app.renderEnabled"
@@ -351,10 +349,7 @@
                       />
                       <div
                         class="w-2 h-2 rounded-full transition-all"
-                        style="
-                          border: 1px solid var(--text-secondary);
-                          box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
-                        "
+                        style="border: 1px solid var(--text-secondary)"
                       ></div>
                       <span
                         class="text-[8px] font-mono uppercase tracking-tighter"
@@ -374,7 +369,7 @@
               <!-- Panel content -->
               <div class="p-4 flex flex-col gap-4">
                 <!-- Concurrency slider -->
-                <div class="slider-group w-full select-none">
+                <div class="slider-group w-full">
                   <label
                     class="flex justify-between items-center text-[10px] font-mono font-black uppercase mb-2 tracking-widest"
                     style="color: var(--text-muted)"
