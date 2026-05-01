@@ -259,7 +259,63 @@
 
           <!-- Grid: Controls (4) + Terminal (8) -->
           <div class="grid grid-cols-12 gap-4">
-            <!-- LEFT: CONTROL PANEL -->
+            <!-- LEFT: STATS (Nutz) -->
+            <div
+              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
+            >
+              <!-- Stats Header -->
+              <div
+                class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
+                style="
+                  background-color: var(--bg-elevated);
+                  border-bottom: 1px solid var(--border-default);
+                "
+              >
+                <span
+                  class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
+                  style="color: var(--text-muted)"
+                  >DEEZ-NUTZ.STATS</span
+                >
+                <span
+                  class="text-[8px] font-mono uppercase tracking-widest"
+                  style="color: var(--text-secondary)"
+                >
+                  Stream created:
+                  <span
+                    x-text="$store.app.system.stream_created_at ?? ''"
+                  ></span>
+                </span>
+              </div>
+
+              <!-- Stats Content -->
+              <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
+                <div class="flex justify-between">
+                  <span style="color: var(--text-muted)">Messages:</span>
+                  <span
+                    style="color: var(--color-success)"
+                    x-text="$store.app.metrics.natsStats?.messages ?? 0"
+                  ></span>
+                </div>
+                <div class="flex justify-between">
+                  <span style="color: var(--text-muted)">Size:</span>
+                  <span
+                    style="color: var(--color-success)"
+                    x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
+                  ></span>
+                </div>
+                <div class="flex justify-center mt-auto">
+                  <canvas id="msg-chart"></canvas>
+                </div>
+                <button
+                  class="task-button task-button-danger w-full mt-2 py-2"
+                  @click="$store.app.confirmPurge()"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            <!-- CENTER: CONTROL PANEL -->
             <div
               class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
             >
@@ -351,62 +407,6 @@
                     ></button>
                   </template>
                 </div>
-              </div>
-            </div>
-
-            <!-- CENTER: STATS (Nutz) -->
-            <div
-              class="col-span-4 rounded-xl flex flex-col shadow-2xl terminal-card"
-            >
-              <!-- Stats Header -->
-              <div
-                class="px-3 py-2 flex justify-between items-center shrink-0 select-none"
-                style="
-                  background-color: var(--bg-elevated);
-                  border-bottom: 1px solid var(--border-default);
-                "
-              >
-                <span
-                  class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
-                  style="color: var(--text-muted)"
-                  >DEEZ-NUTZ.STATS</span
-                >
-                <span
-                  class="text-[8px] font-mono uppercase tracking-widest"
-                  style="color: var(--text-secondary)"
-                >
-                  Stream created:
-                  <span
-                    x-text="$store.app.system.stream_created_at ?? ''"
-                  ></span>
-                </span>
-              </div>
-
-              <!-- Stats Content -->
-              <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
-                <div class="flex justify-between">
-                  <span style="color: var(--text-muted)">Messages:</span>
-                  <span
-                    style="color: var(--color-success)"
-                    x-text="$store.app.metrics.natsStats?.messages ?? 0"
-                  ></span>
-                </div>
-                <div class="flex justify-between">
-                  <span style="color: var(--text-muted)">Size:</span>
-                  <span
-                    style="color: var(--color-success)"
-                    x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
-                  ></span>
-                </div>
-                <div class="flex justify-center mt-auto">
-                  <canvas id="msg-chart"></canvas>
-                </div>
-                <button
-                  class="task-button task-button-danger w-full mt-2 py-2"
-                  @click="$store.app.confirmPurge()"
-                >
-                  Clear Queue
-                </button>
               </div>
             </div>
 
