@@ -78,6 +78,27 @@ The binary format ensures minimal overhead and strict message ordering (FIFO via
 
 ---
 
+## 🐎 Go Semaphores (Distributed Mode)
+
+Fast Atomic Flow supports a distributed semaphore mode via a Go microservice with its own HTTP API. PHP workers acquire and release concurrency slots through HTTP requests to the Go proxy.
+
+**Configuration in `.env`:**
+
+```env
+# === SEMAPHORES ===
+# Semaphore driver: "api" or "shared" (default)
+SEMAPHORE_DRIVER=api
+# Default semaphore permit TTL (in seconds). Used only with the "api" driver.
+# Should be greater than the maximum task processing time. Once TTL expires, the permit is automatically released.
+SEMAPHORE_PERMIT_TTL=10
+
+# === API ===
+API_URL=http://localhost:8080
+API_TOKEN=<your_api_token>
+```
+
+---
+
 ## 🐎 How it works
 
 1. You create tasks through the interface
