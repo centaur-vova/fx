@@ -6,12 +6,12 @@ import (
 	"fast-atomic-flow/go/internal/gateway"
 	"fast-atomic-flow/go/internal/protocol"
 	"fast-atomic-flow/go/internal/semaphore"
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -40,6 +40,17 @@ var (
 	hub   *gateway.Hub
 )
 
+var levelMap = map[string]slog.Level{
+	"debug":     slog.LevelDebug,
+	"info":      slog.LevelInfo,
+	"notice":    slog.LevelInfo,
+	"warning":   slog.LevelWarn,
+	"error":     slog.LevelError,
+	"critical":  slog.LevelError + 2,
+	"alert":     slog.LevelError + 4,
+	"emergency": slog.LevelError + 8,
+}
+
 func subscribeToNATS() {
 	subMu.Lock()
 	defer subMu.Unlock()
@@ -53,7 +64,7 @@ func subscribeToNATS() {
 	sub, err = nc.Subscribe(cfg.BroadcastCh, func(m *nats.Msg) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Panic in NATS handler: %v", r)
+				slog.Error("Panic in NATS handler", "recover", r)
 			}
 		}()
 
@@ -63,7 +74,7 @@ func subscribeToNATS() {
 		}
 		json.Unmarshal(m.Data, &env)
 
-		log.Printf("NATS -> WS: subject=%s, data=%s", m.Subject, string(m.Data))
+		slog.Info("NATS -> WS", "subject", m.Subject, "data", string(m.Data))
 
 		if env.Type == "task.status.update" {
 			var t protocol.TaskStatusUpdate
@@ -73,16 +84,16 @@ func subscribeToNATS() {
 		}
 	})
 	if err != nil {
-		log.Printf("Subscribe error: %v", err)
+		slog.Error("Subscribe error", "error", err, "channel", cfg.BroadcastCh)
 	} else {
-		log.Printf("Subscribed to %s", cfg.BroadcastCh)
+		slog.Info("Subscribed to channel", "channel", cfg.BroadcastCh)
 	}
 }
 
 func main() {
 	// ==== LOAD .env ====
 	if err := godotenv.Load("../.env"); err != nil {
-		log.Println("No .env file found, using system env")
+		slog.Info("No .env file found, using system env")
 	}
 
 	// ==== LOAD CONFIG ====
@@ -90,8 +101,13 @@ func main() {
 	cfg.Validate()
 
 	// === LOGGER ===
+	level, ok := levelMap[strings.ToLower(cfg.LogLevel)]
+	if !ok {
+		log.Printf("unknown LOG_LEVEL '%s'", cfg.LogLevel)
+		level = slog.LevelInfo
+	}
 	opts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: level,
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stdout, opts))
 	slog.SetDefault(logger)
@@ -107,22 +123,22 @@ func main() {
 		nats.MaxReconnects(-1),            // Retry forever
 		nats.ReconnectWait(2*time.Second), // Every 2 second
 		nats.DisconnectErrHandler(func(c *nats.Conn, err error) {
-			log.Printf("⚠️ NATS DISCONNECTED: %v", err)
+			slog.Warn("⚠️ NATS DISCONNECTED", "error", err)
 		}),
 		nats.ReconnectHandler(func(c *nats.Conn) {
-			log.Printf("✅ NATS RECONNECTED to %s", c.ConnectedUrl())
+			slog.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
 			// Need to resubscribe
 		}),
 		nats.ClosedHandler(func(c *nats.Conn) {
-			log.Printf("🔴 NATS connection CLOSED")
+			slog.Info("🔴 NATS connection CLOSED")
 		}),
 	)
 	if err != nil {
-		log.Fatalf("NATS Connection failed: %v", err)
+		slog.Error("NATS Connection failed", "error", err)
 	}
 	defer nc.Close()
 
-	fmt.Printf("Go Proxy connected to NATS at %s\n", cfg.NatsURL)
+	slog.Info("Go Proxy connected to NATS", "url", cfg.NatsURL)
 
 	// ==== INIT HUB ====
 	hub = gateway.NewHub(cfg, nc)
@@ -137,7 +153,7 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Panic in WebSocket endpoint: %v", r)
+				slog.Error("Panic in WebSocket endpoint", "panic", r)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
@@ -158,10 +174,11 @@ func main() {
 
 	// ==== RUN WS SERVER IN GOROUTINE ====
 	go func() {
-		log.Printf("WebSocket Gateway ready on :%s/ws\n", cfg.WSPort)
-		log.Printf("Semaphore service started on :%s\n", cfg.WSPort)
+		slog.Info("WebSocket Gateway ready", "port", cfg.WSPort)
+		slog.Info("Semaphore service started", "port", cfg.WSPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
+			slog.Error("Server crashed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -170,7 +187,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Printf("Shutting down...")
+	slog.Info("Shutting down...")
 
 	// === GRACEFUL SHUTDOWN ===
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -178,11 +195,11 @@ func main() {
 
 	// === STOP SERVER ===
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("Shutdown error: %v", err)
+		slog.Error("Shutdown error", "error", err)
 	}
 
 	// === PUT NATS INTO A DRAIN STATE ===
 	nc.Drain()
 
-	log.Printf("Stopped")
+	slog.Info("Stopped")
 }

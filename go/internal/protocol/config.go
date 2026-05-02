@@ -10,9 +10,14 @@ import (
 )
 
 type AppConfig struct {
+	// API
 	APIToken string
 
+	// WS
 	WSPort string
+
+	// Logging
+	LogLevel string
 
 	// NATS infrastructure
 	NatsURL     string
@@ -51,7 +56,10 @@ func LoadConfig() *AppConfig {
 
 	return &AppConfig{
 		APIToken: getEnv("API_TOKEN", ""),
-		WSPort:   getEnv("WS_PORT", "8080"),
+
+		WSPort: getEnv("WS_PORT", "8080"),
+
+		LogLevel: getEnv("LOG_LEVEL", "info"),
 
 		NatsURL:     getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
 		NatsToken:   getEnv("NATS_TOKEN", ""),
