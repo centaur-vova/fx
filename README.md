@@ -193,7 +193,7 @@ These settings control how tasks behave when the semaphore is busy:
 - **Engine:** Swoole 6.0+, Gorilla WebSocket
 - **Message Bus:** NATS JetStream 2.12+
 - **Queue Capacity:** 10,000 tasks (configurable)
-- **Concurrency:** 1 to 10 (configurable)
+- **Concurrency:** 1 to 255 (configurable)
 
 ---
 

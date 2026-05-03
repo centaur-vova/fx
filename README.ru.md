@@ -191,7 +191,7 @@ docker compose -f docker-compose.prod.yaml up
 - **Engine:** Swoole 6.0+, Gorilla WebSocket
 - **Message Bus:** NATS JetStream 2.12+
 - **Queue Capacity:** 10 000 задач (настраивается)
-- **Concurrency:** от 1 до 10 (настраивается)
+- **Concurrency:** от 1 до 255 (настраивается)
 
 ---
 
