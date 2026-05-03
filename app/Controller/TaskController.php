@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Contract\Storage\CacheStorage;
 use App\Contract\Task\TaskQueue;
 use App\DTO\Http\Request\CreateTasks;
 use App\DTO\Http\Response\ApiResponse;
@@ -22,6 +23,7 @@ class TaskController
     public function __construct(
         private readonly TaskService $taskService,
         private readonly TaskQueue $taskQueue,
+        private readonly CacheStorage $cache,
         private readonly RateLimiterService $rateLimiterService,
         private readonly LoggerInterface $logger,
         private readonly int $taskMaxBatchSize,
@@ -45,6 +47,9 @@ class TaskController
         if ($dto->maxConcurrent < 1 || $dto->maxConcurrent > $this->taskSemaphoreLimit) {
             throw new InvalidTaskBatchException("Concurrency must be between 1 and {$this->taskSemaphoreLimit}");
         }
+
+        // Save timestamp when last createTasks request was sent
+        $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
 
         // Guess mode
         go(function () use ($dto): void {
@@ -78,6 +83,8 @@ class TaskController
         /** @var array{tasking_num: int, task_worker_num: int} $stats */
         $stats = $server->stats();
 
+        $taskLastCreated = (int) $this->cache->get('task-last-created');
+
         return new HealthResponse(
             status: 'ok',
             phpVersion: PHP_VERSION,
@@ -85,6 +92,7 @@ class TaskController
             tasksInProgress: $stats['tasking_num'],
             taskWorkers: $stats['task_worker_num'],
             idleWorkers: $stats['task_worker_num'] - $stats['tasking_num'],
+            taskLastCreated: $taskLastCreated,
         );
     }
 

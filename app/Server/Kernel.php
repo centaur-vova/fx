@@ -8,6 +8,7 @@ use App\ConfigLoader;
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\WorkerStartAware;
+use App\Contract\Storage\CacheStorage;
 use App\Contract\Task\TaskQueue;
 use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
@@ -227,6 +228,7 @@ class Kernel
                     ->constructor(
                         get(TaskService::class),
                         get(TaskQueue::class),
+                        get(CacheStorage::class),
                         get(RateLimiterService::class),
                         get(LoggerInterface::class),
                         get('options.task_max_batch_size'),

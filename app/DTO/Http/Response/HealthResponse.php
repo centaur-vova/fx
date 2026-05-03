@@ -15,6 +15,8 @@ final readonly class HealthResponse implements JsonSerializable
         public int $tasksInProgress,
         public int $taskWorkers,
         public int $idleWorkers,
+        // Timestamp when new task(s) was last created
+        public int $taskLastCreated,
     ) {
     }
 
@@ -33,6 +35,9 @@ final readonly class HealthResponse implements JsonSerializable
                 'tasks_in_progress' => $this->tasksInProgress,
                 'task_workers' => $this->taskWorkers,
                 'idle_workers' => $this->idleWorkers,
+            ],
+            'tasks' => [
+                'last_created' => $this->taskLastCreated,
             ],
         ];
     }

@@ -1,5 +1,6 @@
 parameters:
-    level: 10
+    # level: 11 # Uncomment when level 11 is available
+    level: 10 # Remove this line when level 11 is available
     paths:
         - app
     # Swoole constants & classes sometimes need a boost
