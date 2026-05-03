@@ -49,6 +49,11 @@ type WelcomeData struct {
 	StreamCreatedAt string `json:"stream_created_at"`
 }
 
+type TaskBatchCreated struct {
+	Count uint16 `json:"count"`
+	MC    uint8  `json:"mc"`
+	Mode  string `json:"mode"`
+}
 type TaskStatusUpdate struct {
 	ID       uint64 `json:"id"`
 	Status   string `json:"status"`

@@ -8,6 +8,7 @@ use App\Contract\Messaging\Broadcaster;
 use App\Contract\Task\TaskQueue;
 use App\Contract\Task\TaskSemaphore;
 use App\DTO\Task\TaskExecutionPayload;
+use App\DTO\WebSocket\Message\TaskBatchCreated;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
 use App\Service\Task\Processor\ProcessorFactory;
 use Psr\Log\LoggerInterface;
@@ -33,16 +34,26 @@ class TaskService
 
     public function createBatch(int $count, int $maxConcurrent, string $mode): void
     {
+        $createdCount = 0;
+
         for ($i = 0; $i < $count; $i++) {
             $taskId = $this->generateTaskId();
 
-            $this->taskQueue->push(
+            $result = $this->taskQueue->push(
                 new TaskExecutionPayload(
                     id: $taskId,
                     mc: $maxConcurrent,
                     mode: $mode
                 )
             );
+
+            if ($result) {
+                $createdCount++;
+            }
+        }
+
+        if ($createdCount > 0) {
+            $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode));
         }
     }
 
@@ -142,7 +153,7 @@ class TaskService
         return ($time << 32) | $random;
     }
 
-    private function notify(TaskStatusUpdate $update): void
+    private function notify(mixed $update): void
     {
         $this->broadcaster->publish(
             $this->broadcastSubject,

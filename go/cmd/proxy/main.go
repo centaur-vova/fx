@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fast-atomic-flow/go/internal/gateway"
+	"fast-atomic-flow/go/internal/metrics"
 	"fast-atomic-flow/go/internal/protocol"
 	"fast-atomic-flow/go/internal/semaphore"
 	"log"
@@ -19,6 +20,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Wrapper for incoming serialized messages from NATS
@@ -51,7 +53,7 @@ var levelMap = map[string]slog.Level{
 	"emergency": slog.LevelError + 8,
 }
 
-func subscribeToNATS() {
+func subscribeToNATS(mRouter *gateway.MessageRouter) {
 	subMu.Lock()
 	defer subMu.Unlock()
 
@@ -74,14 +76,9 @@ func subscribeToNATS() {
 		}
 		json.Unmarshal(m.Data, &env)
 
-		slog.Info("NATS -> WS", "subject", m.Subject, "data", string(m.Data))
+		slog.Debug("NATS -> WS", "subject", m.Subject, "type", env.Type, "data", string(m.Data))
 
-		if env.Type == "task.status.update" {
-			var t protocol.TaskStatusUpdate
-			if err := json.Unmarshal(env.Data, &t); err == nil {
-				hub.Broadcast(&t)
-			}
-		}
+		mRouter.Route(env.Type, env.Data)
 	})
 	if err != nil {
 		slog.Error("Subscribe error", "error", err, "channel", cfg.BroadcastCh)
@@ -140,11 +137,17 @@ func main() {
 
 	slog.Info("Go Proxy connected to NATS", "url", cfg.NatsURL)
 
+	// ==== STORE ====
+	store := metrics.NewStore()
+
 	// ==== INIT HUB ====
 	hub = gateway.NewHub(cfg, nc)
 
+	// ==== MESSAGE ROUTER ====
+	mRouter := gateway.NewMessageRouter(store, hub)
+
 	// ==== NATS - passthrough incoming messages to websockets =====
-	subscribeToNATS()
+	subscribeToNATS(mRouter)
 
 	// Broadcast metrics every two seconds
 	go hub.RunMetricsBroadcaster(2 * time.Second)
@@ -163,8 +166,13 @@ func main() {
 	// === HTTP HANDLERS ===
 	semPool := semaphore.NewPool()
 	semHandler := semaphore.NewHandler(semPool)
+
+	// Semaphore
 	http.HandleFunc("/semaphore/acquire", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Acquire))
 	http.HandleFunc("/semaphore/release", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Release))
+
+	// Metrics
+	http.Handle("/metrics", promhttp.Handler())
 
 	// ==== INIT WEBSOCKET SERVER ====
 	srv := &http.Server{

@@ -6,6 +6,7 @@ namespace App\Service\Messaging;
 
 use App\Contract\Messaging\MessageSerializer;
 use App\DTO\Task\TaskExecutionPayload;
+use App\DTO\WebSocket\Message\TaskBatchCreated;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
 use JsonException;
 use Psr\Log\LoggerInterface;
@@ -16,6 +17,7 @@ final readonly class MappedMessageSerializer implements MessageSerializer
     private const array MAP = [
         // => frontend
         'task.status.update' => TaskStatusUpdate::class,
+        'task.batch.created' => TaskBatchCreated::class,
 
         // Internal task handling
         'task.execute' => TaskExecutionPayload::class,
