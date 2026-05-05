@@ -52,6 +52,9 @@ RUN apk add --no-cache libstdc++ libgcc brotli-libs
 COPY --from=builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
 COPY --from=builder /usr/local/etc/php/conf.d/docker-php-ext-swoole.ini /usr/local/etc/php/conf.d/
 
+# Increase memory limit for Swoole
+RUN echo 'memory_limit = 300M' > /usr/local/etc/php/conf.d/memory-limit.ini
+
 WORKDIR /app
 
 # Selective copy: exclude node_modules and build caches by copying only artifacts
