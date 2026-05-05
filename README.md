@@ -20,7 +20,7 @@
 
 <img width="2571" height="1587" alt="image" src="https://github.com/user-attachments/assets/b96bcf59-39ce-49f3-b12e-d33baaf93ab6" />
 
-🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz)
+🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz) | **Dashboard:** [fast.af.l3373.xyz/dashboard](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617)
 
 ---
 
