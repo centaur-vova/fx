@@ -17,7 +17,7 @@ use Swoole\Server;
 
 final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartAware
 {
-    private const int CONNECTION_POOL_SIZE = 64;
+    private const int CONNECTION_POOL_SIZE = 1024;
 
     public function register(ContainerBuilder $builder): array
     {

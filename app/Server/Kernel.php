@@ -270,27 +270,24 @@ class Kernel
             /** @var int $workerId */
             $workerId = $server->worker_id;
 
-            // Create a coroutine so this Task Worker can handle multiple concurrent tasks
-            Co::create(function () use ($server, $task, $workerId): void {
-                try {
-                    if ($task->data instanceof TaskExecutionPayload) {
-                        /** @var TaskService $taskService */
-                        $taskService = $this->container->get(TaskService::class);
+            try {
+                if ($task->data instanceof TaskExecutionPayload) {
+                    /** @var TaskService $taskService */
+                    $taskService = $this->container->get(TaskService::class);
 
-                        $taskService->processTask($task->data, $workerId);
-                        $task->finish(true);
-                    }
-
-                } catch (Throwable $e) {
-                    $this->logger->error('Task execution failed', [
-                        'error' => $e->getMessage(),
-                        'worker_id' => $server->worker_id,
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-
-                    $task->finish(false);
+                    $taskService->processTask($task->data, $workerId);
+                    $task->finish(true);
                 }
-            });
+
+            } catch (Throwable $e) {
+                $this->logger->error('Task execution failed', [
+                    'error' => $e->getMessage(),
+                    'worker_id' => $server->worker_id,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                $task->finish(false);
+            }
         });
 
         // Required for task completion
