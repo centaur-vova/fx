@@ -20,7 +20,7 @@ use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
 use App\Service\Provider\Nats\NatsClientProvider;
 use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
-use App\Service\Provider\Task\TaskSemaphoreProvider;
+use App\Service\Provider\Task\SemaphoreProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\TaskService;
@@ -36,7 +36,6 @@ use function DI\get;
 
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
-use Swoole\Coroutine as Co;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
@@ -56,7 +55,7 @@ class Kernel
         NatsClientProvider::class,
         NatsBroadcasterServiceProvider::class,
         NatsTaskQueueServiceProvider::class,
-        TaskSemaphoreProvider::class,
+        SemaphoreProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,
     ];
@@ -100,7 +99,6 @@ class Kernel
             apiUrl:               $loader->getString('API_URL'),
             apiToken:             $loader->getString('API_TOKEN'),
             semaphorePermitTtl:   $loader->getInt('SEMAPHORE_PERMIT_TTL', 10),
-            semaphoreDriver:      $loader->getString('SEMAPHORE_DRIVER', 'shared'),
             // Queue
             queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
             queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),

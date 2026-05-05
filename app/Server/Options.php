@@ -46,8 +46,7 @@ readonly class Options
         public string $apiToken,
 
         // ========== Semaphores ==========
-        public int $semaphorePermitTtl, // for demo only
-        public string $semaphoreDriver, // api/local/shared
+        public int $semaphorePermitTtl, // for `api` semaphoreDriver only
 
         // ========== Queue ==========
         public int $queueCapacity,

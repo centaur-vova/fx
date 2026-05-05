@@ -8,5 +8,5 @@ interface TaskSemaphore
 {
     public function forLimit(int $mc): SemaphorePermit;
 
-    public function close(): void;
+    public function shutdown(): void;
 }

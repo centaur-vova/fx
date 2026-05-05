@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Service\Task;
 
 use App\Contract\Messaging\Broadcaster;
+use App\Contract\Task\SemaphoreAware;
+use App\Contract\Task\SemaphoreFactory;
 use App\Contract\Task\TaskQueue;
-use App\Contract\Task\TaskSemaphore;
 use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Message\TaskBatchCreated;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
@@ -19,7 +20,7 @@ use Throwable;
 class TaskService
 {
     public function __construct(
-        private readonly TaskSemaphore $semaphore,
+        private readonly SemaphoreFactory $semaphoreFactory,
         private readonly ProcessorFactory $processorFactory,
         private readonly Broadcaster $broadcaster,
         private readonly TaskQueue $taskQueue,
@@ -32,7 +33,7 @@ class TaskService
     ) {
     }
 
-    public function createBatch(int $count, int $maxConcurrent, string $mode): void
+    public function createBatch(int $count, int $maxConcurrent, string $semaphoreDriver, string $mode): void
     {
         $createdCount = 0;
 
@@ -43,6 +44,7 @@ class TaskService
                 new TaskExecutionPayload(
                     id: $taskId,
                     mc: $maxConcurrent,
+                    sem: $semaphoreDriver,
                     mode: $mode
                 )
             );
@@ -53,7 +55,7 @@ class TaskService
         }
 
         if ($createdCount > 0) {
-            $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode));
+            $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode), $semaphoreDriver);
         }
     }
 
@@ -61,9 +63,10 @@ class TaskService
     {
         $this->logger->debug('Entered processTask', ['id' => $payload->id]);
 
+        $semaphore = $this->semaphoreFactory->get($payload->sem);
         try {
-            $permit = $this->semaphore->forLimit($payload->mc);
-            $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc));
+            $permit = $semaphore->forLimit($payload->mc);
+            $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc), $payload->sem);
 
             /**
              * Attempt to acquire lock.
@@ -72,11 +75,14 @@ class TaskService
                 if ($payload->attempt >= $this->maxRetries) {
                     $this->manager->nack($payload);
                     $this->logger->debug('Max retries reached', ['id' => $payload->id]);
-                    $this->notify(TaskStatusUpdate::retriesFailed($payload->id, $payload->mc, $workerId, $this->maxRetries));
+                    $this->notify(
+                        TaskStatusUpdate::retriesFailed($payload->id, $payload->mc, $workerId, $this->maxRetries),
+                        $payload->sem
+                    );
                     return;
                 }
 
-                $this->notify(TaskStatusUpdate::lockFailed($payload->id, $payload->mc));
+                $this->notify(TaskStatusUpdate::lockFailed($payload->id, $payload->mc), $payload->sem);
 
                 /**
                  * Re-queue with delay & jitter
@@ -89,7 +95,7 @@ class TaskService
                     // Ack
                     $this->manager->ack($payload);
 
-                    $this->notify(TaskStatusUpdate::retry($payload->id, $payload->mc));
+                    $this->notify(TaskStatusUpdate::retry($payload->id, $payload->mc), $payload->sem);
                 });
 
                 return;
@@ -111,14 +117,15 @@ class TaskService
              * мы должны "Спасти Рядового Райана, тьфу, Конебрата"
              */
             try {
-                $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc));
+                $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc), $payload->sem);
 
                 $processor = $this->processorFactory->get($payload->mode);
 
                 $progressCallback = function (int $progress) use ($payload): void {
                     $this->notify(
                         TaskStatusUpdate::progress($payload->id, $payload->mc, $progress)
-                            ->withMessage($progress . '%')
+                            ->withMessage($progress . '%'),
+                        $payload->sem
                     );
                     Co::sleep(0.001);
                 };
@@ -127,7 +134,10 @@ class TaskService
                 $processor->execute($progressCallback);
                 $this->logger->debug('Task finished', ['id' => $payload->id, 'time' => microtime(true)]);
 
-                $this->notify(TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId));
+                $this->notify(
+                    TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId),
+                    $payload->sem
+                );
             } finally {
                 $permit->release();
                 $this->logger->debug('Lock released', ['id' => $payload->id]);
@@ -143,7 +153,7 @@ class TaskService
 
     public function shutdown(): void
     {
-        $this->semaphore->close();
+        $this->semaphoreFactory->shutdown();
     }
 
     private function generateTaskId(): int
@@ -154,11 +164,11 @@ class TaskService
         return ($time << 32) | $random;
     }
 
-    private function notify(mixed $update): void
+    private function notify(SemaphoreAware $update, string $sem): void
     {
         $this->broadcaster->publish(
             $this->broadcastSubject,
-            $update
+            $update->withSem($sem),
         );
     }
 }

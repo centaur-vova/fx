@@ -66,36 +66,35 @@ Each service does one thing, but with surgical precision. The Worker processes t
 
 The WebSocket proxy (Go) communicates with the frontend via a **binary protocol** — compact, fast, no JSON overhead.
 
-- Each message is packed into **13 bytes**:
+- Each message is packed into **14 bytes**:
   - `magic byte` (message type)
   - `status` (task status)
   - `taskId` (uint64)
   - `max_concurrent` (mc)
   - `progress` (0–100)
   - `worker_id`
+  - `semaphore type` (0 - shared, 1 - api)
 
 The binary format ensures minimal overhead and strict message ordering (FIFO via channels).
 
 ---
 
-## 🐎 Go Semaphores (Distributed Mode)
+## 🐎 Hybrid Semaphore Strategy (PHP & Go)
 
-Fast Atomic Flow supports a distributed semaphore mode via a Go microservice with its own HTTP API. PHP workers acquire and release concurrency slots through HTTP requests to the Go proxy.
+Fast.AF features a dual-driver semaphore system, allowing you to switch between ultra-fast local locking and distributed cluster-wide synchronization. The driver is defined per **Flow Theme** via YAML configuration, enabling real-time performance comparison.
 
-**Configuration in `.env`:**
+### 🐎 Drivers:
 
-```env
-# === SEMAPHORES ===
-# Semaphore driver: "api" or "shared" (default)
-SEMAPHORE_DRIVER=api
-# Default semaphore permit TTL (in seconds). Used only with the "api" driver.
-# Should be greater than the maximum task processing time. Once TTL expires, the permit is automatically released.
-SEMAPHORE_PERMIT_TTL=10
+- **○ PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency.
+- **◉ Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers.
 
-# === API ===
-API_URL=http://localhost:8080
-API_TOKEN=<your_api_token>
-```
+### 🐎 Architectural Features:
+
+- **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes.
+- **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization.
+- **Visual Distinction:** The UI differentiates drivers in real-time (rounded squares for Go API, sharp squares for PHP Atomic).
+
+> **Note:** On the live demo, the **Sin City** theme is powered by the **Go API** driver, while other themes use the **PHP Atomic** driver by default. Switch themes to see the performance difference.
 
 ---
 

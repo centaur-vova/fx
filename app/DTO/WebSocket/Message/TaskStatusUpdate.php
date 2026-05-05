@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\DTO\WebSocket\Message;
 
+use App\Contract\Task\SemaphoreAware;
+use App\Contract\Task\SemaphoreDriver;
 use App\DTO\WebSocket\Concern\InteractsWithWebSocket;
 use JsonSerializable;
 
-final readonly class TaskStatusUpdate implements JsonSerializable
+final readonly class TaskStatusUpdate implements JsonSerializable, SemaphoreAware
 {
     use InteractsWithWebSocket;
 
@@ -28,6 +30,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
         public int $mc,
         public int $progress = 0,
         public ?int $worker = null,
+        public string $sem = SemaphoreDriver::SHARED->value,
     ) {
     }
 
@@ -85,6 +88,20 @@ final readonly class TaskStatusUpdate implements JsonSerializable
             mc: $this->mc,
             progress: $this->progress,
             worker: $this->worker,
+            sem: $this->sem,
+        );
+    }
+
+    public function withSem(string $sem): self
+    {
+        return new self(
+            message: $this->message,
+            id: $this->id,
+            status: $this->status,
+            mc: $this->mc,
+            progress: $this->progress,
+            worker: $this->worker,
+            sem: $sem,
         );
     }
 }

@@ -60,22 +60,29 @@ type TaskStatusUpdate struct {
 	MC       uint8  `json:"mc"`
 	Progress uint8  `json:"progress"`
 	Worker   uint8  `json:"worker"`
+	Sem      string `json:"sem"`
 }
 
 func (t *TaskStatusUpdate) Pack() []byte {
-	buf := make([]byte, 13)
+	buf := make([]byte, 14)
 	buf[0] = MagicByte
 
-	sByte, ok := StatusMap[t.Status]
+	val, ok := StatusMap[t.Status]
 	if !ok {
-		sByte = 255
+		val = 255
 	}
-	buf[1] = sByte
+	buf[1] = val
 
 	binary.BigEndian.PutUint64(buf[2:10], t.ID)
 	buf[10] = t.MC
 	buf[11] = t.Progress
 	buf[12] = t.Worker
+
+	val, ok = SemaphoreMap[t.Sem]
+	if !ok {
+		val = 0
+	}
+	buf[13] = val
 
 	return buf
 }

@@ -5,6 +5,7 @@ emoji: "🖤"
 
 settings:
   flow:
+    semaphore_driver: api
     default_concurrent: 50
     min_concurrent: 10
     max_concurrent: 100

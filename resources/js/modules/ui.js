@@ -6,12 +6,12 @@ import { COLORS, LABEL_COLORS, PROGRESS_BAR } from './config';
  * @param {number} x - center X coordinate
  * @param {number} y - center Y coordinate
  * @param {number} size - base size (before scaling)
- * @param {Object} task - task object with properties: mc, status, progress, pulseOffset
+ * @param {Object} task - task object with properties: mc, status, progress, sem, pulseOffset
  * @param {string} mode - display mode ('normal' or 'dot')
  * @param {number} scale - current global scale factor
  */
 export const drawShape = (ctx, x, y, size, task, mode, scale) => {
-    const { mc, status, pulseOffset, progress = null } = task;
+    const { mc, status, sem, pulseOffset, progress = null } = task;
     const s = size * scale;
     const isFinished = status === 'completed' || status === 'retries_failed';
 
@@ -42,9 +42,8 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
         return;
     }
 
-    ctx.beginPath();
-    ctx.roundRect(x - s / 2, y - s / 2, s, s, 4 * scale);
-    ctx.fill();
+    // Draw different shapes based on sem
+    drawTaskShape(ctx, x, y, s, sem, scale);
 
     ctx.globalAlpha = 1;
 
@@ -59,4 +58,18 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
             ctx.fillRect(x - s / 2, y + s / 2 - PROGRESS_BAR.height, s * (progress / 100), PROGRESS_BAR.height);
         }
     }
+};
+
+// Holy horse, it becomes complicated!
+const drawTaskShape = (ctx, x, y, size, sem, scale) => {
+    // 1 - Go API (Rounded square)
+    if (sem === 1) {
+        ctx.beginPath();
+        ctx.roundRect(x - size / 2, y - size / 2, size, size, 4 * scale);
+        ctx.fill();
+        return;
+    }
+
+    // 0 - PHP Shared (Simple square)
+    ctx.fillRect(x - size / 2, y - size / 2, size, size);
 };

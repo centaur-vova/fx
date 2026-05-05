@@ -11,10 +11,15 @@ use App\Contract\Support\Identifiable;
  */
 final readonly class TaskExecutionPayload implements Identifiable
 {
+    /**
+     * @param string $sem Semaphore driver
+     * @see \App\Service\Provider\Task\SemaphoreProvider
+     */
     public function __construct(
         public int $id,
         public int $mc,
         public string $mode,
+        public string $sem,
         public int $attempt = 0,
     ) {
     }
@@ -25,6 +30,7 @@ final readonly class TaskExecutionPayload implements Identifiable
             id: $this->id,
             mc: $this->mc,
             mode: $this->mode,
+            sem: $this->sem,
             attempt: $this->attempt + 1,
         );
     }

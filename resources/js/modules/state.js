@@ -28,6 +28,7 @@ const getDefaults = () => ({
 const getFlowDefaults = () => ({
     min: 1,
     max: 10,
+    semaphore_driver: 'shared', // php semaphore by default
     buttons: [
         { label: '1', tasks: 1, class: 'default', stress: false },
         { label: '10', tasks: 10, class: 'default', stress: false },
@@ -73,9 +74,14 @@ export const state = {
     init() {
         const themeFlow = window.THEME_CONFIG?.settings?.flow || {};
 
+        // semaphore driver
+        this.flow.semaphore_driver = themeFlow.semaphore_driver || this.flow.semaphore_driver;
+
+        // mc slider settings
         this.flow.min = themeFlow.min_concurrent || 1;
         this.flow.max = themeFlow.max_concurrent || 10;
 
+        // init current mc
         this.mc = themeFlow.default_concurrent || this.flow.min;
 
         // Replace buttons only when present in YAML
@@ -216,7 +222,12 @@ export const state = {
             const res = await fetch("/api/tasks/create", {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ count, max_concurrent: this.mc, stress_mode: forceStress }),
+                body: JSON.stringify({
+                    count,
+                    semaphore_driver: this.flow.semaphore_driver,
+                    max_concurrent: this.mc,
+                    stress_mode: forceStress
+                }),
             });
             const data = await res.json();
 

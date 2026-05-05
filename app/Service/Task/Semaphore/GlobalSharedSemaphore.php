@@ -69,7 +69,7 @@ class GlobalSharedSemaphore implements TaskSemaphore
         };
     }
 
-    public function close(): void
+    public function shutdown(): void
     {
         // Atomics are managed by Swoole Master process
     }

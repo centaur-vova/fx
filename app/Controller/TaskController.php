@@ -40,13 +40,7 @@ class TaskController
         $this->rateLimit('create-tasks', $request);
 
         // Validate DTO
-        if ($dto->count < 1 || $dto->count > $this->taskMaxBatchSize) {
-            throw new InvalidTaskBatchException("Count must be between 1 and {$this->taskMaxBatchSize}");
-        }
-
-        if ($dto->maxConcurrent < 1 || $dto->maxConcurrent > $this->taskSemaphoreLimit) {
-            throw new InvalidTaskBatchException("Concurrency must be between 1 and {$this->taskSemaphoreLimit}");
-        }
+        $dto->validate($this->taskMaxBatchSize, $this->taskSemaphoreLimit);
 
         // Save timestamp when last createTasks request was sent
         $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
@@ -57,7 +51,7 @@ class TaskController
                 ? ProcessorFactory::MODE_STRESS
                 : ProcessorFactory::MODE_OBSERVATION;
 
-            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $mode);
+            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $dto->semaphoreDriver, $mode);
         });
 
         return ApiResponse::ok('Tasks queued');

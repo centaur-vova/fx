@@ -9,10 +9,10 @@
       const allowedThemes = ["fast", "crystal", "sin-city"]; // TODO
       const safeTheme = allowedThemes.includes(theme) ? theme : "fast";
       document.write(
-        `<link rel="stylesheet" href="/dist/themes/${safeTheme}.css">`,
+        `<link rel="stylesheet" href="/dist/themes/${safeTheme}.css?HORSE_VER=1">`,
       );
       document.write(
-        `<script src="/dist/themes/${safeTheme}.config.js"><\/script>`,
+        `<script src="/dist/themes/${safeTheme}.config.js?HORSE_VER=1"><\/script>`,
       );
     </script>
 
@@ -72,9 +72,9 @@
               <p
                 class="text-[10px] font-mono uppercase tracking-widest"
                 style="color: var(--text-muted)"
-              >
-                High-Load Pipeline Engine
-              </p>
+                x-text="$store.app.flow.semaphore_driver === 'api' ? '[◉] GO API SEMAPHORE' : '[○] PHP ATOMIC SEMAPHORE'"
+              ></p>
+              <p></p>
             </a>
 
             <!-- RIGHT: METRICS (Fixed layout) -->
@@ -573,6 +573,6 @@
       </div>
     </div>
 
-    <script src="dist/app.min.js"></script>
+    <script src="dist/app.min.js?HORSE_VER=1"></script>
   </body>
 </html>

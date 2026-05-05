@@ -14,6 +14,11 @@ const (
 	StatusRetry                     // 8
 )
 
+const (
+	SemaphoreShared byte = iota // 0
+	SemaphoreAPI                // 1
+)
+
 var StatusMap = map[string]byte{
 	"queued":         StatusQueued,
 	"processing":     StatusProcessing,
@@ -24,4 +29,9 @@ var StatusMap = map[string]byte{
 	"lock_failed":    StatusLockFailed,
 	"retries_failed": StatusRetriesFailed,
 	"retry":          StatusRetry,
+}
+
+var SemaphoreMap = map[string]byte{
+	"shared": SemaphoreShared,
+	"api":    SemaphoreAPI,
 }

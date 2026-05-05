@@ -113,10 +113,10 @@ const connect = () => {
 };
 
 const handleUpdateTasks = (data) => {
-    const { taskId, worker, mc, status, message, progress = null } = data;
+    const { taskId, worker, mc, status, sem, message, progress = null } = data;
 
     // Logging
-    if (tasks.size < TASK.LOG_THRESHOLD) addLog(taskId, mc, status, message, progress);
+    if (tasks.size < TASK.LOG_THRESHOLD) addLog(taskId, mc, status, message, sem, progress);
 
     if (!tasks.has(taskId)) {
         const jitterX = (Math.random() - 0.5) * 0.22;
@@ -127,6 +127,7 @@ const handleUpdateTasks = (data) => {
             currentX: COORDS.queued + jitterX,
             targetX: COORDS.queued + jitterX,
             status: 'queued',
+            sem: sem,
             pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
     }
@@ -176,7 +177,7 @@ const render = () => {
 };
 
 // Helpers
-const addLog = (taskId, mc, status, msg, progress = null) => {
+const addLog = (taskId, mc, status, msg, sem, progress = null) => {
     // console.li
     const logContainer = document.getElementById("log-panel");
     if (!logContainer || store.isLogPanelDisabled) return;
@@ -220,9 +221,12 @@ const addLog = (taskId, mc, status, msg, progress = null) => {
             statusColor = 'var(--text-muted)';
     }
 
+    // 0 - shared (php), 1 - api (go)
+    const semLabel = sem === 1 ? '◉' : '○';
+
     entry.innerHTML = `
         <span style="color: var(--text-secondary)">${time}</span>
-        <span style="color: ${statusColor}; font-weight: bold">[${status.toUpperCase()}]</span>
+        <span style="color: ${statusColor}; font-weight: bold">${semLabel} [${status.toUpperCase()}]</span>
         <span style="color: var(--text-primary)">${taskId.slice(-8)}</span>
         <span style="color: var(--text-muted)">${msg}${progressText}</span>
     `;

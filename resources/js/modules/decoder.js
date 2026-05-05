@@ -4,23 +4,22 @@ export const decodeMessage = (rawData, labels) => {
     // Binary
     if (rawData instanceof ArrayBuffer) {
         const view = new DataView(rawData);
+        const type = view.getUint8(0); // get magick byte
 
-        if (rawData.byteLength === 13) {
-            const type = view.getUint8(0);
-            if (type === WS.BINARY_TYPE.STATUS_UPDATE) {
-                const status = TASK.STATUS_MAP[view.getUint8(1)];
-                return {
-                    event: WS.EVENT.STATUS_CHANGED,
-                    data: {
-                        status: status,
-                        taskId: view.getBigUint64(2).toString(),
-                        mc: view.getUint8(10),
-                        progress: view.getUint8(11),
-                        worker: view.getUint8(12) || null,
-                        message: labels[status] || ''
-                    }
-                };
-            }
+        if (rawData.byteLength === 14 && type === WS.BINARY_TYPE.STATUS_UPDATE) {
+            const status = TASK.STATUS_MAP[view.getUint8(1)];
+            return {
+                event: WS.EVENT.STATUS_CHANGED,
+                data: {
+                    status: status,
+                    taskId: view.getBigUint64(2).toString(),
+                    mc: view.getUint8(10),
+                    progress: view.getUint8(11),
+                    worker: view.getUint8(12),
+                    sem: view.getUint8(13),
+                    message: labels[status] || ''
+                }
+            };
         }
 
         const decoder = new TextDecoder();
