@@ -70,6 +70,7 @@ class TaskService
              */
             if (!$permit->acquire((float) $this->lockTimeoutSec)) {
                 if ($payload->attempt >= $this->maxRetries) {
+                    $this->manager->nack($payload);
                     $this->logger->debug('Max retries reached', ['id' => $payload->id]);
                     $this->notify(TaskStatusUpdate::retriesFailed($payload->id, $payload->mc, $workerId, $this->maxRetries));
                     return;

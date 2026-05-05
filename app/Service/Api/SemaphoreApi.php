@@ -17,15 +17,15 @@ class SemaphoreApi
     public function acquire(int $maxConcurrent, int $lockWaitTimeoutSec = 5, int $permitTTLSec = 10): ?int
     {
         try {
+            /** @var array{uid?: int|string|float} $response */
             $response = $this->client->post('/semaphore/acquire', [
                 'max_concurrent' => $maxConcurrent,
                 'lock_wait_timeout' => $lockWaitTimeoutSec,
                 'permit_ttl' => $permitTTLSec,
             ]);
 
-            $uid = is_numeric($response['uid'] ?? null) ? (int) $response['uid'] : 0;
-
-            return $uid < 0 ? null : $uid;
+            $uid = isset($response['uid']) ? (int) $response['uid'] : 0;
+            return $uid > 0 ? $uid : null; // Return null if UID is 0 or missing
         } catch (\Throwable) {
             return null;
         }

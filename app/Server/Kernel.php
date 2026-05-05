@@ -211,9 +211,6 @@ class Kernel
 
                 // Channels & Jet streams
                 'options.broadcast_subject' => $options->broadcastSubject,
-                'options.task_queue_subject' => $options->taskQueueSubject,
-                'options.task_queue_stream' => $options->taskQueueStream,
-                'options.nats_ack_wait_ms' => $options->natsAckWaitMs,
 
                 'shared.atomic.tasks' => $tasksAtomic,
 
