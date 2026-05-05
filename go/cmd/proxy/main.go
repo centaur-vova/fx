@@ -170,14 +170,16 @@ func main() {
 	// Semaphore
 	http.HandleFunc("/semaphore/acquire", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Acquire))
 	http.HandleFunc("/semaphore/release", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Release))
+	http.HandleFunc("/semaphore/health", semHandler.Health)
 
 	// Metrics
 	http.Handle("/metrics", promhttp.Handler())
 
 	// ==== INIT WEBSOCKET SERVER ====
 	srv := &http.Server{
-		Addr:    ":" + cfg.WSPort,
-		Handler: nil,
+		Addr:        ":" + cfg.WSPort,
+		Handler:     nil,
+		IdleTimeout: 5 * time.Second, // 5 seconds should be enough
 	}
 
 	// ==== RUN WS SERVER IN GOROUTINE ====

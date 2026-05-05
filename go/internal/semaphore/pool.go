@@ -50,14 +50,14 @@ func (p *Pool) Acquire(ctx context.Context, mc int, timeout, ttl time.Duration) 
 		MaxConcurrent: mc,
 	}
 
+	// Lock first
+	p.mu.Lock()
+	p.permits[uid] = permit
 	// Set up auto-release timer (TTL)
 	permit.timer = time.AfterFunc(ttl, func() {
 		slog.Debug("TTL expired, auto-releasing permit", "uid", uid)
 		p.Release(uid)
 	})
-
-	p.mu.Lock()
-	p.permits[uid] = permit
 	p.mu.Unlock()
 
 	return uid, nil
@@ -71,16 +71,20 @@ func (p *Pool) Release(uid uint64) {
 		p.mu.Unlock()
 		return
 	}
+
+	// Make a copy of object data before deleting
+	mc := permit.MaxConcurrent
+	timer := permit.timer
 	delete(p.permits, uid)
 	p.mu.Unlock()
 
 	// Stop TTL timer to prevent double release
-	if permit.timer != nil {
-		permit.timer.Stop()
+	if timer != nil {
+		timer.Stop()
 	}
 
 	p.mu.RLock()
-	sem, ok := p.semaphores[permit.MaxConcurrent]
+	sem, ok := p.semaphores[mc]
 	p.mu.RUnlock()
 
 	if ok {
@@ -92,4 +96,11 @@ func (p *Pool) Release(uid uint64) {
 			slog.Warn("attempted to release an empty slot", "uid", uid)
 		}
 	}
+}
+
+func (p *Pool) PermitCount() int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return len(p.permits)
 }

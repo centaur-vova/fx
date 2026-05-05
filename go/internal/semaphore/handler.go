@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"time"
 )
 
@@ -82,6 +83,15 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 
 	h.pool.Release(req.UID)
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+
+	permitCount := h.pool.PermitCount()
+	numGoroutine := runtime.NumGoroutine()
+
+	json.NewEncoder(w).Encode(map[string]int{"permits": permitCount, "numGoroutine": numGoroutine})
 }
 
 // AuthMiddleware wraps a handler to check for a valid Bearer token
