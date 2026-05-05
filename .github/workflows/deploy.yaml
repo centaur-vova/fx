@@ -6,6 +6,7 @@ on:
 
 jobs:
   build-and-push:
+    if: github.repository == 'shmandalf/fast-atomic-flow'
     name: Build & Push to GHCR
     runs-on: ubuntu-latest
     permissions:
@@ -42,6 +43,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:latest
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.version }}
+            WS_URL=${{ secrets.WS_URL }}
 
       - name: Build and Push Go WebSocket Proxy
         uses: docker/build-push-action@v5
@@ -55,6 +57,7 @@ jobs:
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
 
   deploy-vps:
+    if: github.repository == 'shmandalf/fast-atomic-flow'
     name: Pull & Restart on VPS
     needs: build-and-push
     runs-on: ubuntu-latest

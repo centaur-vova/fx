@@ -26,6 +26,9 @@ WORKDIR /app
 ARG SERVER_PORT=9501
 ENV SERVER_PORT=${SERVER_PORT}
 
+ARG WS_URL=ws://localhost:8080/ws
+ENV WS_URL=${WS_URL}
+
 # Copy composer from official image
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 RUN chmod +x /usr/local/bin/composer
