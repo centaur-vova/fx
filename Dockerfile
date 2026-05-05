@@ -33,7 +33,7 @@ RUN chmod +x /usr/local/bin/composer
 # Install PHP and Node dependencies
 COPY composer.json composer.lock package.json package-lock.json ./
 RUN php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs \
-    && npm install
+    && npm ci
 
 # Build assets and dump autoload
 COPY . .
