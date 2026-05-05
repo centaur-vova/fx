@@ -43,7 +43,7 @@ final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartA
                 // API Token
                 $apiToken = $options->apiToken;
 
-                return new ConnectionPool(function () use ($host, $port, $ssl, $apiToken, $timeout): \Swoole\Coroutine\Http\Client {
+                return new ConnectionPool(function () use ($host, $port, $ssl, $apiToken, $timeout): Client {
                     $client = new Client($host, $port, $ssl);
                     $client->set([
                         'timeout' => $timeout,

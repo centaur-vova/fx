@@ -179,7 +179,7 @@ func main() {
 	srv := &http.Server{
 		Addr:        ":" + cfg.WSPort,
 		Handler:     nil,
-		IdleTimeout: 5 * time.Second, // 5 seconds should be enough
+		IdleTimeout: 60 * time.Second, // keep idle connections alive long enough for Swoole heartbeat
 	}
 
 	// ==== RUN WS SERVER IN GOROUTINE ====
