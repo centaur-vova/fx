@@ -68,6 +68,9 @@ export const state = {
         timeout: null,
     },
 
+    // Overlay when switching themes
+    isSwitching: false,
+
     /**
      * Sync with Theme YAML on start
      */
@@ -146,6 +149,43 @@ export const state = {
         this.metrics.connections = data.connections;
         this.metrics.cpu = Math.round(data.cpu_usage) + '%';
         this.metrics.natsStats = data.nats_stats;
+    },
+
+    switchTheme(themeName) {
+        if (!window.THEMES?.includes(themeName)) return;
+
+        const info = window.THEME_MAP?.[themeName];
+        if (!info) return;
+
+        this.isSwitching = true;
+
+        // Update CSS
+        const oldLink = document.querySelector('link[data-theme]');
+        const newLink = document.createElement('link');
+        newLink.rel = 'stylesheet';
+        newLink.href = `/dist/themes/${info.cssFile}`;
+        newLink.setAttribute('data-theme', '');
+        newLink.onload = () => {
+            this.isSwitching = false;
+        };
+        if (oldLink) oldLink.remove();
+        document.head.appendChild(newLink);
+
+        // Remove old config script
+        const oldScript = document.querySelector('script[data-theme-config]');
+        if (oldScript) oldScript.remove();
+
+        // Load new config
+        const newScript = document.createElement('script');
+        newScript.src = `/dist/themes/${info.configFile}`;
+        newScript.setAttribute('data-theme-config', '');
+        newScript.onload = () => this.init();
+        document.head.appendChild(newScript);
+
+        // Update URL without reload
+        const url = new URL(window.location);
+        url.searchParams.set('theme', themeName);
+        history.pushState(null, '', url);
     },
 
     // Purge queue with confirmation

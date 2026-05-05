@@ -40,9 +40,6 @@ restart: stop run
 distclean:
 	rm -rf public/dist
 
-watch:
-	npm run watch
-
 test:
 	./vendor/bin/phpunit --colors=always
 

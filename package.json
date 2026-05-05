@@ -1,9 +1,7 @@
 {
     "type": "module",
     "scripts": {
-        "build:themes": "node build-themes.mjs",
-        "build:js": "node build.mjs",
-        "build": "npm run build:themes && npm run build:js"
+        "build": "node build.mjs"
     },
     "devDependencies": {
         "alpinejs": "^3.15.8",

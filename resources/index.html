@@ -3,16 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="/dist/tailwind.css" />
+    <script src="/dist/themes.js"></script>
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const theme = urlParams.get("theme") || "fast";
-      const allowedThemes = ["fast", "crystal", "sin-city"]; // TODO
-      const safeTheme = allowedThemes.includes(theme) ? theme : "fast";
+      const safeTheme = window.THEMES?.includes(theme) ? theme : "fast";
+      const themeInfo = window.THEME_MAP?.[safeTheme] || {};
+
       document.write(
-        `<link rel="stylesheet" href="/dist/themes/${safeTheme}.css?HORSE_VER=1">`,
+        `<link rel="stylesheet" href="/dist/themes/${themeInfo.cssFile || safeTheme + ".css"}" data-theme>`,
       );
       document.write(
-        `<script src="/dist/themes/${safeTheme}.config.js?HORSE_VER=1"><\/script>`,
+        `<script src="/dist/themes/${themeInfo.configFile || safeTheme + ".config.js"}" data-theme-config><\/script>`,
       );
     </script>
 
@@ -551,17 +553,20 @@
         "
       >
         <a
-          href="?theme=crystal"
-          style="color: var(--text-muted); text-decoration: none"
-          >💎 crystal</a
-        >
-        <a
           href="?theme=fast"
+          @click.prevent="$store.app.switchTheme('fast')"
           style="color: var(--text-muted); text-decoration: none"
           >🚀 fast</a
         >
         <a
+          href="?theme=crystal"
+          @click.prevent="$store.app.switchTheme('crystal')"
+          style="color: var(--text-muted); text-decoration: none"
+          >💎 crystal</a
+        >
+        <a
           href="?theme=sin-city"
+          @click.prevent="$store.app.switchTheme('sin-city')"
           style="color: var(--text-muted); text-decoration: none"
           >🖤 sin-city</a
         >
@@ -573,6 +578,13 @@
       </div>
     </div>
 
-    <script src="dist/app.min.js?HORSE_VER=1"></script>
+    <div
+      x-show="$store.app.isSwitching"
+      class="fixed inset-0 z-50 backdrop-blur-sm"
+      style="background-color: var(--bg-overlay)"
+    >
+      <!-- Put any text here if needed -->
+    </div>
+    <script src="dist/app.min.js"></script>
   </body>
 </html>
