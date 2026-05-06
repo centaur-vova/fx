@@ -180,6 +180,7 @@ export const state = {
         newScript.src = `/dist/themes/${info.configFile}`;
         newScript.setAttribute('data-theme-config', '');
         newScript.onload = () => this.init();
+        newScript.onerror = () => location.reload();
         document.head.appendChild(newScript);
 
         // Update URL without reload
