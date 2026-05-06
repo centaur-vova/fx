@@ -1,5 +1,6 @@
 import { COLORS, LABEL_COLORS, LOD } from './config';
 import { clearTasks } from './task-store.js';
+import { resetThemeColors } from './theme-config.js';
 
 const getDefaults = () => ({
     latency: '--',
@@ -180,7 +181,10 @@ export const state = {
         const newScript = document.createElement('script');
         newScript.src = `/dist/themes/${info.configFile}`;
         newScript.setAttribute('data-theme-config', '');
-        newScript.onload = () => this.init();
+        newScript.onload = () => {
+            resetThemeColors();
+            this.init();
+        }
         newScript.onerror = () => location.reload();
         document.head.appendChild(newScript);
 
