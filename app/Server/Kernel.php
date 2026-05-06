@@ -81,7 +81,6 @@ class Kernel
             taskLockTimeoutSec:   $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
             taskRetryDelaySec:    $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
             taskMaxRetries:       $loader->getInt('TASK_MAX_RETRIES', 3),
-            metricsIntervalMs:    $loader->getInt('METRICS_UPDATE_INTERVAL_MS', 1000),
             shutdownTimeoutSec:   $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
             natsHost:             $loader->getString('NATS_HOST', 'nutz'),
             natsPort:             $loader->getInt('NATS_PORT', 4222),

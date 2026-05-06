@@ -31,6 +31,9 @@ type AppConfig struct {
 	QueueCapacity int
 	AppVersion    string
 	BuildDate     string
+
+	// Misc
+	MetricsUpdateIntervalMs int
 }
 
 var natsChannelRegex = regexp.MustCompile(`^[a-zA-Z0-9\._]+$`)
@@ -53,6 +56,7 @@ func LoadConfig() *AppConfig {
 	queueCap, _ := strconv.Atoi(os.Getenv("QUEUE_CAPACITY"))
 	workerNum, _ := strconv.Atoi(os.Getenv("SERVER_WORKER_NUM"))
 	version, buildDate := getVersion()
+	ms, _ := strconv.Atoi(getEnv("METRICS_UPDATE_INTERVAL_MS", "1000"))
 
 	return &AppConfig{
 		APIToken: getEnv("API_TOKEN", ""),
@@ -71,6 +75,8 @@ func LoadConfig() *AppConfig {
 		QueueCapacity: queueCap,
 		AppVersion:    version,
 		BuildDate:     buildDate,
+
+		MetricsUpdateIntervalMs: ms,
 	}
 }
 

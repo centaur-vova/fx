@@ -150,7 +150,7 @@ func main() {
 	subscribeToNATS(mRouter)
 
 	// Broadcast metrics every two seconds
-	go hub.RunMetricsBroadcaster(2 * time.Second)
+	go hub.RunMetricsBroadcaster(time.Duration(cfg.MetricsUpdateIntervalMs) * time.Millisecond)
 
 	// === WS HANDLER ===
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

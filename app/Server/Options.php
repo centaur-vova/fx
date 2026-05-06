@@ -64,7 +64,6 @@ readonly class Options
         public int $taskMaxRetries,
 
         // ========== Real-time ==========
-        public int $metricsIntervalMs,
         public int $shutdownTimeoutSec,
 
         // ========== Messaging consumer (group) name ==========
