@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Provider\Nats;
+namespace App\Service\Provider\Messaging;
 
 use App\Contract\Messaging\Broadcaster;
 use App\Contract\Provider\ServiceProvider;
@@ -14,7 +14,7 @@ use DI\ContainerBuilder;
 
 use function DI\get;
 
-final readonly class NatsBroadcasterServiceProvider implements ServiceProvider
+final readonly class BroadcasterServiceProvider implements ServiceProvider
 {
     public function register(ContainerBuilder $builder): array
     {

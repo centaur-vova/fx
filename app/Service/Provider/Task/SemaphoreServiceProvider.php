@@ -17,7 +17,7 @@ use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Swoole\Atomic;
 
-final readonly class SemaphoreProvider implements ServiceProvider, Bootable
+final readonly class SemaphoreServiceProvider implements ServiceProvider, Bootable
 {
     private const array DRIVER_MAP = [
         'semaphore.api' => SemaphoreDriver::API,

@@ -17,10 +17,9 @@ use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
-use App\Service\Provider\Nats\NatsBroadcasterServiceProvider;
-use App\Service\Provider\Nats\NatsClientProvider;
-use App\Service\Provider\Nats\NatsTaskQueueServiceProvider;
-use App\Service\Provider\Task\SemaphoreProvider;
+use App\Service\Provider\Messaging\BroadcasterServiceProvider;
+use App\Service\Provider\Messaging\MessagingServiceProvider;
+use App\Service\Provider\Task\SemaphoreServiceProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\TaskService;
@@ -52,10 +51,9 @@ class Kernel
     private const array PROVIDERS = [
         AppServiceProvider::class,
         ApiServiceProvider::class,
-        NatsClientProvider::class,
-        NatsBroadcasterServiceProvider::class,
-        NatsTaskQueueServiceProvider::class,
-        SemaphoreProvider::class,
+        BroadcasterServiceProvider::class,
+        MessagingServiceProvider::class,
+        SemaphoreServiceProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,
     ];
