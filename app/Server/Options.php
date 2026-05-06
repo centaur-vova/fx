@@ -53,7 +53,7 @@ readonly class Options
         public int $queuePrefetchBatch,
 
         // ========== Task Meta ==========
-        public int $taskMetaCacheSize,
+        public int $taskMaxActive,
         public int $taskMetaTtlSec,
 
         // ========== Task Engine ==========

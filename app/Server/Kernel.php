@@ -25,15 +25,8 @@ use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
-
-use function DI\autowire;
-
 use DI\Container;
 use DI\ContainerBuilder;
-
-use function DI\create;
-use function DI\get;
-
 use Psr\Log\LoggerInterface;
 use Swoole\Atomic;
 use Swoole\Http\Request;
@@ -41,6 +34,10 @@ use Swoole\Http\Response;
 use Swoole\Http\Server;
 use Swoole\Server\Task;
 use Throwable;
+
+use function DI\autowire;
+use function DI\create;
+use function DI\get;
 
 class Kernel
 {
@@ -112,8 +109,11 @@ class Kernel
             taskQueueSubject:     $loader->getString('NATS_SUBJECT_TASKS', 'task.queue'),
             taskQueueConsumer:    $loader->getString('NATS_CONSUMER_TASKS', 'php-task-consumers'),
             taskQueueStream:      $loader->getString('NATS_STREAM_TASKS', 'tasks'),
-            // Task Meta (KV)
-            taskMetaCacheSize:    $loader->getInt('TASK_META_CACHE_SIZE', 65536),
+            // Maximum number of concurrent tasks tracked in metadata cache (taskId → receiptId for ack/nack).
+            // This also limits how many tasks can be processed simultaneously — no more than this many tasks
+            // will ever be in flight at once.
+            taskMaxActive:        $loader->getInt('TASK_MAX_ACTIVE', 2048),
+            // How long to keep task receipt after completion before evicting from cache.
             taskMetaTtlSec:       $loader->getInt('TASK_META_TTL_SEC', 10),
             // Misc
             rateLimiters:         $rateLimiters,

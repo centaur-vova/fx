@@ -34,7 +34,7 @@ final class TaskQueueManager
     public function run(Server $server): void
     {
         go(function () use ($server): void {
-            $maxTableSize = $this->options->taskMetaCacheSize;
+            $maxTableSize = $this->options->taskMaxActive;
             $reserve = (int) ($maxTableSize / 100); // to not to exceed the max. amount
 
             /** @phpstan-ignore-next-line */
