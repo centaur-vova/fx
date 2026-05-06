@@ -78,7 +78,7 @@ export const state = {
         const themeFlow = window.THEME_CONFIG?.settings?.flow || {};
 
         // semaphore driver
-        this.flow.semaphore_driver = themeFlow.semaphore_driver || this.flow.semaphore_driver;
+        this.flow.semaphore_driver = themeFlow.semaphore_driver || 'shared';
 
         // mc slider settings
         this.flow.min = themeFlow.min_concurrent || 1;
