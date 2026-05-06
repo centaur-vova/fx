@@ -108,15 +108,16 @@ Fast.AF использует систему с двумя драйверами �
 
 ## 🐎 Два режима работы
 
-- **Режим наблюдения** (< 500 задач):
+- **Режим наблюдения** (`stress_mode: false`, по умолчанию): 
   Искусственная задержка через `Co::sleep()` — 11 шагов по 50-200 миллисекунд.
   [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
-- **Стресс-тест** (≥ 500 задач):
-  Вместо `sleep()` — полезная нагрузка: хеширование `hash('sha256', $data)` в цикле.
+- **Стресс-тест** (`stress_mode: true`):
+  Кнопки стресс-теста визуально отличаются от обычных — цветной фон, рамка или акцент, в зависимости от выбранной темы.
+  Полезная нагрузка — `hash('sha256', $data)` в цикле.
   [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
-Порог переключения (`STRESS_MIN_TASK_NUM`) настраивается в `.env`.
+Режим передаётся в теле POST-запроса при создании задач (`/api/tasks/create`).
 
 **Ключевая фича**: задачи с разными `max_concurrent` используют независимые семафоры и могут выполняться параллельно, не мешая друг другу.
 

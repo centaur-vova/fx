@@ -108,15 +108,16 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 
 ## 🐎 Two operation modes
 
-- **Observation mode** (< 500 tasks):
+- **Observation mode** (`stress_mode: false`, default):
   Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
   [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
-- **Stress test mode** (≥ 500 tasks):
+- **Stress test mode** (`stress_mode: true`):
+  Stress test buttons are visually distinct — colored background, border, or accent depending on the theme.
   Instead of `sleep()` — real CPU work: `hash('sha256', $data)` in a loop.
   [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
-The threshold (`STRESS_MIN_TASK_NUM`) is configurable in `.env`.
+The mode is passed in the POST request body when creating tasks (`/api/tasks/create`).
 
 **Key feature**: tasks with different `max_concurrent` values use independent semaphores and can run in parallel without interfering with each other.
 
