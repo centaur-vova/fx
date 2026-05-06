@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Server;
 
-use App\ConfigLoader;
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\WorkerStartAware;

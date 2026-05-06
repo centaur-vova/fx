@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\ConfigLoader;
+use App\Server\ConfigLoader;
 use PHPUnit\Framework\TestCase;
 
 class ConfigLoaderTest extends TestCase
