@@ -54,12 +54,6 @@ func (r *MessageRouter) handleBatchCreated(data json.RawMessage) {
 		int(msg.MC),
 		msg.Mode,
 	)
-
-	slog.Info("Incremented tasks created counter",
-		"count", msg.Count,
-		"mc", msg.MC,
-		"mode", msg.Mode,
-	)
 }
 
 func (r *MessageRouter) handleTaskStatusUpdate(data json.RawMessage) {

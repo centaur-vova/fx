@@ -61,10 +61,10 @@ class TaskService
 
     public function fafo(): void
     {
-        $batches = random_int(100, 150);
+        $batches = random_int(500, 1000);
 
         for ($i = 0; $i < $batches; $i++) {
-            $count = random_int(15, 100);
+            $count = random_int(1, 5);
             $mc = random_int(1, 20);
             $mode = ProcessorFactory::MODE_STRESS;
             $sem = random_int(0, 1) === 0 ? 'shared' : 'api';

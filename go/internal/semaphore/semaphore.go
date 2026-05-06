@@ -1,19 +1,18 @@
 package semaphore
 
 import (
-	"sync/atomic"
 	"time"
 )
 
 type Permit struct {
 	UID           uint64
 	MaxConcurrent int
-	timer         *time.Timer
+	ExpiresAt     time.Time
 }
 
 type Semaphore struct {
 	slots   chan struct{}
-	nextUID atomic.Uint64
+	permits map[uint64]*Permit
 }
 
 func NewSemaphore(capacity int) *Semaphore {

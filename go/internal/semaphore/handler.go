@@ -43,16 +43,6 @@ func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
 		req.PermitTTL = maxPermitTTLSec
 	}
 
-	slog.Debug(
-		"acquire request",
-		"max_concurrent",
-		req.MaxConcurrent,
-		"lock_wait_timeout",
-		req.LockWaitTimeout,
-		"permit_ttl",
-		req.PermitTTL,
-	)
-
 	uid, err := h.pool.Acquire(
 		r.Context(),
 		req.MaxConcurrent,
@@ -78,8 +68,6 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	slog.Debug("release request", "uid", req.UID)
 
 	h.pool.Release(req.UID)
 	w.WriteHeader(http.StatusOK)

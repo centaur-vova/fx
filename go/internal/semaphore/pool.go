@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -12,12 +13,61 @@ type Pool struct {
 	mu         sync.RWMutex
 	semaphores map[int]*Semaphore
 	permits    map[uint64]*Permit
+	nextUID    atomic.Uint64
 }
 
 func NewPool() *Pool {
-	return &Pool{
+	p := &Pool{
 		semaphores: make(map[int]*Semaphore),
 		permits:    make(map[uint64]*Permit),
+	}
+
+	p.startCleaner()
+
+	return p
+}
+
+func (p *Pool) startCleaner() {
+	ticker := time.NewTicker(1 * time.Second)
+	go func() {
+		for range ticker.C {
+			p.cleanupExpired()
+		}
+	}()
+}
+
+func (p *Pool) cleanupExpired() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	now := time.Now()
+	for uid, permit := range p.permits {
+		if now.After(permit.ExpiresAt) {
+			slog.Debug("TTL expired (cleaner)", "uid", uid)
+			p.internalRelease(uid)
+		}
+	}
+}
+
+// internalRelease releases a semaphore slot without locking.
+// Must be called while p.mu is already held.
+func (p *Pool) internalRelease(uid uint64) {
+	permit, ok := p.permits[uid]
+	if !ok {
+		return
+	}
+
+	mc := permit.MaxConcurrent
+	delete(p.permits, uid)
+
+	sem, ok := p.semaphores[mc]
+	if ok {
+		select {
+		case <-sem.slots:
+			slog.Debug("slot released (cleaner)", "uid", uid)
+		default:
+			slog.Warn("attempted to release an empty slot (cleaner)", "uid", uid)
+		}
 	}
 }
 
@@ -44,20 +94,16 @@ func (p *Pool) Acquire(ctx context.Context, mc int, timeout, ttl time.Duration) 
 		return 0, ctx.Err()
 	}
 
-	uid := sem.nextUID.Add(1)
+	uid := p.nextUID.Add(1)
 	permit := &Permit{
 		UID:           uid,
 		MaxConcurrent: mc,
+		ExpiresAt:     time.Now().Add(ttl),
 	}
 
 	// Lock first
 	p.mu.Lock()
 	p.permits[uid] = permit
-	// Set up auto-release timer (TTL)
-	permit.timer = time.AfterFunc(ttl, func() {
-		slog.Debug("TTL expired, auto-releasing permit", "uid", uid)
-		p.Release(uid)
-	})
 	p.mu.Unlock()
 
 	return uid, nil
@@ -74,14 +120,8 @@ func (p *Pool) Release(uid uint64) {
 
 	// Make a copy of object data before deleting
 	mc := permit.MaxConcurrent
-	timer := permit.timer
 	delete(p.permits, uid)
 	p.mu.Unlock()
-
-	// Stop TTL timer to prevent double release
-	if timer != nil {
-		timer.Stop()
-	}
 
 	p.mu.RLock()
 	sem, ok := p.semaphores[mc]
