@@ -144,11 +144,6 @@ class Kernel
             // System
             'dispatch_mode' => $options->dispatchMode,
             'socket_buffer_size' => $options->socketBufferMb * 1024 * 1024,
-            /**
-             * Max pending tasks in the queue before $server->task() returns false.
-             * Prevents memory exhaustion by limiting backpressure.
-             */
-            'task_max_waiting_num' => 10000,
 
             // Enable coroutines
             'enable_coroutine' => true,

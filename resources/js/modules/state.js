@@ -91,7 +91,7 @@ export const state = {
         if (themeFlow.task_buttons?.length > 0) {
             this.flow.buttons = themeFlow.task_buttons.map(btn => ({
                 label: btn.label || (btn.tasks || btn).toString(),
-                tasks: btn.tasks || btn,
+                tasks: btn.tasks ?? btn,
                 stress: !!btn.stress,
                 class: btn.class || 'default'
             }));
@@ -118,12 +118,13 @@ export const state = {
 
     // Workers
     initWorkers(count) {
-        this.workers = Array.from({ length: count }, () => ({ status: '' }));
+        this.workers = Array.from({ length: count * 2 }, () => ({ status: '' }));
     },
 
     // Heatmap
-    flashWorker(id, isFailed) {
-        const idx = id >= this.workers.length ? id % this.workers.length : id;
+    flashWorker(id, isFailed, sem) {
+        const workerNum = this.workers.length / 2;
+        const idx = (sem * workerNum) + (id % workerNum);
         if (!this.workers[idx]) return;
 
         this.workers[idx].status = isFailed ? 'error' : 'success';
@@ -259,6 +260,7 @@ export const state = {
     // API - create tasks
     async createTasks(count, forceStress) {
         this.flashQueue();
+
         try {
             const res = await fetch("/api/tasks/create", {
                 method: "POST",

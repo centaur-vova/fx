@@ -59,6 +59,20 @@ class TaskService
         }
     }
 
+    public function fafo(): void
+    {
+        $batches = random_int(100, 150);
+
+        for ($i = 0; $i < $batches; $i++) {
+            $count = random_int(15, 100);
+            $mc = random_int(1, 20);
+            $mode = ProcessorFactory::MODE_STRESS;
+            $sem = random_int(0, 1) === 0 ? 'shared' : 'api';
+
+            $this->createBatch($count, $mc, $sem, $mode);
+        }
+    }
+
     public function processTask(TaskExecutionPayload $payload, int $workerId): void
     {
         $this->logger->debug('Entered processTask', ['id' => $payload->id]);

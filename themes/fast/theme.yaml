@@ -8,10 +8,10 @@ settings:
     min_concurrent: 1
     max_concurrent: 10
     task_buttons:
-      - { label: '1', tasks: 1, class: 'default', stress: false }
-      - { label: '10', tasks: 10, class: 'default', stress: false }
-      - { label: '50', tasks: 50, class: 'default', stress: false }
-      - { label: '100', tasks: 100, class: 'default', stress: false }
+      - { label: '1', tasks: 1 }
+      - { label: '10', tasks: 10 }
+      - { label: '50', tasks: 50 }
+      - { label: '100', tasks: 100 }
       - { label: '500', tasks: 500, class: 'warning', stress: true }
       - { label: '1000', tasks: 1000, class: 'accent', stress: true }
 

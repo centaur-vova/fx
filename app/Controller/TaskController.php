@@ -39,11 +39,16 @@ class TaskController
     {
         $this->rateLimit('create-tasks', $request);
 
-        // Validate DTO
-        $dto->validate($this->taskMaxBatchSize, $this->taskSemaphoreLimit);
-
         // Save timestamp when last createTasks request was sent
         $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
+
+        if ($dto->count === 0) {
+            go(fn () => $this->taskService->fafo());
+            return ApiResponse::ok('FAFO initiated');
+        }
+
+        // Validate DTO
+        $dto->validate($this->taskMaxBatchSize, $this->taskSemaphoreLimit);
 
         // Guess mode
         go(function () use ($dto): void {

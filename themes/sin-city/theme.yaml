@@ -10,9 +10,10 @@ settings:
     min_concurrent: 10
     max_concurrent: 100
     task_buttons:
-      - { label: "🖤 10", tasks: 10, class: "default", stress: false }
-      - { label: "🖤 50", tasks: 50, class: "default", stress: false }
-      - { label: "🖤 100", tasks: 100, class: "default", stress: false }
+      - { label: "🖤 10", tasks: 10 }
+      - { label: "🖤 50", tasks: 50 }
+      - { label: "🖤 100", tasks: 100 }
+      - { label: "FAFO", tasks: 0 }
       - { label: "🔴 500", tasks: 500, class: "warning", stress: true }
       - { label: "💀 1000", tasks: 1000, class: "accent", stress: true }
 

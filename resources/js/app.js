@@ -139,7 +139,7 @@ const handleUpdateTasks = (data) => {
 
     if (status === 'completed' || status === 'retries_failed') {
         task.endTime = Date.now() + REMOVE_DELAYS.completed;
-        store.flashWorker(worker, status === 'retries_failed');
+        store.flashWorker(worker, status === 'retries_failed', sem);
     } else if (status === 'retry') {
         task.endTime = Date.now() + REMOVE_DELAYS.retry_stall;
     }

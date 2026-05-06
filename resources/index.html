@@ -52,7 +52,7 @@
       <div class="max-w-7xl mx-auto h-full flex flex-col gap-3">
         <!-- HEADER -->
         <div
-          class="rounded-xl shadow-2xl p-4 select-none"
+          class="rounded-xl shadow-2xl p-3 select-none"
           style="
             background-color: var(--bg-elevated);
             border: 1px solid var(--border-default);
@@ -82,7 +82,7 @@
             <!-- RIGHT: METRICS (Fixed layout) -->
             <div class="flex items-center gap-6">
               <!-- Stats Grid: Use flex with fixed widths to prevent shifting -->
-              <div class="flex gap-6 text-right" x-data>
+              <div class="flex gap-6 text-right items-center" x-data>
                 <!-- Workers Heatmap -->
                 <div
                   class="text-xs pr-6"
@@ -93,16 +93,43 @@
                     style="color: var(--text-muted)"
                     >Workers</span
                   >
-                  <div
-                    id="worker-heatmap"
-                    class="flex gap-1 justify-end items-center h-[14px]"
-                  >
-                    <template x-for="(w, i) in $store.app.workers" :key="i">
-                      <div
-                        class="worker-bar"
-                        :class="{ 'flash-success': w.status === 'success', 'flash-error': w.status === 'error' }"
-                      ></div>
-                    </template>
+                  <!-- Row 1 (Shared) -->
+                  <div class="flex items-center gap-1 justify-end">
+                    <span
+                      class="text-[8px] font-mono"
+                      style="color: var(--text-muted)"
+                      >[○]</span
+                    >
+                    <div class="flex gap-1 items-center h-[10px]">
+                      <template
+                        x-for="i in ($store.app.workers.length / 2)"
+                        :key="'s'+i"
+                      >
+                        <div
+                          class="worker-bar"
+                          :class="{ 'flash-success': $store.app.workers[i-1]?.status === 'success', 'flash-error': $store.app.workers[i-1]?.status === 'error' }"
+                        ></div>
+                      </template>
+                    </div>
+                  </div>
+                  <!-- Row 2 (API) -->
+                  <div class="flex items-center gap-1 justify-end">
+                    <span
+                      class="text-[8px] font-mono"
+                      style="color: var(--text-muted)"
+                      >[◉]</span
+                    >
+                    <div class="flex gap-1 items-center h-[10px]">
+                      <template
+                        x-for="i in ($store.app.workers.length / 2)"
+                        :key="'a'+i"
+                      >
+                        <div
+                          class="worker-bar"
+                          :class="{ 'flash-success': $store.app.workers[$store.app.workers.length/2 + i - 1]?.status === 'success', 'flash-error': $store.app.workers[$store.app.workers.length/2 + i - 1]?.status === 'error' }"
+                        ></div>
+                      </template>
+                    </div>
                   </div>
                 </div>
 
