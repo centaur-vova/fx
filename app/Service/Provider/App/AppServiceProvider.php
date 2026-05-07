@@ -9,6 +9,7 @@ use App\Contract\Provider\ServiceProvider;
 use App\Contract\Provider\WorkerStartAware;
 use App\Contract\Storage\CacheStorage;
 use App\Server\Options;
+use App\Server\RuntimeScheduler;
 use App\Service\Storage\Swoole\SwooleTableKeyValueStorage;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
@@ -26,16 +27,17 @@ class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
         ];
     }
 
-    public function onWorkerStart(ContainerInterface $container, Server $server, int $workerId): void
+    public function onWorkerStart(ContainerInterface $c, Server $server, int $workerId): void
     {
         if ($workerId === 0) {
             /** @var CacheStorage $storage */
-            $storage = $container->get(CacheStorage::class);
-
+            $storage = $c->get(CacheStorage::class);
             /** @var Options $options */
-            $options = $container->get(Options::class);
+            $options = $c->get(Options::class);
+            /** @var RuntimeScheduler $scheduler */
+            $scheduler = $c->get(RuntimeScheduler::class);
 
-            $storage->startCleaner($options->cacheAutoCleanSec);
+            $scheduler->tick($storage->cleanExpired(...), $options->cacheAutoCleanSec);
         }
     }
 
@@ -52,6 +54,7 @@ class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
         /** @var LoggerInterface $logger */
         $logger = $c->get(LoggerInterface::class);
 
+        // Storage driver
         $driver = $options->cacheStorageDriver;
 
         $storage = match ($driver) {

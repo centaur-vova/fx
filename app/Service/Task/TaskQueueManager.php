@@ -9,7 +9,9 @@ use App\Contract\Support\Concern\LoopedLogger;
 use App\Contract\Support\Identifiable;
 use App\Contract\Task\TaskQueue;
 use App\DTO\Task\TaskExecutionPayload;
+use App\Exception\Server\WorkerShutdownException;
 use App\Server\Options;
+use App\Server\RuntimeContext;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Server;
@@ -21,6 +23,7 @@ final class TaskQueueManager
     private const string RECEIPT_PREFIX = 'receipt:';
 
     public function __construct(
+        private readonly RuntimeContext $context,
         private readonly TaskQueue $taskQueue,
         private readonly CacheStorage $taskMetaCache,
         private readonly Options $options,
@@ -34,18 +37,20 @@ final class TaskQueueManager
     public function run(Server $server): void
     {
         go(function () use ($server): void {
-            $maxTableSize = $this->options->taskMaxActive;
-            $reserve = (int) ($maxTableSize / 100); // to not to exceed the max. amount
+            $maxActive = $this->options->taskMaxActive;
+            $reserve = (int) ($maxActive / 100); // to not to exceed the max. amount
 
-            /** @phpstan-ignore-next-line */
             while (true) {
+                if ($this->context->isShuttingDown()) {
+                    $this->logger->info('TaskQueueManager is shutting down');
+                    break;
+                }
+
                 $this->logMemoryUsage();
 
-                // Occupied slots count
+                // Calc free slots count
                 $activeTasks = $this->taskMetaCache->count();
-
-                // Free slots count
-                $freeSlots = $maxTableSize - $activeTasks - $reserve;
+                $freeSlots = $maxActive - $activeTasks - $reserve;
                 $this->logLoopDebug('Loop iteration', ['freeSlots' => $freeSlots]);
 
                 if ($freeSlots <= 0) {
@@ -54,7 +59,7 @@ final class TaskQueueManager
                     continue;
                 }
 
-                // Do pull
+                // Calculate batch size
                 $batchSize = min($this->options->queuePrefetchBatch, $freeSlots);
 
                 if ($batchSize <= 0) {
@@ -62,35 +67,30 @@ final class TaskQueueManager
                     continue;
                 }
 
+                $taskCount = 0;
                 $tasks = $this->taskQueue->pull($batchSize);
-                $tasksCount = 0;
-                foreach ($tasks as $receiptId => $task) {
-                    $tasksCount++;
 
-                    if (!$task instanceof TaskExecutionPayload) {
-                        $this->taskQueue->ack($receiptId);
-                        continue;
+                try {
+                    $taskCount = $this->pumpToTasks($server, $tasks);
+
+                } catch (WorkerShutdownException) {
+                    // Shutting down, simply return
+                    return;
+                } catch (\Throwable $e) {
+                    $this->logger->error('Manager loop failed. Retrying in 5s...', [
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    // Wait & continue
+                    try {
+                        $this->context->sleepOrDie(5.0);
+                    } catch (WorkerShutdownException) {
+                        return;
                     }
-
-                    $this->logger->debug('Task received', ['id' => $task->id, 'receipt' => $receiptId]);
-                    $taskId = $server->task($task);
-                    $this->logger->debug('Task sent to worker', ['id' => $task->id]);
-
-                    if ($taskId === false) {
-                        $this->taskQueue->nack($receiptId);
-                        continue;
-                    }
-
-                    // Save to task meta
-                    $this->taskMetaCache->set(
-                        $this->getReceiptKey($task),
-                        $receiptId,
-                        $this->options->taskMetaTtlSec
-                    );
                 }
 
                 // Adaptive delay
-                Co::sleep($tasksCount ? 0.001 : 0.01);
+                Co::sleep($taskCount ? 0.001 : 0.01);
             }
         });
     }
@@ -113,6 +113,38 @@ final class TaskQueueManager
             $this->taskQueue->nack($receiptId);
             $this->taskMetaCache->delete($receiptKey);
         }
+    }
+
+    private function pumpToTasks(Server $server, \Generator $tasks): int
+    {
+        $taskCount = 0;
+        /** @var string $receiptId */
+        foreach ($tasks as $receiptId => $task) {
+            $taskCount++;
+
+            if (!$task instanceof TaskExecutionPayload) {
+                $this->taskQueue->ack($receiptId);
+                continue;
+            }
+
+            $this->logger->debug('Task received', ['id' => $task->id, 'receipt' => $receiptId]);
+            $taskId = $server->task($task);
+            $this->logger->debug('Task sent to worker', ['id' => $task->id]);
+
+            if ($taskId === false) {
+                $this->taskQueue->nack($receiptId);
+                continue;
+            }
+
+            // Save to task meta
+            $this->taskMetaCache->set(
+                $this->getReceiptKey($task),
+                $receiptId,
+                $this->options->taskMetaTtlSec
+            );
+        }
+
+        return $taskCount;
     }
 
     private function getReceiptKey(Identifiable $task): string

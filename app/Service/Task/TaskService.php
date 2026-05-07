@@ -11,7 +11,10 @@ use App\Contract\Task\TaskQueue;
 use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Message\TaskBatchCreated;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
+use App\Exception\Server\WorkerShutdownException;
+use App\Server\RuntimeContext;
 use App\Service\Task\Processor\ProcessorFactory;
+use App\Support\Concern\Snafubarable;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Timer;
@@ -19,7 +22,10 @@ use Throwable;
 
 class TaskService
 {
+    use Snafubarable;
+
     public function __construct(
+        private readonly RuntimeContext $context,
         private readonly SemaphoreFactory $semaphoreFactory,
         private readonly ProcessorFactory $processorFactory,
         private readonly Broadcaster $broadcaster,
@@ -75,6 +81,12 @@ class TaskService
 
     public function processTask(TaskExecutionPayload $payload, int $workerId): void
     {
+        // Quick check if shutting down
+        if ($this->context->isShuttingDown()) {
+            $this->manager->nack($payload); // Return to queue
+            return;
+        }
+
         $this->logger->debug('Entered processTask', ['id' => $payload->id]);
 
         $semaphore = $this->semaphoreFactory->get($payload->sem);
@@ -159,6 +171,9 @@ class TaskService
 
             $this->manager->ack($payload);
 
+        } catch (WorkerShutdownException) {
+            // Worker shutting down, early return
+            return;
         } catch (Throwable $e) {
             $this->logger->error('Fatal task error', ['id' => $payload->id, 'error' => $e->getMessage()]);
             $this->manager->nack($payload);
@@ -180,9 +195,9 @@ class TaskService
 
     private function notify(SemaphoreAware $update, string $sem): void
     {
-        $this->broadcaster->publish(
-            $this->broadcastSubject,
-            $update->withSem($sem),
+        $this->snafubar(
+            action: fn () => $this->broadcaster->publish($this->broadcastSubject, $update->withSem($sem)),
+            reason: 'Notify failed',
         );
     }
 }

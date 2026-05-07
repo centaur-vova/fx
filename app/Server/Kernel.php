@@ -16,6 +16,7 @@ use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
+use App\Service\Provider\App\RuntimeContextServiceProvider;
 use App\Service\Provider\Messaging\BroadcasterServiceProvider;
 use App\Service\Provider\Messaging\MessagingServiceProvider;
 use App\Service\Provider\Task\SemaphoreServiceProvider;
@@ -38,6 +39,7 @@ use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
 use Swoole\Server\Task;
+use Swoole\Timer;
 use Throwable;
 
 class Kernel
@@ -50,6 +52,7 @@ class Kernel
     private const array PROVIDERS = [
         AppServiceProvider::class,
         ApiServiceProvider::class,
+        RuntimeContextServiceProvider::class,
         BroadcasterServiceProvider::class,
         MessagingServiceProvider::class,
         SemaphoreServiceProvider::class,
@@ -89,7 +92,7 @@ class Kernel
             cacheStorageDriver:   $loader->getString('CACHE_STORAGE_DRIVER', 'swoole_table'),
             cacheDefaultTtlSec:   $loader->getInt('CACHE_DEFAULT_TTL_SEC', 60),
             cacheMaxSize:         $loader->getInt('CACHE_MAX_SIZE', 131072),
-            cacheAutoCleanSec:    $loader->getInt('CACHE_AUTO_CLEAN_SEC', 60),
+            cacheAutoCleanSec:    $loader->getFloat('CACHE_AUTO_CLEAN_SEC', 60),
             cacheValueMaxSize:    $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
             // API
             apiUrl:               $loader->getString('API_URL'),
@@ -132,6 +135,10 @@ class Kernel
             'open_tcp_keepalive' => true,
             'tcp_keepidle' => 60,
             'tcp_keepinterval' => 10,
+
+            // Graceful shutdown
+            // 'reload_async' => true,
+            'max_wait_time' => $options->shutdownTimeoutSec,
 
             // Workers
             'worker_num' => $options->workerNum,
@@ -303,29 +310,22 @@ class Kernel
             }
         });
 
+        // Graceful shutdown (with reload_async enabled)
+        $this->server->on('WorkerExit', function ($server, $workerId): void {
+            /** @var RuntimeContext $context */
+            $context = $this->container->get(RuntimeContext::class);
+            $context->triggerShutdown();
+
+            // Clear all timers in the current worker
+            foreach (Timer::list() as $timerId) {
+                /** @var int $timerId */
+                Timer::clear($timerId);
+            }
+        });
+
         // Graceful shutdown
         $this->server->on('WorkerStop', function ($server, int $workerId): void {
-            $start = microtime(true);
-
-            /**
-             * Wait for active tasks to finish.
-             * Using Co::sleep (if in coroutine context) or usleep for safe polling.
-             */
-            /*
-            // TODO: REFACTOR
-            while ($taskCounter->get() > 0 && (microtime(true) - $start) < $timeout) {
-                // Check if we can use non-blocking sleep
-                if (Co::getuid() > 0) {
-                    Co::sleep(0.05);
-                } else {
-                    usleep(50000);
-                }
-            }
-            */
-
-            $duration = round(microtime(true) - $start, 2);
-
-            $this->logger->info("[System] Worker #$workerId stopped after {$duration}s.");
+            $this->logger->info("[System] Worker #$workerId stopped.");
         });
 
         // Request handling

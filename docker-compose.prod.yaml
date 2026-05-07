@@ -21,9 +21,10 @@ services:
   deez-nutz:
     image: nats:2.12.8-alpine
     container_name: fast-deez-nutz
-    command: -js
+    command: ["-c", "/etc/nats.conf", "-js"]
     restart: always
     volumes:
+      - ./nats.conf:/etc/nats.conf:ro
       - deez-nutz-data:/data
     ports:
       - "127.0.0.1:4222:4222"

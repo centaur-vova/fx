@@ -6,7 +6,6 @@ namespace App\Service\Storage\Swoole;
 
 use App\Contract\Storage\CacheStorage;
 use Psr\Log\LoggerInterface;
-use Swoole\Coroutine as Co;
 use Swoole\Table;
 
 class SwooleTableKeyValueStorage implements CacheStorage
@@ -161,22 +160,10 @@ class SwooleTableKeyValueStorage implements CacheStorage
             }
         }
 
+        if ($deleted > 0) {
+            $this->logger->debug("Cleaned $deleted expired keys");
+        }
+
         return $deleted;
-    }
-
-    public function startCleaner(int $interval = 60): void
-    {
-        $logger = $this->logger;
-
-        go(function () use ($interval, $logger): void {
-            /** @phpstan-ignore-next-line */
-            while (true) {
-                Co::sleep($interval);
-                $deleted = $this->cleanExpired();
-                if ($deleted > 0) {
-                    $logger->debug("Cleaned $deleted expired keys");
-                }
-            }
-        });
     }
 }

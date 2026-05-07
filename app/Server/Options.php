@@ -26,7 +26,7 @@ readonly class Options
         public string $cacheStorageDriver,
         public int $cacheDefaultTtlSec,
         public int $cacheMaxSize,
-        public int $cacheAutoCleanSec,
+        public float $cacheAutoCleanSec,
         public int $cacheValueMaxSize,
 
         // ========== Nats ==========

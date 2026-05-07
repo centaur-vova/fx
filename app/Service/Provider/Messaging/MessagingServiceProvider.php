@@ -11,23 +11,16 @@ use App\Contract\Queue\Queue;
 use App\Contract\Task\TaskQueue;
 use App\Contract\Task\TaskQueueConsumer;
 use App\Server\Options;
+use App\Server\RuntimeScheduler;
 use App\Service\Messaging\Nats\ReconnectableClient;
 use App\Service\Queue\Nats\NatsQueue;
 use App\Service\Queue\Nats\NatsTaskQueue;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Configuration as NatsConfiguration;
-use Basis\Nats\Consumer\AckPolicy;
-use Basis\Nats\Consumer\DeliverPolicy;
-use Basis\Nats\Stream\DiscardPolicy;
-use Basis\Nats\Stream\RetentionPolicy;
-use Basis\Nats\Stream\StorageBackend;
 
 use function DI\autowire;
 
 use DI\ContainerBuilder;
-
-use function DI\get;
-
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Server;
@@ -51,9 +44,8 @@ final readonly class MessagingServiceProvider implements ServiceProvider, Worker
                 );
             },
 
-            // Client
-            NatsClient::class => autowire(ReconnectableClient::class)
-                ->constructorParameter('configuration', get(NatsConfiguration::class)),
+            // Client (actually a Basis Nats client wrapped with ReconnectableClient)
+            NatsClient::class => autowire(ReconnectableClient::class),
 
             // General Queue class
             Queue::class => function (ContainerInterface $c): Queue {
@@ -112,10 +104,18 @@ final readonly class MessagingServiceProvider implements ServiceProvider, Worker
     {
         /** @var Options $options */
         $options = $container->get(Options::class);
-
+        /** @var LoggerInterface */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var RuntimeScheduler $scheduler */
+        $scheduler = $container->get(RuntimeScheduler::class);
         /** @var ReconnectableClient $client */
         $client = $container->get(NatsClient::class);
-        $client->startPingTimer($options->natsWorkerPingIntervalSec);
+
+        // Ping NATS periodically to keep connection alive
+        $scheduler->tick(
+            fn () => $client->pingOrRestart($workerId),
+            $options->natsWorkerPingIntervalSec
+        );
 
         // Create stream & consumer when NOT in the task worker
         // @TODO: Create a separate command to create a stream and a consumer
@@ -123,50 +123,13 @@ final readonly class MessagingServiceProvider implements ServiceProvider, Worker
             return;
         }
 
-        /** @var NatsClient $client */
-        $client = $container->get(NatsClient::class);
-        /** @var LoggerInterface $logger */
-        $logger = $container->get(LoggerInterface::class);
-
         try {
-            $this->createStream($client, $options);
-            $this->createConsumer($client, $options);
+            $client->ensureTopology();
         } catch (\Throwable $e) {
             $logger->error(
                 'NATS init failed, horse falls into medically induced coma',
                 ['error' => $e->getMessage()]
             );
-            $server->shutdown();
         }
-    }
-
-    private function createStream(NatsClient $client, Options $options): void
-    {
-        $api = $client->getApi();
-        $stream = $api->getStream($options->taskQueueStream);
-
-        $stream->getConfiguration()
-            ->setSubjects([$options->taskQueueSubject])
-            ->setStorageBackend(StorageBackend::MEMORY)
-            ->setRetentionPolicy(RetentionPolicy::WORK_QUEUE)
-            ->setDiscardPolicy(DiscardPolicy::NEW) // discard new messages if queue is full
-            ->setMaxMessagesPerSubject($options->queueCapacity);
-
-        $stream->createIfNotExists();
-    }
-
-    private function createConsumer(NatsClient $client, Options $options): void
-    {
-        $api = $client->getApi();
-        $stream = $api->getStream($options->taskQueueStream);
-
-        $consumer = $stream->getConsumer($options->taskQueueConsumer);
-        $consumer->getConfiguration()
-            ->setAckPolicy(AckPolicy::EXPLICIT)
-            ->setDeliverPolicy(DeliverPolicy::ALL)
-            ->setAckWait($options->natsAckWaitMs * 1_0_0000_0) // to nanosec using HORSE_MILLION
-            ->setMaxWaiting(0);
-
-        $consumer->create(true);
     }
 }

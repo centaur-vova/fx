@@ -31,10 +31,9 @@ final readonly class NatsBroadcaster implements Broadcaster
         try {
             $this->client->publish($subject, $payload);
             return;
-        } catch (\Throwable) {
-            $this->logger?->error('NATS publish failed, exiting worker...');
-            // Restart worker
-            exit(1);
+        } catch (\Throwable $e) {
+            $this->logger?->error('NATS publish failed', ['subject' => $subject]);
+            throw $e;
         }
     }
 
