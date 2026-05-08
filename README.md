@@ -18,7 +18,7 @@
 
 [📖 Читать README на русском](README.ru.md) | [📖 Read in English](README.md)
 
-<img width="2571" height="1587" alt="image" src="https://github.com/user-attachments/assets/b96bcf59-39ce-49f3-b12e-d33baaf93ab6" />
+<img width="2564" height="1788" alt="Fast theme - star dust mode" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
 🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz) | **Dashboard:** [fast.af.l3373.xyz/dashboard](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617)
 
@@ -120,7 +120,7 @@ The mode is passed in the POST request body when creating tasks (`/api/tasks/cre
 
 **Key feature**: tasks with different `max_concurrent` values use independent semaphores and can run in parallel without interfering with each other.
 
-<img width="2574" height="1589" alt="Demo slow mode" src="https://github.com/user-attachments/assets/69b10bca-41ad-4342-bd80-5246daad5c65" />
+<img width="2559" height="1788" alt="Crystal theme - observation mode" src="https://github.com/user-attachments/assets/a782287c-50f4-4383-b090-cef9dbdbf2e0" />
 
 > _In the In Progress zone — no more tasks than the semaphore allows (the number inside the square). The rest wait in Queue or Check Lock. A clear demonstration — like horses not crowding into a single stable._
 
@@ -200,16 +200,22 @@ These settings control how tasks behave when the semaphore is busy:
 
 Fast Atomic Flow supports visual themes. Each theme is defined as a separate YAML file and can be switched via URL parameter `?theme=<name>`.
 
+**Easy switching:** Just click the **theme links in the page footer** — `fast` 🚀, `crystal` 💎, or `sin city` 🖤. No need to type URLs.
+
+<img width="2568" height="1793" alt="Sin City theme - noir style with RAND button" src="https://github.com/user-attachments/assets/392398ee-ba1c-4a0e-ad5b-918257d34631" />
+
+_Sin City theme: noir aesthetics, RAND button active — hybrid semaphore stress test._
+
 Built‑in themes:
 
 - `fast` — default neon style
 - `crystal` — icy blues and purples
 - `sin-city` — noir, mostly gray with red accents
 
-How to switch: add `?theme=sin-city` to the URL, for example:
-`https://fast.af.l3373.xyz/?theme=sin-city`
+**Theme‑aware task buttons:** Each button can specify its own semaphore driver (`shared` for PHP Atomic, `api` for Go Distributed).  
+The **RAND** button in every theme fires random batches on **both** drivers simultaneously — perfect for stress testing the hybrid architecture.
 
-Custom themes: you can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, etc.).
+**Custom themes:** You can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, per‑button semaphore drivers, etc.).  
 See the [Wiki](https://github.com/shmandalf/fast-atomic-flow/wiki/Themes) for details.
 
 ---

@@ -18,7 +18,7 @@
 
 [📖 Read in English](README.md) | [📖 Читать README на русском](README.ru.md)
 
-<img width="2571" height="1587" alt="image" src="https://github.com/user-attachments/assets/b96bcf59-39ce-49f3-b12e-d33baaf93ab6" />
+<img width="2564" height="1788" alt="Скриншот Fast темы: множество мелких точек (star dust) в зонах Pipeline, демонстрация LOD при большом количестве задач" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
 🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz) | **Dashboard:** [fast.af.l3373.xyz/dashboard](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617)
 
@@ -120,7 +120,7 @@ Fast.AF использует систему с двумя драйверами �
 
 **Ключевая фича**: задачи с разными `max_concurrent` используют независимые семафоры и могут выполняться параллельно, не мешая друг другу.
 
-<img width="2574" height="1589" alt="Демо медленного режима" src="https://github.com/user-attachments/assets/69b10bca-41ad-4342-bd80-5246daad5c65" />
+<img width="2559" height="1788" alt="Скриншот Crystal темы: в ледяных тонах" src="https://github.com/user-attachments/assets/a782287c-50f4-4383-b090-cef9dbdbf2e0" />
 
  > *Одновременно в зоне In Progress — не больше задач, чем разрешает семафор (цифра внутри квадрата). Остальные ждут в очереди или в Check Lock. Наглядно — как кони не лезут в одну конюшню.*
 
@@ -198,7 +198,13 @@ docker compose -f docker-compose.prod.yaml up
 
 ## 🐎 Темы
 
-Fast Atomic Flow поддерживает визуальные темы. Каждая тема описывается в отдельном YAML‑файле и переключается через параметр URL `?theme=<name>`.
+Fast Atomic Flow поддерживает визуальные темы. Каждая тема описывается в отдельном YAML-файле и переключается через параметр URL `?theme=<name>`.
+
+**Быстрое переключение:** просто кликните по ссылке с названием темы в футере — `fast` 🚀, `crystal` 💎 или `sin city` 🖤. Вбивать URL вручную не нужно.
+
+<img width="2568" height="1793" alt="Sin City тема — нуар, активна кнопка RAND" src="https://github.com/user-attachments/assets/392398ee-ba1c-4a0e-ad5b-918257d34631" />
+
+_Тема Sin City: нуарная эстетика, активна кнопка RAND — стресс-тест гибридной архитектуры._
 
 Встроенные темы:
 
@@ -206,10 +212,10 @@ Fast Atomic Flow поддерживает визуальные темы. Каж�
 - `crystal` — ледяные голубые и фиолетовые тона
 - `sin-city` — нуар, серый с красными акцентами
 
-Как переключить: добавьте `?theme=sin-city` к адресу страницы, например:
-`https://fast.af.l3373.xyz/?theme=sin-city`
+**Кнопки с привязкой к драйверу:** каждая кнопка может указывать свой драйвер семафора (`shared` для PHP Atomic, `api` для Go Distributed).  
+Кнопка **RAND** в любой теме запускает случайные пачки на **обоих** драйверах одновременно — идеально для стресс-теста гибридной архитектуры.
 
-Свои темы: вы можете создать собственную тему, добавив папку в `themes/` с файлом `theme.yaml` (цвета, координаты зон, наборы кнопок и т.д.).
+**Свои темы:** вы можете создать собственную тему, добавив папку в `themes/` с файлом `theme.yaml` (цвета, координаты зон, наборы кнопок, драйверы семафоров для каждой кнопки и т.д.).  
 Подробности в [Wiki](https://github.com/shmandalf/fast-atomic-flow/wiki/Themes).
 
 --
