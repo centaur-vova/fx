@@ -28,15 +28,13 @@ const getDefaults = () => ({
 
 const getFlowDefaults = () => ({
     min: 1,
-    max: 10,
-    semaphore_driver: 'shared', // php semaphore by default
+    max: 100,
     buttons: [
-        { label: '1', tasks: 1, class: 'default', stress: false },
-        { label: '10', tasks: 10, class: 'default', stress: false },
-        { label: '50', tasks: 50, class: 'default', stress: false },
-        { label: '100', tasks: 100, class: 'default', stress: false },
-        { label: '500', tasks: 500, class: 'warning', stress: true },
-        { label: '1000', tasks: 1000, class: 'accent', stress: true },
+        { label: '1', tasks: 1, class: 'default', stress: false, semaphore_driver: 'shared' },
+        { label: '10', tasks: 10, class: 'default', stress: false, semaphore_driver: 'api', },
+        { label: '500', tasks: 500, class: 'warning', stress: true, semaphore_driver: 'shared' },
+        { label: '1000', tasks: 1000, class: 'accent', stress: true, semaphore_driver: 'api' },
+        { label: 'RAND', tasks: 0, class: 'accent', semaphore_driver: 'api', full_width: true },
     ]
 });
 
@@ -78,9 +76,6 @@ export const state = {
     init() {
         const themeFlow = window.THEME_CONFIG?.settings?.flow || {};
 
-        // semaphore driver
-        this.flow.semaphore_driver = themeFlow.semaphore_driver || 'shared';
-
         // mc slider settings
         this.flow.min = themeFlow.min_concurrent || 1;
         this.flow.max = themeFlow.max_concurrent || 10;
@@ -94,7 +89,9 @@ export const state = {
                 label: btn.label || (btn.tasks || btn).toString(),
                 tasks: btn.tasks ?? btn,
                 stress: !!btn.stress,
-                class: btn.class || 'default'
+                class: btn.class || 'default',
+                full_width: btn.full_width || false,
+                semaphore_driver: btn.semaphore_driver || 'shared',
             }));
         }
     },
@@ -247,7 +244,7 @@ export const state = {
             this.scale = LOD.scale_medium;
             this.mode = 'normal';
         } else {
-            this.scale = LOD.scale_dot;
+            this.scale = 0; // hardcoded, only used to compare against other scales. A dot - it's a dot even in Africa
             this.mode = 'dot';
         }
 
@@ -262,7 +259,7 @@ export const state = {
     },
 
     // API - create tasks
-    async createTasks(count, forceStress) {
+    async createTasks(count, forceStress, semaphoreDriver) {
         this.flashQueue();
 
         try {
@@ -271,7 +268,7 @@ export const state = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     count,
-                    semaphore_driver: this.flow.semaphore_driver,
+                    semaphore_driver: semaphoreDriver,
                     max_concurrent: this.mc,
                     stress_mode: forceStress
                 }),

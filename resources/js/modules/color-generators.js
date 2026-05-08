@@ -19,7 +19,7 @@ export const generators = {
 
     // Mostly gray, occasional red (sin-city)
     noir: (mc) => {
-        if (mc % 10 === 0 || mc > 50) return '#ff3333';
+        if (mc % 10 === 0 || mc > 200) return '#ff3333';
         const gray = 100 + (mc % 100);
         return `rgb(${gray}, ${gray}, ${gray})`;
     },

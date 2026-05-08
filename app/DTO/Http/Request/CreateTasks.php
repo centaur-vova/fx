@@ -39,7 +39,7 @@ final readonly class CreateTasks
 
     public function validate(int $maxBatchSize, int $semaphoreLimit): void
     {
-        if ($this->count < 1 || $this->count > $maxBatchSize) {
+        if ($this->count < 0 || $this->count > $maxBatchSize) {
             throw new InvalidTaskBatchException("Count must be between 1 and $maxBatchSize");
         }
 

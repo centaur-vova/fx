@@ -222,12 +222,13 @@ const addLog = (taskId, mc, status, msg, sem, progress = null) => {
     }
 
     // 0 - shared (php), 1 - api (go)
-    const semLabel = sem === 1 ? '◉' : '○';
+    const semLabel = sem === 1 ? 'API' : 'PHP';
+    const paddedStatus = status.toUpperCase().padEnd(14, ' ');
 
     entry.innerHTML = `
         <span style="color: var(--text-secondary)">${time}</span>
-        <span style="color: ${statusColor}; font-weight: bold">${semLabel} [${status.toUpperCase()}]</span>
-        <span style="color: var(--text-primary)">${taskId.slice(-8)}</span>
+        <span style="color: ${statusColor}; font-weight: bold; white-space: pre">${semLabel} » ${paddedStatus}</span>
+        <span style="color: var(--text-primary)">${taskId.slice(-4)}</span>
         <span style="color: var(--text-muted)">${msg}${progressText}</span>
     `;
 

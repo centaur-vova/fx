@@ -74,9 +74,9 @@
               <p
                 class="text-[10px] font-mono uppercase tracking-widest"
                 style="color: var(--text-muted)"
-                x-text="$store.app.flow.semaphore_driver === 'api' ? '[◉] GO API SEMAPHORE' : '[○] PHP ATOMIC SEMAPHORE'"
-              ></p>
-              <p></p>
+              >
+                High-Load Pipeline Engine
+              </p>
             </a>
 
             <!-- RIGHT: METRICS (Fixed layout) -->
@@ -98,7 +98,7 @@
                     <span
                       class="text-[8px] font-mono"
                       style="color: var(--text-muted)"
-                      >[○]</span
+                      >[PHP]</span
                     >
                     <div class="flex gap-1 items-center h-[10px]">
                       <template
@@ -117,7 +117,7 @@
                     <span
                       class="text-[8px] font-mono"
                       style="color: var(--text-muted)"
-                      >[◉]</span
+                      >[API]</span
                     >
                     <div class="flex gap-1 items-center h-[10px]">
                       <template
@@ -422,12 +422,17 @@
                 </div>
 
                 <!-- Task injection buttons -->
-                <div class="grid grid-cols-2 gap-2 flex-grow">
+                <div class="grid grid-cols-2 auto-rows-min gap-2 flex-grow">
                   <template x-for="btn in $store.app.flow.buttons">
                     <button
                       class="task-button py-2"
-                      :class="'task-button-' + btn.class"
-                      @click="$store.app.createTasks(btn.tasks, btn.stress)"
+                      :class="[
+                        'task-button',
+                        'py-2',
+                        `task-button-${btn.class}`,
+                        btn.full_width ? 'w-full col-span-2' : ''
+                      ]"
+                      @click="$store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
                       x-text="btn.label"
                     ></button>
                   </template>

@@ -1,4 +1,4 @@
-import { COLORS, LABEL_COLORS, PROGRESS_BAR } from './config';
+import { COLORS, LABEL_COLORS, LOD, PROGRESS_BAR } from './config';
 
 /**
  * Draw a single task square (or dot) on the canvas.
@@ -47,13 +47,17 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
 
     ctx.globalAlpha = 1;
 
-    if (scale > PROGRESS_BAR.min_scale) {
+    // Render concurrency label only when scale is sufficient for readability
+    if (scale > LOD.scale_medium) {
         ctx.fillStyle = LABEL_COLORS[mc];
         ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(mc, x, y);
+    }
 
+    // Show task progress bar only if zoomed in enough to avoid visual noise
+    if (scale >= PROGRESS_BAR.min_scale) {
         if (status === 'progress' && progress && progress > 0 && progress < 100 && PROGRESS_BAR.height > 0) {
             ctx.fillRect(x - s / 2, y + s / 2 - PROGRESS_BAR.height, s * (progress / 100), PROGRESS_BAR.height);
         }

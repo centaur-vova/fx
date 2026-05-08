@@ -14,7 +14,7 @@ export const THEME_DEFAULTS = {
         retry: 'Better luck next time',
     },
     PROGRESS_BAR: {
-        min_scale: 0.8,
+        min_scale: 0.9,
         height: 4,
     },
     LOD: {
@@ -22,7 +22,6 @@ export const THEME_DEFAULTS = {
         medium_max: 500,
         scale_normal: 1,
         scale_medium: 0.5,
-        scale_dot: 0.3,
     },
     ZONE_COORDS: {
         queued: 0.125,

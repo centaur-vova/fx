@@ -85,16 +85,15 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 
 ### 🐎 Drivers:
 
-- **○ PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency.
-- **◉ Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers.
+- **[PHP] PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency.
+- **[API] Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers.
 
 ### 🐎 Architectural Features:
 
 - **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes.
 - **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization.
 - **Visual Distinction:** The UI differentiates drivers in real-time (rounded squares for Go API, sharp squares for PHP Atomic).
-
-> **Note:** On the live demo, the **Sin City** theme is powered by the **Go API** driver, while other themes use the **PHP Atomic** driver by default. Switch themes to see the performance difference.
+- **RAND (Random Spam Mode):** The "RAND" button triggers chaotic spam mode, firing hundreds of batches with randomized parameters: `max_concurrent`, `stress_mode`, and semaphore driver change per batch. Perfect for stress testing and visual fireworks on the worker heatmap.
 
 ---
 

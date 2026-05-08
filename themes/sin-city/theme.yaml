@@ -5,18 +5,15 @@ emoji: "🖤"
 
 settings:
   flow:
-    semaphore_driver: api
-    default_concurrent: 50
-    min_concurrent: 10
-    max_concurrent: 100
+    default_concurrent: 127
+    min_concurrent: 1
+    max_concurrent: 255
     task_buttons:
-      - { label: "🖤 10", tasks: 10 }
-      - { label: "🖤 50", tasks: 50 }
-      - { label: "🖤 100", tasks: 100 }
-      - { label: "FAFO", tasks: 0 }
-      - { label: "🔴 500", tasks: 500, class: "warning", stress: true }
-      - { label: "💀 1000", tasks: 1000, class: "accent", stress: true }
-
+      - { label: "🖤 25 (PHP)", tasks: 25, stress: false, semaphore_driver: "shared" }
+      - { label: "🖤 100 (Go API)", tasks: 100, stress: false, semaphore_driver: "api" }
+      - { label: "⚡ 500 (PHP)", tasks: 500, class: "warning", stress: true, semaphore_driver: "shared" }
+      - { label: "⚡ 1000 (Go API)", tasks: 1000, class: "accent", stress: true, semaphore_driver: "api" }
+      - { label: "💀 RAND", tasks: 0, class: "danger", full_width: true }
   ui:
     color_generator: "noir"
     label_text_color: "#ffffff"
@@ -25,8 +22,7 @@ settings:
       height: 0  # No progress bar in sin-city
 
     lod:
-      normal_max: 250
-      medium_max: 600
-      scale_normal: 1.0
-      scale_medium: 0.7
-      scale_dot: 0.5
+      normal_max: 700
+      medium_max: 1200
+      scale_normal: 0.8
+      scale_medium: 0.5

@@ -6,6 +6,7 @@ namespace App\Service\Task;
 
 use App\Contract\Messaging\Broadcaster;
 use App\Contract\Task\SemaphoreAware;
+use App\Contract\Task\SemaphoreDriver;
 use App\Contract\Task\SemaphoreFactory;
 use App\Contract\Task\TaskQueue;
 use App\DTO\Task\TaskExecutionPayload;
@@ -65,15 +66,27 @@ class TaskService
         }
     }
 
-    public function fafo(): void
+    public function createRandomBatches(): void
     {
+        // Total # of batches
         $batches = random_int(500, 1000);
 
         for ($i = 0; $i < $batches; $i++) {
+            // Tasks per batch
             $count = random_int(1, 5);
-            $mc = random_int(1, 20);
-            $mode = ProcessorFactory::MODE_STRESS;
-            $sem = random_int(0, 1) === 0 ? 'shared' : 'api';
+
+            // MC range
+            $mc = random_int(10, 30);
+
+            // Stress/ Observation mode
+            $mode = random_int(0, 1) === 0
+                ? ProcessorFactory::MODE_STRESS
+                : ProcessorFactory::MODE_OBSERVATION;
+
+            // Semaphore driver
+            $semValues = SemaphoreDriver::values();
+            assert(count($semValues) > 0); // Stop PHP Satan from blaming the code
+            $sem = $semValues[random_int(0, count($semValues) - 1)];
 
             $this->createBatch($count, $mc, $sem, $mode);
         }
