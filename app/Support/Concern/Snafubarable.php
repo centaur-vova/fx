@@ -51,10 +51,12 @@ trait Snafubarable
             }
 
             // Perform a safety delay to prevent restart loops
+            $jitter = mt_rand(80, 120) / 100; // ±20% (0.8 - 1.2)
+            $actualDelay = $delay * $jitter;
             if (isset($this->context)) {
-                $this->context->sleepOrDie($delay);
+                $this->context->sleepOrDie($actualDelay);
             } else {
-                Coroutine::sleep($delay);
+                Coroutine::sleep($actualDelay);
             }
 
             // Signal the Master process to bring a fresh horse
