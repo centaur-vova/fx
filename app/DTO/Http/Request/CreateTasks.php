@@ -7,6 +7,12 @@ namespace App\DTO\Http\Request;
 use App\Contract\Task\SemaphoreDriver;
 use App\Exception\Http\InvalidTaskBatchException;
 
+/**
+ * Incoming request DTO for the task creation endpoint.
+ *
+ * $count = 0 triggers random batch mode (RAND).
+ * $semaphoreDriver is nullable — only required when not in random mode.
+ */
 final readonly class CreateTasks
 {
     public function __construct(
