@@ -6,18 +6,26 @@ export const decodeMessage = (rawData, labels) => {
         const view = new DataView(rawData);
         const type = view.getUint8(0); // get magick byte
 
-        if (rawData.byteLength === 14 && type === WS.BINARY_TYPE.STATUS_UPDATE) {
+        // 9 bytes binary proto with magic byte
+        if (rawData.byteLength === 9 && type === WS.BINARY_TYPE.STATUS_UPDATE) {
             const status = TASK.STATUS_MAP[view.getUint8(1)];
+
+            const packed = view.getUint32(2);
+
+            // Unpack task ID (31 bits) and semaphore type (1 bit) from a single uint32
+            const taskId = packed & 0x7FFFFFFF,
+                sem = (packed >>> 31) & 1;
+
             return {
                 event: WS.EVENT.STATUS_CHANGED,
                 data: {
                     status: status,
-                    taskId: view.getBigUint64(2).toString(),
-                    mc: view.getUint8(10),
-                    progress: view.getUint8(11),
-                    worker: view.getUint8(12),
-                    sem: view.getUint8(13),
-                    message: labels[status] || ''
+                    mc: view.getUint8(6),
+                    progress: view.getUint8(7),
+                    worker: view.getUint8(8),
+                    message: labels[status] || '',
+                    taskId,
+                    sem,
                 }
             };
         }

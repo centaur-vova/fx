@@ -28,18 +28,19 @@ class NatsConsumer implements Consumer, TaskQueueConsumer
                 ->getQueue();
         }
 
+        /** @var Msg[] $messages */
         $messages = $this->queue->fetchAll($batch);
 
-        /** @phpstan-ignore-next-line */
         return array_filter(array_map(function (Msg $msg): ?NatsMessage {
+            /** @var array{headers?: array<string, string|int>} $payload */
+            $payload = (array) $msg->payload;
             /** @var array<string, string|int> $headers */
-            $headers = $msg->payload->headers ?? [];
+            $headers = $payload['headers'] ?? [];
 
             $replyTo = $msg->replyTo;
 
             $statusCode = (int) ($headers['Status-Code'] ?? 0);
             if ($statusCode >= 400) {
-                // Error TODO:
                 return null;
             }
 
@@ -47,8 +48,7 @@ class NatsConsumer implements Consumer, TaskQueueConsumer
                 return null;
             }
 
-            // Seq/attempts
-            $sequence = (int) ($headers['Nats-Sequence'] ?? $msg->sequence ?? 0); // @phpstan-ignore-line
+            $sequence = (int) ($headers['Nats-Sequence'] ?? 0);
             $attempts = (int) ($headers['Nats-Attempts'] ?? 0);
 
             return new NatsMessage(

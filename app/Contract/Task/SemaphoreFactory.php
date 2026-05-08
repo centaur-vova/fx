@@ -6,7 +6,7 @@ namespace App\Contract\Task;
 
 interface SemaphoreFactory
 {
-    public function get(string $driver): TaskSemaphore;
+    public function get(SemaphoreDriver $driver): TaskSemaphore;
 
     /**
      * Shutdown/terminate/release all semaphores

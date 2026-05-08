@@ -4,30 +4,26 @@ declare(strict_types=1);
 
 namespace App\DTO\WebSocket\Message;
 
-use App\Contract\Task\SemaphoreAware;
 use App\Contract\Task\SemaphoreDriver;
-use App\DTO\WebSocket\Concern\InteractsWithWebSocket;
 use JsonSerializable;
 
-final readonly class TaskBatchCreated implements JsonSerializable, SemaphoreAware
+final readonly class TaskBatchCreated implements JsonSerializable
 {
-    use InteractsWithWebSocket;
-
     public function __construct(
         public int $count,
         public int $mc,
         public string $mode,
-        public string $sem = SemaphoreDriver::SHARED->value,
+        public SemaphoreDriver $sem,
     ) {
     }
 
-    public function withSem(string $sem): self
+    public function jsonSerialize(): mixed
     {
-        return new self(
-            count: $this->count,
-            mc: $this->mc,
-            mode: $this->mode,
-            sem: $sem,
-        );
+        return [
+            'count' => $this->count,
+            'mc' => $this->mc,
+            'mode' => $this->mode,
+            'sem' => $this->sem->value,
+        ];
     }
 }

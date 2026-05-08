@@ -224,11 +224,13 @@ const addLog = (taskId, mc, status, msg, sem, progress = null) => {
     // 0 - shared (php), 1 - api (go)
     const semLabel = sem === 1 ? 'API' : 'PHP';
     const paddedStatus = status.toUpperCase().padEnd(14, ' ');
+    // Show taskId in hex
+    const hexId = (taskId & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
 
     entry.innerHTML = `
         <span style="color: var(--text-secondary)">${time}</span>
         <span style="color: ${statusColor}; font-weight: bold; white-space: pre">${semLabel} » ${paddedStatus}</span>
-        <span style="color: var(--text-primary)">${taskId.slice(-4)}</span>
+        <span style="color: var(--text-primary)">${hexId}</span>
         <span style="color: var(--text-muted)">${msg}${progressText}</span>
     `;
 

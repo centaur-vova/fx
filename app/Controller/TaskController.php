@@ -14,6 +14,9 @@ use App\Exception\Http\RateLimitExceededException;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\TaskService;
+
+use function PHPUnit\Framework\assertNotNull;
+
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Server;
@@ -46,7 +49,7 @@ class TaskController
         $dto->validate($this->taskMaxBatchSize, $this->taskSemaphoreLimit);
 
         // Random mode
-        if ($dto->count === 0) {
+        if ($dto->inRandomMode()) {
             go(fn () => $this->taskService->createRandomBatches());
             return ApiResponse::ok('RAND mode initiated');
         }
@@ -57,6 +60,7 @@ class TaskController
                 ? ProcessorFactory::MODE_STRESS
                 : ProcessorFactory::MODE_OBSERVATION;
 
+            assertNotNull($dto->semaphoreDriver);
             $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $dto->semaphoreDriver, $mode);
         });
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Messaging;
 
 use App\Contract\Messaging\MessageSerializer;
+use App\Contract\Support\FromArray;
 use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Message\TaskBatchCreated;
 use App\DTO\WebSocket\Message\TaskStatusUpdate;
@@ -63,9 +64,12 @@ final readonly class MappedMessageSerializer implements MessageSerializer
             $type = $data['_t'];
             $class = $this->resolveClassName($type);
 
+            /** @var array<string, mixed> $messageData */
             $messageData = $data['d'] ?? [];
-            if (!is_array($messageData)) {
-                $messageData = [];
+
+            // Use FromArray when possible
+            if (is_subclass_of($class, FromArray::class)) {
+                return $class::fromArray($messageData);
             }
 
             return new $class(...$messageData);

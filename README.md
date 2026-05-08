@@ -6,10 +6,13 @@
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
   <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
+  <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Concurrency">
   <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
   <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Architecture">
+  <img src="https://img.shields.io/badge/binary--msg-9_bytes-blue?style=flat" alt="Binary Message: 9 bytes">
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
+  <img src="https://img.shields.io/badge/days_since_last_commit-0-red?style=flat" alt="Days Since Last Commit: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
 </p>
@@ -62,20 +65,19 @@ Each service does one thing, but with surgical precision. The Worker processes t
 
 ---
 
-## 🐎 WebSocket binary protocol
+## 🐎 WebSocket Binary Protocol
 
 The WebSocket proxy (Go) communicates with the frontend via a **binary protocol** — compact, fast, no JSON overhead.
 
-- Each message is packed into **14 bytes**:
-  - `magic byte` (message type)
-  - `status` (task status)
-  - `taskId` (uint64)
-  - `max_concurrent` (mc)
-  - `progress` (0–100)
-  - `worker_id`
-  - `semaphore type` (0 - shared, 1 - api)
+- Each message is packed into **9 bytes**:
+  - `magic byte` — message type (1 byte)
+  - `status` — task status (1 byte, 8 predefined states)
+  - `taskId + sem` — semaphore driver type (1 bit, highest bit) packed with task ID (31 bits, lower bits) into a single uint32 (4 bytes)
+  - `max_concurrent` — concurrency limit (1 byte, 0–255)
+  - `progress` — completion percentage (7 bits, 0–100) + 1 reserved bit for future mischief (1 byte)
+  - `worker_id` — worker that processed the task (1 byte, 0–255)
 
-The binary format ensures minimal overhead and strict message ordering (FIFO via channels).
+The binary format ensures minimal overhead (9 bytes per event vs hundreds in JSON) and strict message ordering via FIFO channels.
 
 ---
 

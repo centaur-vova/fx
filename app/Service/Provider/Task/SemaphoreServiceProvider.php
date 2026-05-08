@@ -42,13 +42,11 @@ final readonly class SemaphoreServiceProvider implements ServiceProvider, Bootab
                 ) {
                 }
 
-                public function get(string $driver): TaskSemaphore
+                public function get(SemaphoreDriver $driver): TaskSemaphore
                 {
-                    $driverEnum = SemaphoreDriver::tryFrom($driver);
-
-                    $serviceName = array_search($driverEnum, $this->driverMap, true);
+                    $serviceName = array_search($driver, $this->driverMap, true);
                     if (!$serviceName) {
-                        throw new \InvalidArgumentException("Unknown semaphore driver: $driver");
+                        throw new \InvalidArgumentException("Unknown semaphore driver: {$driver->value}");
                     }
 
                     /** @var TaskSemaphore $service */

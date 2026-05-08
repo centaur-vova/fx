@@ -118,6 +118,7 @@ final class TaskQueueManager
     private function pumpToTasks(Server $server, \Generator $tasks): int
     {
         $taskCount = 0;
+
         /** @var string $receiptId */
         foreach ($tasks as $receiptId => $task) {
             $taskCount++;

@@ -5,13 +5,16 @@
   <img src="https://img.shields.io/badge/Swoole-6.0-8DD6F9?style=flat&logo=swoole&logoColor=white" alt="Swoole 6.0">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
-  <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
-  <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Concurrency">
-  <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
-  <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Architecture">
-  <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Brotherhood">
+  <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan уровень 10">
+  <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
+  <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Конкурентность">
+  <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Шина данных">
+  <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Архитектура">
+  <img src="https://img.shields.io/badge/binary--msg-9_bytes-blue?style=flat" alt="Binary Message: 9 bytes">
+  <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Конебратство">
+  <img src="https://img.shields.io/badge/days_since_last_commit-0-red?style=flat" alt="Дней с последнего коммита: 0">
   <img src="https://img.shields.io/badge/Утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
-  <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
+  <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="Лицензия KBL 3.0">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
@@ -64,18 +67,17 @@
 
 ## 🐎 Бинарный протокол WebSocket
 
-WebSocket-прокси (Go) общается с фронтом через **бинарный протокол** — компактный, быстрый, без JSON-перегрузок.
+WebSocket-прокси (Go) общается с фронтендом через **бинарный протокол** — компактный, быстрый, без JSON-перегрузок.
 
-- Каждое сообщение упаковано в **14 байт**:
-  - `magic byte` (тип сообщения)
-  - `status` (статус задачи)
-  - `taskId` (uint64)
-  - `max_concurrent` (mc)
-  - `progress` (0–100)
-  - `worker_id`
-  - `semaphore type` (0 - shared, 1 - api)
+- Каждое сообщение упаковано в **9 байт**:
+  - `magic byte` — тип сообщения (1 байт)
+  - `status` — статус задачи (1 байт, 8 предопределённых состояний)
+  - `taskId + sem` — тип семафора (1 бит, старший) + ID задачи (31 бит, младшие) в одном uint32 (4 байта)
+  - `max_concurrent` — лимит конкурентности (1 байт, 0–255)
+  - `progress` — процент выполнения (7 бит, 0–100) + 1 зарезервированный бит для будущих шалостей (1 байт)
+  - `worker_id` — воркер, обработавший задачу (1 байт, 0–255)
 
-Бинарный формат гарантирует минимальный оверхед и строгий порядок сообщений (FIFO через каналы).
+Бинарный формат обеспечивает минимальный оверхед (9 байт на событие вместо сотен в JSON) и строгий порядок сообщений через FIFO-каналы.
 
 ---
 

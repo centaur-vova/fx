@@ -55,7 +55,7 @@ type TaskBatchCreated struct {
 	Mode  string `json:"mode"`
 }
 type TaskStatusUpdate struct {
-	ID       uint64 `json:"id"`
+	ID       uint32 `json:"id"`
 	Status   string `json:"status"`
 	MC       uint8  `json:"mc"`
 	Progress uint8  `json:"progress"`
@@ -64,7 +64,7 @@ type TaskStatusUpdate struct {
 }
 
 func (t *TaskStatusUpdate) Pack() []byte {
-	buf := make([]byte, 14)
+	buf := make([]byte, 9)
 	buf[0] = MagicByte
 
 	val, ok := StatusMap[t.Status]
@@ -73,16 +73,19 @@ func (t *TaskStatusUpdate) Pack() []byte {
 	}
 	buf[1] = val
 
-	binary.BigEndian.PutUint64(buf[2:10], t.ID)
-	buf[10] = t.MC
-	buf[11] = t.Progress
-	buf[12] = t.Worker
-
-	val, ok = SemaphoreMap[t.Sem]
+	// Pack task ID (31 bits) and semaphore type (1 bit) into a single uint32.
+	// Upper bit = semaphore driver (0 for shared, 1 for API).
+	// Lower 31 bits = task ID.
+	semBit, ok := SemaphoreMap[t.Sem]
 	if !ok {
-		val = 0
+		semBit = 0
 	}
-	buf[13] = val
+	packed := (t.ID & 0x7FFFFFFF) | (uint32(semBit) << 31)
+	binary.BigEndian.PutUint32(buf[2:6], packed)
+
+	buf[6] = t.MC
+	buf[7] = t.Progress
+	buf[8] = t.Worker
 
 	return buf
 }

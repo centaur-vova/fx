@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Service\Task;
 
 use App\Contract\Messaging\Broadcaster;
-use App\Contract\Task\SemaphoreAware;
 use App\Contract\Task\SemaphoreDriver;
 use App\Contract\Task\SemaphoreFactory;
 use App\Contract\Task\TaskQueue;
@@ -16,6 +15,7 @@ use App\Exception\Server\WorkerShutdownException;
 use App\Server\RuntimeContext;
 use App\Service\Task\Processor\ProcessorFactory;
 use App\Support\Concern\Snafubarable;
+use JsonSerializable;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Timer;
@@ -40,19 +40,16 @@ class TaskService
     ) {
     }
 
-    public function createBatch(int $count, int $maxConcurrent, string $semaphoreDriver, string $mode): void
+    public function createBatch(int $count, int $maxConcurrent, SemaphoreDriver $semaphoreDriver, string $mode): void
     {
         $createdCount = 0;
 
         for ($i = 0; $i < $count; $i++) {
-            $taskId = $this->generateTaskId();
-
             $result = $this->taskQueue->push(
-                new TaskExecutionPayload(
-                    id: $taskId,
+                TaskExecutionPayload::create(
                     mc: $maxConcurrent,
+                    mode: $mode,
                     sem: $semaphoreDriver,
-                    mode: $mode
                 )
             );
 
@@ -62,7 +59,7 @@ class TaskService
         }
 
         if ($createdCount > 0) {
-            $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode), $semaphoreDriver);
+            $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode, $semaphoreDriver));
         }
     }
 
@@ -84,9 +81,8 @@ class TaskService
                 : ProcessorFactory::MODE_OBSERVATION;
 
             // Semaphore driver
-            $semValues = SemaphoreDriver::values();
-            assert(count($semValues) > 0); // Stop PHP Satan from blaming the code
-            $sem = $semValues[random_int(0, count($semValues) - 1)];
+            $cases = SemaphoreDriver::cases();
+            $sem = $cases[array_rand($cases)];
 
             $this->createBatch($count, $mc, $sem, $mode);
         }
@@ -105,7 +101,7 @@ class TaskService
         $semaphore = $this->semaphoreFactory->get($payload->sem);
         try {
             $permit = $semaphore->forLimit($payload->mc);
-            $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc), $payload->sem);
+            $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc, $payload->sem));
 
             /**
              * Attempt to acquire lock.
@@ -115,13 +111,18 @@ class TaskService
                     $this->manager->nack($payload);
                     $this->logger->debug('Max retries reached', ['id' => $payload->id]);
                     $this->notify(
-                        TaskStatusUpdate::retriesFailed($payload->id, $payload->mc, $workerId, $this->maxRetries),
-                        $payload->sem
+                        TaskStatusUpdate::retriesFailed(
+                            $payload->id,
+                            $payload->mc,
+                            $workerId,
+                            $this->maxRetries,
+                            $payload->sem
+                        )
                     );
                     return;
                 }
 
-                $this->notify(TaskStatusUpdate::lockFailed($payload->id, $payload->mc), $payload->sem);
+                $this->notify(TaskStatusUpdate::lockFailed($payload->id, $payload->mc, $payload->sem));
 
                 /**
                  * Re-queue with delay & jitter
@@ -134,7 +135,7 @@ class TaskService
                     // Ack
                     $this->manager->ack($payload);
 
-                    $this->notify(TaskStatusUpdate::retry($payload->id, $payload->mc), $payload->sem);
+                    $this->notify(TaskStatusUpdate::retry($payload->id, $payload->mc, $payload->sem));
                 });
 
                 return;
@@ -156,15 +157,14 @@ class TaskService
              * мы должны "Спасти Рядового Райана, тьфу, Конебрата"
              */
             try {
-                $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc), $payload->sem);
+                $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc, $payload->sem));
 
                 $processor = $this->processorFactory->get($payload->mode);
 
                 $progressCallback = function (int $progress) use ($payload): void {
                     $this->notify(
-                        TaskStatusUpdate::progress($payload->id, $payload->mc, $progress)
-                            ->withMessage($progress . '%'),
-                        $payload->sem
+                        TaskStatusUpdate::progress($payload->id, $payload->mc, $progress, $payload->sem)
+                            ->withMessage($progress . '%')
                     );
                     Co::sleep(0.001);
                 };
@@ -173,10 +173,7 @@ class TaskService
                 $processor->execute($progressCallback);
                 $this->logger->debug('Task finished', ['id' => $payload->id, 'time' => microtime(true)]);
 
-                $this->notify(
-                    TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId),
-                    $payload->sem
-                );
+                $this->notify(TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId, $payload->sem));
             } finally {
                 $permit->release();
                 $this->logger->debug('Lock released', ['id' => $payload->id]);
@@ -198,18 +195,10 @@ class TaskService
         $this->semaphoreFactory->shutdown();
     }
 
-    private function generateTaskId(): int
-    {
-        $time = time(); // 4 bytes
-        $random = random_int(0, 0xFFFFFFFF); // 4 random bytes
-
-        return ($time << 32) | $random;
-    }
-
-    private function notify(SemaphoreAware $update, string $sem): void
+    private function notify(JsonSerializable $update): void
     {
         $this->snafubar(
-            action: fn () => $this->broadcaster->publish($this->broadcastSubject, $update->withSem($sem)),
+            action: fn () => $this->broadcaster->publish($this->broadcastSubject, $update),
             reason: 'Notify failed',
         );
     }

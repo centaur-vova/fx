@@ -80,15 +80,14 @@ export const WS = {
 export const TASK = {
     // Binary id mappings
     STATUS_MAP: {
-        0: 'queued',
-        1: 'processing',
-        2: 'check_lock',
-        3: 'progress',
-        4: 'completed',
-        5: 'lock_acquired',
-        6: 'lock_failed',
-        7: 'retries_failed',
-        8: 'retry'
+        0: 'processing',
+        1: 'check_lock',
+        2: 'progress',
+        3: 'completed',
+        4: 'lock_acquired',
+        5: 'lock_failed',
+        6: 'retries_failed',
+        7: 'retry'
     },
     LOG_THRESHOLD: 200
 };

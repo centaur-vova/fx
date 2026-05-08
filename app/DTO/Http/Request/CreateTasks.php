@@ -12,8 +12,8 @@ final readonly class CreateTasks
     public function __construct(
         public int $count,
         public int $maxConcurrent,
-        public string $semaphoreDriver,
         public bool $stressMode,
+        public ?SemaphoreDriver $semaphoreDriver = null,
     ) {
     }
 
@@ -22,6 +22,11 @@ final readonly class CreateTasks
      */
     public static function fromArray(array $payload): self
     {
+        $semAsString = is_string($payload['semaphore_driver'] ?? null)
+            ? $payload['semaphore_driver']
+            : '';
+        $sem = SemaphoreDriver::tryFrom($semAsString);
+
         /** @var array{
          *      count?: int|string,
          *      max_concurrent?: int|string,
@@ -32,8 +37,8 @@ final readonly class CreateTasks
         return new self(
             count: (int) ($payload['count'] ?? 1),
             maxConcurrent: (int) ($payload['max_concurrent'] ?? 2),
-            semaphoreDriver: (string) ($payload['semaphore_driver'] ?? SemaphoreDriver::SHARED->value), // fallback to shared driver
             stressMode: (bool) ($payload['stress_mode'] ?? false),
+            semaphoreDriver: $sem,
         );
     }
 
@@ -47,9 +52,13 @@ final readonly class CreateTasks
             throw new InvalidTaskBatchException("Concurrency must be between 1 and $semaphoreLimit");
         }
 
-        if (!in_array($this->semaphoreDriver, SemaphoreDriver::values(), true)) {
-            $allowed = implode(', ', SemaphoreDriver::values());
-            throw new InvalidTaskBatchException("Invalid semaphore driver '{$this->semaphoreDriver}'. Allowed: $allowed");
+        if (!$this->inRandomMode() and !$this->semaphoreDriver) {
+            throw new InvalidTaskBatchException('Invalid semaphore driver');
         }
+    }
+
+    public function inRandomMode(): bool
+    {
+        return $this->count === 0;
     }
 }
