@@ -190,32 +190,30 @@ const addLog = (taskId, mc, status, msg, sem, progress = null) => {
     // Status color mapping based on semantic roles
     let statusColor = 'var(--text-muted)';  // default
 
-    /**
-     * TODO: needs refactoring, some statuses listed below are not even used lol.
-     */
     switch (status) {
-        case 'error':
-        case 'failed':
-            statusColor = 'var(--color-error)';
-            break;
-        case 'warning':
-        case 'retry':
-            statusColor = 'var(--color-warning)';
-            break;
-        case 'success':
-        case 'done':
         case 'completed':
             statusColor = 'var(--color-success)';
             break;
-        case 'info':
-        case 'queue':
+        case 'retries_failed':
+            statusColor = 'var(--color-error)';
+            break;
+        case 'lock_failed':
+            statusColor = 'var(--color-error)';
+            break;
+        case 'retry':
+            statusColor = 'var(--color-warning)';
+            break;
+        case 'check_lock':
             statusColor = 'var(--color-info)';
             break;
-        case 'accent':
+        case 'lock_acquired':
             statusColor = 'var(--color-accent)';
             break;
-        case 'urgent':
+        case 'progress':
             statusColor = 'var(--color-urgent)';
+            break;
+        case 'processing':
+            statusColor = 'var(--text-muted)';
             break;
         default:
             statusColor = 'var(--text-muted)';
