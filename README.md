@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/PHP-8.4-777BB4?style=flat&logo=php&logoColor=white" alt="PHP 8.4">
-  <img src="https://img.shields.io/badge/Swoole-6.0-8DD6F9?style=flat&logo=swoole&logoColor=white" alt="Swoole 6.0">
+  <img src="https://img.shields.io/badge/Swoole-6.2-8DD6F9?style=flat&logo=swoole&logoColor=white" alt="Swoole 6.2">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
   <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
