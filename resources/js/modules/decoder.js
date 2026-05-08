@@ -1,5 +1,17 @@
 import { WS, TASK } from './config.js';
 
+/**
+ * Decodes an incoming WebSocket message, either binary (9-byte protocol frame)
+ * or JSON-encoded text. Returns a structured { event, data } object for the
+ * application to consume, or null if parsing fails entirely.
+ *
+ * Binary frames are identified by the magic byte (type field); no payload
+ * length check is needed — the magic byte uniquely identifies the message type.
+ *
+ * @param {ArrayBuffer|string} rawData - Raw WebSocket message payload
+ * @param {Object} labels - Map of task status keys to human-readable labels
+ * @returns {{event: string, data: Object}|null}
+ */
 export const decodeMessage = (rawData, labels) => {
     // Binary
     if (rawData instanceof ArrayBuffer) {
