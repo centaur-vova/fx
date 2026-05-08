@@ -6,8 +6,8 @@ export const decodeMessage = (rawData, labels) => {
         const view = new DataView(rawData);
         const type = view.getUint8(0); // get magick byte
 
-        // 9 bytes binary proto with magic byte
-        if (rawData.byteLength === 9 && type === WS.BINARY_TYPE.STATUS_UPDATE) {
+        // Magic byte uniquely identifies the message type — no need to check payload length
+        if (type === WS.BINARY_TYPE.STATUS_UPDATE) {
             const status = TASK.STATUS_MAP[view.getUint8(1)];
 
             const packed = view.getUint32(2);
