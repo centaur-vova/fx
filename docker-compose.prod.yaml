@@ -28,6 +28,8 @@ services:
       - deez-nutz-data:/data
     ports:
       - "127.0.0.1:4222:4222"
+    environment:
+      - NATS_TOKEN=${NATS_TOKEN}
     networks:
       - atomic-network
 

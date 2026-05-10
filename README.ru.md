@@ -137,6 +137,8 @@ Fast.AF использует систему с двумя драйверами �
 
 ### 🐎 Запуск из готовых образов (GHCR)
 
+> **⚠️ Заметка:** Локальный деплой через Docker сейчас в процессе доработки — скоро WebSocket заработает.
+
 ```bash
 git clone https://github.com/shmandalf/fast-atomic-flow.git
 cd fast-atomic-flow
