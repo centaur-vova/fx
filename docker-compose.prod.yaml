@@ -30,6 +30,10 @@ services:
       - "127.0.0.1:4222:4222"
     environment:
       - NATS_TOKEN=${NATS_TOKEN}
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
       - atomic-network
 
@@ -43,9 +47,13 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks:
       - atomic-network
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     depends_on:
       - deez-nutz
 
