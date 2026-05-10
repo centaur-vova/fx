@@ -4,15 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fast-atomic-flow/go/internal/gateway"
+	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/metrics"
 	"fast-atomic-flow/go/internal/protocol"
-	"fast-atomic-flow/go/internal/semaphore"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -41,17 +39,6 @@ var (
 	subMu sync.Mutex
 	hub   *gateway.Hub
 )
-
-var levelMap = map[string]slog.Level{
-	"debug":     slog.LevelDebug,
-	"info":      slog.LevelInfo,
-	"notice":    slog.LevelInfo,
-	"warning":   slog.LevelWarn,
-	"error":     slog.LevelError,
-	"critical":  slog.LevelError + 2,
-	"alert":     slog.LevelError + 4,
-	"emergency": slog.LevelError + 8,
-}
 
 func subscribeToNATS(mRouter *gateway.MessageRouter) {
 	subMu.Lock()
@@ -98,16 +85,7 @@ func main() {
 	cfg.Validate()
 
 	// === LOGGER ===
-	level, ok := levelMap[strings.ToLower(cfg.LogLevel)]
-	if !ok {
-		log.Printf("unknown LOG_LEVEL '%s'", cfg.LogLevel)
-		level = slog.LevelInfo
-	}
-	opts := &slog.HandlerOptions{
-		Level: level,
-	}
-	logger := slog.New(slog.NewTextHandler(os.Stdout, opts))
-	slog.SetDefault(logger)
+	logger.Init(cfg.LogLevel)
 
 	// ==== INIT ROUTER ====
 	router := gateway.NewRouter()
@@ -164,14 +142,6 @@ func main() {
 	})
 
 	// === HTTP HANDLERS ===
-	semPool := semaphore.NewPool()
-	semHandler := semaphore.NewHandler(semPool)
-
-	// Semaphore
-	http.HandleFunc("/semaphore/acquire", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Acquire))
-	http.HandleFunc("/semaphore/release", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Release))
-	http.HandleFunc("/semaphore/health", semHandler.Health)
-
 	// Metrics
 	http.Handle("/metrics", promhttp.Handler())
 
@@ -185,7 +155,6 @@ func main() {
 	// ==== RUN WS SERVER IN GOROUTINE ====
 	go func() {
 		slog.Info("WebSocket Gateway ready", "port", cfg.WSPort)
-		slog.Info("Semaphore service started", "port", cfg.WSPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("Server crashed", "error", err)
 			os.Exit(1)

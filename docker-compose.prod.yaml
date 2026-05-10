@@ -47,6 +47,22 @@ services:
     depends_on:
       - deez-nutz
 
+  api:
+    image: ghcr.io/shmandalf/fast-atomic-flow-api:latest
+    container_name: fast-api
+    restart: always
+    command: /usr/local/bin/api
+    environment:
+      - APP_VERSION=${APP_VERSION:-dev}
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8081:8081"
+    networks:
+      - atomic-network
+    depends_on:
+      - ws-proxy
+
 volumes:
   deez-nutz-data:
 

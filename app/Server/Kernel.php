@@ -34,7 +34,6 @@ use function DI\create;
 use function DI\get;
 
 use Psr\Log\LoggerInterface;
-use Swoole\Atomic;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
@@ -186,9 +185,6 @@ class Kernel
         $server = $this->server;
         $options = $this->options;
 
-        // Task counter
-        $tasksAtomic = new Atomic(0);
-
         /**
          * DI container setup
          */
@@ -205,13 +201,8 @@ class Kernel
                 'options.task_max_batch_size' => $options->taskMaxBatchSize,
                 'options.task_semaphore_limit' => $options->taskSemaphoreLimit,
 
-                // Queue
-                'options.queue_capacity' => $options->queueCapacity,
-
                 // Channels & Jet streams
                 'options.broadcast_subject' => $options->broadcastSubject,
-
-                'shared.atomic.tasks' => $tasksAtomic,
 
                 // Logger
                 StdoutLogger::class => create()

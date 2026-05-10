@@ -49,9 +49,20 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./go
-          file: ./go/Dockerfile
+          file: ./go/Dockerfile.ws
           push: true
           tags: ghcr.io/${{ github.repository }}-ws:latest
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.version }}
+            BUILD_DATE=${{ steps.vars.outputs.build_date }}
+
+      - name: Build and Push Go API (Semaphore)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./go
+          file: ./go/Dockerfile.api
+          push: true
+          tags: ghcr.io/${{ github.repository }}-api:latest
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.version }}
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
@@ -71,6 +82,6 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose -f docker-compose.prod.yaml pull app ws-proxy
-            docker compose -f docker-compose.prod.yaml up -d --remove-orphans app ws-proxy
+            docker compose -f docker-compose.prod.yaml pull app ws-proxy api
+            docker compose -f docker-compose.prod.yaml up -d --remove-orphans app ws-proxy api
             docker image prune -f

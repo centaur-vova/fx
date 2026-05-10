@@ -7,9 +7,9 @@ RUN echo "#$APP_VERSION; $BUILD_DATE" > /version.txt
 WORKDIR /build
 COPY . .
 RUN go mod download && \
-    CGO_ENABLED=0 go build -o /go-proxy ./cmd/proxy
+    CGO_ENABLED=0 go build -o /api ./cmd/api
 
 FROM alpine:3.23
-COPY --from=builder /go-proxy /usr/local/bin/
+COPY --from=builder /api /usr/local/bin/
 COPY --from=builder /version.txt /version.txt
-CMD ["/usr/local/bin/go-proxy"]
+CMD ["/usr/local/bin/api"]

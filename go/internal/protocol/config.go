@@ -11,6 +11,7 @@ import (
 
 type AppConfig struct {
 	// API
+	APIPort  string
 	APIToken string
 
 	// WS
@@ -60,6 +61,7 @@ func LoadConfig() *AppConfig {
 
 	return &AppConfig{
 		APIToken: getEnv("API_TOKEN", ""),
+		APIPort:  getEnv("API_PORT", "8081"),
 
 		WSPort: getEnv("WS_PORT", "8080"),
 
