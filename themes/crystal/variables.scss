@@ -1,7 +1,16 @@
 :root {
   /* Semantic color roles — Pure Light & Crystal Accents */
+  --color-error: #ef4444;
+  --color-warning: #0ea5e9;
+  --color-success: #10b981;
   --color-info: #0ea5e9; /* sky */
   --color-accent: #0ea5e9; /* primary brand color */
+  --color-highlight: #f8fafc;
+  --color-urgent: #ef4444;
+  --color-subtle: #94a3b8;
+  --color-bright: #0f172a;
+  --color-vivid: #0ea5e9;
+
   --color-highlight: #f8fafc;
   --color-urgent: #ef4444; /* same as error */
   --color-subtle: #94a3b8; /* secondary gray */
@@ -10,8 +19,8 @@
 
   /* Surface & background colors — Apple-style White */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-elevated: #e2e8f0;
+  --bg-secondary: #f1f5f9; // slate-50
+  --bg-elevated: #e2e8f0; // slate-200
   --bg-control: rgba(255, 255, 255, 0.9);
   --bg-control-disabled: rgba(241, 245, 249, 0.5);
   --bg-overlay: rgba(255, 255, 255, 0.5);
@@ -39,8 +48,4 @@
   --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
   --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
   --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
-
-  /* Flash when creating tasks */
-  --flash-bg: rgba(0, 0, 0, 0.15);
-  --flash-filter: brightness(0.9);
 }

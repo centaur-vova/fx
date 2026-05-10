@@ -1,7 +1,6 @@
 canvas {
-  /* Subtle glow to make task shards look "backlit" */
+  background: transparent;
   filter: drop-shadow(0 0 5px rgba(14, 165, 233, 0.15));
-  background: var(--bg-primary);
 }
 
 .task-button {
@@ -133,9 +132,4 @@ canvas {
 
 .zone-bg {
   backdrop-filter: blur(1px);
-}
-
-.zone-queue.flash {
-  --flash-bg: rgba(0, 0, 0, 0.3) !important;
-  --flash-filter: brightness(0.8) !important;
 }

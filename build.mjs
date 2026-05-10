@@ -100,10 +100,13 @@ for (const theme of themes) {
     const themeScss = path.join(themePath, 'theme.scss');
     const baseScss = path.join(cssDir, 'style.scss');
 
+    // --- variables.scss must be present in each theme ---
+    validateThemeVars(theme, varsScss);
+
     // Concatenate SCSS sources: base styles + variables + theme overrides
     let scssContent = '';
-    if (fs.existsSync(baseScss)) scssContent += fs.readFileSync(baseScss, 'utf8') + '\n\n';
     if (fs.existsSync(varsScss)) scssContent += fs.readFileSync(varsScss, 'utf8') + '\n\n';
+    if (fs.existsSync(baseScss)) scssContent += fs.readFileSync(baseScss, 'utf8') + '\n\n';
     if (fs.existsSync(themeScss)) scssContent += fs.readFileSync(themeScss, 'utf8');
 
     try {
@@ -201,5 +204,30 @@ for (const theme of themeNames) {
 
 fs.writeFileSync(path.join(__dirname, 'public/index.html'), html);
 console.log(`  ✅ public / index.html(hash: ${buildHash})`);
+
+function validateThemeVars(theme, varsPath) {
+    const requiredVars = [
+        '--color-error', '--color-warning', '--color-success', '--color-info',
+        '--color-accent', '--color-urgent', '--color-subtle', '--color-bright', '--color-vivid',
+        '--bg-primary', '--bg-secondary', '--bg-elevated', '--bg-control', '--bg-control-disabled', '--bg-overlay',
+        '--border-default', '--border-subtle', '--border-emphasized', '--border-disabled',
+        '--text-primary', '--text-secondary', '--text-muted', '--text-white',
+        '--color-slider-track', '--worker-bar-idle', '--grid-dot', '--divider-subtle',
+        '--bg-info', '--bg-warning', '--bg-success'
+    ];
+
+    if (!fs.existsSync(varsPath)) {
+        console.error(`❌ Theme "${theme}" is missing variables.scss`);
+        process.exit(1);
+    }
+
+    const content = fs.readFileSync(varsPath, 'utf8');
+    const missing = requiredVars.filter(v => !content.includes(v));
+
+    if (missing.length > 0) {
+        console.error(`❌ Theme "${theme}" is missing required CSS variables: ${missing.join(', ')}`);
+        process.exit(1);
+    }
+}
 
 console.log('\n🎉 Build complete!');
