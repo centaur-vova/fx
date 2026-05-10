@@ -135,8 +135,6 @@ The mode is passed in the POST request body when creating tasks (`/api/tasks/cre
 
 ### 🐎 Run from pre-built images (GHCR)
 
-> **⚠️ Note:** Local Docker deployment is a horse still being saddled — live WebSocket will be fixed soon.
-
 ```bash
 git clone https://github.com/shmandalf/fast-atomic-flow.git
 cd fast-atomic-flow
