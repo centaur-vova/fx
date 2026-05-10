@@ -56,6 +56,14 @@ final class RuntimeContext
      */
     public function getShutdownSignal(): Channel
     {
+        if ($this->isShuttingDown()) {
+            // Already shutting down — return a closed channel so caller wakes up immediately
+            /** @var Channel<null> */
+            $ch = new Channel(1);
+            $ch->close();
+            return $ch;
+        }
+
         return $this->shutdownChan ??= new Channel(1);
     }
 

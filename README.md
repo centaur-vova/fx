@@ -1,10 +1,13 @@
 # FAST ATOMIC FLOW · KBL v3.0
 
 <p align="center">
+  <!-- Row 1: Technology Stack -->
   <img src="https://img.shields.io/badge/PHP-8.4-777BB4?style=flat&logo=php&logoColor=white" alt="PHP 8.4">
   <img src="https://img.shields.io/badge/Swoole-6.2-8DD6F9?style=flat&logo=swoole&logoColor=white" alt="Swoole 6.2">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
+  <br>
+  <!-- Row 2: Quality & Features -->
   <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Concurrency">
@@ -12,7 +15,8 @@
   <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Architecture">
   <img src="https://img.shields.io/badge/binary--msg-9_bytes-blue?style=flat" alt="Binary Message: 9 bytes">
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
-  <img src="https://img.shields.io/badge/days_since_last_commit-0-red?style=flat" alt="Days Since Last Commit: 0">
+  <br>
+  <!-- Row 3: Health & License -->
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
 </p>
