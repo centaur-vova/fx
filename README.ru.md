@@ -13,11 +13,10 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Конкурентность">
   <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Шина данных">
-  <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Архитектура">
   <img src="https://img.shields.io/badge/binary--msg-9_bytes-blue?style=flat" alt="Binary Message: 9 bytes">
-  <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Конебратство">
   <br>
   <!-- Row 3: Health & License -->
+  <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Конебратство">
   <img src="https://img.shields.io/badge/Утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
   <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="Лицензия KBL 3.0">
 </p>

@@ -12,11 +12,10 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/concurrency-semaphores-blue?style=flat" alt="Concurrency">
   <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
-  <img src="https://img.shields.io/badge/architecture-event%20driven-10b981?style=flat" alt="Architecture">
   <img src="https://img.shields.io/badge/binary--msg-9_bytes-blue?style=flat" alt="Binary Message: 9 bytes">
-  <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
   <br>
   <!-- Row 3: Health & License -->
+  <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
 </p>
