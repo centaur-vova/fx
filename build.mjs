@@ -19,9 +19,6 @@ const buildHash = crypto.randomBytes(4).toString('hex');
 const appJsFile = `app.${buildHash}.js`;
 const themesJsFile = `themes.${buildHash}.js`;
 
-// Environment variables
-const wsUrl = process.env.WS_URL || 'wss://fast.af.l3373.xyz/ws';
-
 // Paths
 const themesDir = path.join(__dirname, 'themes');
 const distDir = path.join(__dirname, 'public/dist');
@@ -50,7 +47,6 @@ await esbuild.build({
     minify: true,
     outfile: path.join(distDir, appJsFile),
     define: {
-        WS_URL: JSON.stringify(wsUrl)
     }
 });
 

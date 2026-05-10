@@ -177,7 +177,6 @@ For those who want to dig into the code, change the workflow, and run everything
 | Variable  | Default                  | Description                |
 | --------- | ------------------------ | -------------------------- |
 | `WS_PORT` | `8080`                   | WebSocket port             |
-| `WS_URL`  | `ws://localhost:8080/ws` | WebSocket URL for frontend |
 
 ### 🐎 Semaphore & Retry tuning
 

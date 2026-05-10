@@ -43,7 +43,6 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:latest
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.version }}
-            WS_URL=${{ secrets.WS_URL }}
 
       - name: Build and Push Go WebSocket Proxy
         uses: docker/build-push-action@v5

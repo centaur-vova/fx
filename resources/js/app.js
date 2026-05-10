@@ -62,7 +62,9 @@ resize();
 
 // Websockets
 const connect = () => {
-    const wsUrl = WS_URL;
+    const wsPort = location.hostname === 'localhost' ? ':8080' : '';
+    const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.hostname}${wsPort}/ws`;
+
     const ws = new WebSocket(wsUrl);
 
     ws.binaryType = 'arraybuffer';

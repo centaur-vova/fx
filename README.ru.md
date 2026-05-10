@@ -179,7 +179,6 @@ docker compose -f docker-compose.prod.yaml up
 | Переменная | По умолчанию | Описание       |
 | ---------- | ------------ | -------------- |
 | `WS_PORT`  | `8080`       | Порт WebSocket |
-| `WS_URL` | `ws://localhost:8080/ws` | WS URL для фронта |
 
 ### 🐎 Настройка семафоров и ретраев
 
