@@ -148,7 +148,7 @@ docker compose -f docker-compose.prod.yaml up
 
 ### 🐎 Локальная разработка
 
-Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go без Docker, три терминала) — см. [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
+Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go нативно, NATS в Docker) — см. [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 

@@ -146,7 +146,7 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 
 ### 🐎 Local development
 
-For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go without Docker, three terminals) — see [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
+For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 
