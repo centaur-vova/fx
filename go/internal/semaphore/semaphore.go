@@ -11,8 +11,7 @@ type Permit struct {
 }
 
 type Semaphore struct {
-	slots   chan struct{}
-	permits map[uint64]*Permit
+	slots chan struct{}
 }
 
 func NewSemaphore(capacity int) *Semaphore {

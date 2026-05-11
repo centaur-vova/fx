@@ -15,7 +15,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -28,12 +27,7 @@ type NatsEnvelope struct {
 }
 
 var (
-	cfg       *protocol.AppConfig
-	clients   = make(map[*websocket.Conn]bool)
-	clientsMu sync.Mutex
-	upgrader  = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool { return true }, // Allow all
-	}
+	cfg   *protocol.AppConfig
 	nc    *nats.Conn
 	sub   *nats.Subscription
 	subMu sync.Mutex
