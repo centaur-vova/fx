@@ -116,12 +116,12 @@ Fast.AF использует систему с двумя драйверами �
 
 - **Режим наблюдения** (`task_mode: observation`, по умолчанию): 
   Искусственная задержка через `Co::sleep()` — 11 шагов по 50-200 миллисекунд.
-  [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
+  [`PrecisionProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
 - **Стресс-тест** (`task_mode: stress`):
   Кнопки стресс-теста визуально отличаются от обычных — цветной фон, рамка или акцент, в зависимости от выбранной темы.
   Полезная нагрузка — `hash('sha256', $data)` в цикле.
-  [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
+  [`HighLoadProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
 Режим передаётся в теле POST-запроса при создании задач (`/api/tasks/create`).
 
@@ -138,7 +138,7 @@ Fast.AF использует систему с двумя драйверами �
 ### 🐎 Запуск из готовых образов (GHCR)
 
 ```bash
-git clone https://github.com/shmandalf/fast-atomic-flow.git
+git clone https://github.com/centaur-vova/fast-atomic-flow.git
 cd fast-atomic-flow
 cp .env.example .env
 docker compose -f docker-compose.prod.yaml up
@@ -148,7 +148,7 @@ docker compose -f docker-compose.prod.yaml up
 
 ### 🐎 Локальная разработка
 
-Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go нативно, NATS в Docker) — см. [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
+Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go нативно, NATS в Docker) — см. [Local Development Workflow](https://github.com/centaur-vova/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 
@@ -222,7 +222,7 @@ _Тема Sin City: нуарная эстетика, активна кнопка
 Кнопка **RAND** в любой теме запускает случайные пачки на **обоих** драйверах одновременно — идеально для стресс-теста гибридной архитектуры.
 
 **Свои темы:** вы можете создать собственную тему, добавив папку в `themes/` с файлом `theme.yaml` (цвета, координаты зон, наборы кнопок, драйверы семафоров для каждой кнопки и т.д.).  
-Подробности в [Wiki](https://github.com/shmandalf/fast-atomic-flow/wiki/Themes).
+Подробности в [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes).
 
 --
 
@@ -273,7 +273,7 @@ _Тема Sin City: нуарная эстетика, активна кнопка
 Fast Atomic Flow — это открытый код, но не открытый кошелёк.
 
 - **Вы можете** использовать проект для обучения, личных пет-проектов, форков с сохранением авторства.
-- **Вы не можете** использовать код или его производные в платных продуктах, SaaS-сервисах, инструментах корпоративного мониторинга без **письменного согласия автора** (Дмитрий Шманатов / `shmandalf`).
+- **Вы не можете** использовать код или его производные в платных продуктах, SaaS-сервисах, инструментах корпоративного мониторинга без **письменного согласия автора** (Дмитрий Шманатов / `centaur-vova`).
 
 **Почему так?**
 Потому что конь не против, если на нём ездят. Но только с седла, которое он сам одобрил.

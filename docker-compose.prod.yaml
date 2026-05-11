@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/shmandalf/fast-atomic-flow:latest
+    image: ghcr.io/centaur-vova/fast-atomic-flow:latest
     container_name: atomic-flow-app
     restart: always
     env_file:
@@ -38,7 +38,7 @@ services:
       - atomic-network
 
   ws-proxy:
-    image: ghcr.io/shmandalf/fast-atomic-flow-ws:latest
+    image: ghcr.io/centaur-vova/fast-atomic-flow-ws:latest
     container_name: fast-ws
     restart: always
     command: /usr/local/bin/go-proxy
@@ -58,7 +58,7 @@ services:
       - deez-nutz
 
   api:
-    image: ghcr.io/shmandalf/fast-atomic-flow-api:latest
+    image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
     container_name: fast-api
     restart: always
     command: /usr/local/bin/api

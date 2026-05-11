@@ -114,12 +114,12 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 
 - **Observation mode** (`task_mode: observation`, default):
   Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
-  [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
+  [`PrecisionProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
 - **Stress test mode** (`task_mode: stress`):
   Stress test buttons are visually distinct — colored background, border, or accent depending on the theme.
   Instead of `sleep()` — real CPU work: `hash('sha256', $data)` in a loop.
-  [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
+  [`HighLoadProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
 The mode is passed in the POST request body when creating tasks (`/api/tasks/create`).
 
@@ -136,7 +136,7 @@ The mode is passed in the POST request body when creating tasks (`/api/tasks/cre
 ### 🐎 Run from pre-built images (GHCR)
 
 ```bash
-git clone https://github.com/shmandalf/fast-atomic-flow.git
+git clone https://github.com/centaur-vova/fast-atomic-flow.git
 cd fast-atomic-flow
 cp .env.example .env
 docker compose -f docker-compose.prod.yaml up
@@ -146,7 +146,7 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 
 ### 🐎 Local development
 
-For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/shmandalf/fast-atomic-flow/wiki/Local-Development-Workflow)
+For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/centaur-vova/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 
@@ -220,7 +220,7 @@ Built‑in themes:
 The **RAND** button in every theme fires random batches on **both** drivers simultaneously — perfect for stress testing the hybrid architecture.
 
 **Custom themes:** You can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, per‑button semaphore drivers, etc.).  
-See the [Wiki](https://github.com/shmandalf/fast-atomic-flow/wiki/Themes) for details.
+See the [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) for details.
 
 ---
 
@@ -271,7 +271,7 @@ _Violation is punishable by a week of maintaining PHP 5.6 and listening to recor
 Fast Atomic Flow is open source, but not open wallet.
 
 - **You may** use the project for learning, personal pet projects, forks with attribution.
-- **You may not** use the code or its derivatives in paid products, SaaS services, corporate monitoring tools without **written consent from the author** (Dmitry Shmanatov / `shmandalf`).
+- **You may not** use the code or its derivatives in paid products, SaaS services, corporate monitoring tools without **written consent from the author** (Dmitry Shmanatov / `centaur-vova`).
 
 **Why?**
 Because the horse doesn't mind if you ride it. But only with a saddle that it has approved itself.

@@ -1,5 +1,5 @@
 {
-    "name": "shmandalf/atomic-flow",
+    "name": "centaur-vova/atomic-flow",
     "description": "High-performance task visualizer built with PHP 8.4+ & Swoole",
     "type": "project",
     "require": {

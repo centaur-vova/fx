@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-push:
-    if: github.repository == 'shmandalf/fast-atomic-flow'
+    if: github.repository == 'centaur-vova/fast-atomic-flow'
     name: Build & Push to GHCR
     runs-on: ubuntu-latest
     permissions:
@@ -67,7 +67,7 @@ jobs:
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
 
   deploy-vps:
-    if: github.repository == 'shmandalf/fast-atomic-flow'
+    if: github.repository == 'centaur-vova/fast-atomic-flow'
     name: Pull & Restart on VPS
     needs: build-and-push
     runs-on: ubuntu-latest
