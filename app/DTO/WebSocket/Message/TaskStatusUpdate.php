@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\DTO\WebSocket\Message;
 
 use App\Contract\Task\SemaphoreDriver;
+use App\Contract\Task\TaskMode;
+use App\DTO\Task\TaskExecutionPayload;
 use JsonSerializable;
 
 final readonly class TaskStatusUpdate implements JsonSerializable
@@ -21,65 +23,72 @@ final readonly class TaskStatusUpdate implements JsonSerializable
     public function __construct(
         public int $id,
         public string $status,
-        public string $message,
         public int $mc,
         public SemaphoreDriver $sem,
-        public int $progress = 0,
+        public TaskMode $mode,
+        public ?string $message,
+        public ?int $progress = null,
         public ?int $worker = null,
     ) {
     }
 
-    public static function retry(int $id, int $mc, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_RETRY, 'Retry', $mc, $sem);
-    }
-
-    public static function processing(int $id, int $mc, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_PROCESSING, 'Started', $mc, $sem);
-    }
-
-    public static function checkLock(int $id, int $mc, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_CHECK_LOCK, "Limit: {$mc}", $mc, $sem);
-    }
-
-    public static function progress(int $id, int $mc, int $percent, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_PROGRESS, 'Progress', $mc, $sem, $percent);
-    }
-
-    public static function completed(int $id, int $mc, int $worker, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_COMPLETED, 'Done', $mc, $sem, 100, $worker);
-    }
-
-    public static function lockAcquired(int $id, int $mc, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_LOCK_ACQUIRED, 'Accepted', $mc, $sem);
-    }
-
-    public static function lockFailed(int $id, int $mc, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_LOCK_FAILED, 'Timeout', $mc, $sem);
-    }
-
-    public static function retriesFailed(int $id, int $mc, int $worker, int $maxRetries, SemaphoreDriver $sem): self
-    {
-        return new self($id, self::EVENT_RETRIES_FAILED, "Max retries reached ({$maxRetries})", $mc, $sem, worker: $worker);
-    }
-
-    public function withMessage(string $message): self
-    {
+    public static function fromPayload(
+        TaskExecutionPayload $payload,
+        string $status,
+        ?string $message = null,
+        ?int $worker = null,
+        ?int $progress = null,
+    ): self {
         return new self(
+            id: $payload->id,
+            mc: $payload->mc,
+            sem: $payload->sem,
+            mode: $payload->mode,
+            worker: $worker,
+            status: $status,
             message: $message,
-            id: $this->id,
-            status: $this->status,
-            mc: $this->mc,
-            progress: $this->progress,
-            worker: $this->worker,
-            sem: $this->sem,
+            progress: $progress,
         );
+    }
+
+    public static function retry(TaskExecutionPayload $payload): self
+    {
+        return self::fromPayload($payload, self::EVENT_RETRY, 'Retrying');
+    }
+
+    public static function processing(TaskExecutionPayload $payload): self
+    {
+        return self::fromPayload($payload, self::EVENT_PROCESSING, 'Processing');
+    }
+
+    public static function checkLock(TaskExecutionPayload $payload): self
+    {
+        return self::fromPayload($payload, self::EVENT_CHECK_LOCK, "Limit: {$payload->mc}");
+    }
+
+    public static function progress(TaskExecutionPayload $payload, int $percent): self
+    {
+        return self::fromPayload($payload, self::EVENT_PROGRESS, "{$percent}%", null, $percent);
+    }
+
+    public static function completed(TaskExecutionPayload $payload, int $worker): self
+    {
+        return self::fromPayload($payload, self::EVENT_COMPLETED, 'Done', $worker, 100);
+    }
+
+    public static function lockAcquired(TaskExecutionPayload $payload): self
+    {
+        return self::fromPayload($payload, self::EVENT_LOCK_ACQUIRED, 'Accepted');
+    }
+
+    public static function lockFailed(TaskExecutionPayload $payload): self
+    {
+        return self::fromPayload($payload, self::EVENT_LOCK_FAILED, 'Timeout');
+    }
+
+    public static function retriesFailed(TaskExecutionPayload $payload, int $worker, int $maxRetries): self
+    {
+        return self::fromPayload($payload, self::EVENT_RETRIES_FAILED, "Max retries reached ({$maxRetries})", $worker);
     }
 
     public function jsonSerialize(): mixed
@@ -92,6 +101,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
             'progress' => $this->progress,
             'worker' => $this->worker,
             'sem' => $this->sem->value,
+            'mode' => $this->mode->value,
         ];
     }
 }

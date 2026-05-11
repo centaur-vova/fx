@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\DTO\Http\Request;
 
 use App\Contract\Task\SemaphoreDriver;
+use App\Contract\Task\TaskMode;
 use App\Exception\Http\InvalidTaskBatchException;
 
 /**
  * Incoming request DTO for the task creation endpoint.
  *
- * $count = 0 triggers random batch mode (RAND).
+ * When $count is 0 (RAND mode), all other parameters are ignored — random batches are generated instead.
+ * When $count > 0, $taskMode and $semaphoreDriver are required.
+ *
  * $semaphoreDriver is nullable — only required when not in random mode.
  */
 final readonly class CreateTasks
@@ -18,8 +21,8 @@ final readonly class CreateTasks
     public function __construct(
         public int $count,
         public int $maxConcurrent,
-        public bool $stressMode,
-        public ?SemaphoreDriver $semaphoreDriver = null,
+        public ?TaskMode $taskMode,
+        public ?SemaphoreDriver $semaphoreDriver,
     ) {
     }
 
@@ -28,29 +31,41 @@ final readonly class CreateTasks
      */
     public static function fromArray(array $payload): self
     {
+        // semaphore_driver literal to SemaphoreDriver
         $semAsString = is_string($payload['semaphore_driver'] ?? null)
             ? $payload['semaphore_driver']
             : '';
         $sem = SemaphoreDriver::tryFrom($semAsString);
 
+        // task_mode literal to TaskMode
+        $taskModeAsString = is_string($payload['task_mode'] ?? null)
+            ? $payload['task_mode']
+            : '';
+        $taskMode = TaskMode::tryFrom($taskModeAsString);
+
         /** @var array{
          *      count?: int|string,
          *      max_concurrent?: int|string,
          *      semaphore_driver?: string,
-         *      stress_mode?: bool|string
+         *      task_mode?: string
          *  } $payload
          */
         return new self(
             count: (int) ($payload['count'] ?? 1),
             maxConcurrent: (int) ($payload['max_concurrent'] ?? 2),
-            stressMode: (bool) ($payload['stress_mode'] ?? false),
+            taskMode: $taskMode,
             semaphoreDriver: $sem,
         );
     }
 
     public function validate(int $maxBatchSize, int $semaphoreLimit): void
     {
-        if ($this->count < 0 || $this->count > $maxBatchSize) {
+        if ($this->inRandomMode()) {
+            return;
+        }
+
+        /* --- Further checks for non-random mode --- */
+        if ($this->count < 1 || $this->count > $maxBatchSize) {
             throw new InvalidTaskBatchException("Count must be between 1 and $maxBatchSize");
         }
 
@@ -58,8 +73,12 @@ final readonly class CreateTasks
             throw new InvalidTaskBatchException("Concurrency must be between 1 and $semaphoreLimit");
         }
 
-        if (!$this->inRandomMode() and !$this->semaphoreDriver) {
+        if (!$this->semaphoreDriver) {
             throw new InvalidTaskBatchException('Invalid semaphore driver');
+        }
+
+        if (!$this->taskMode) {
+            throw new InvalidTaskBatchException('Invalid task mode');
         }
     }
 

@@ -270,7 +270,7 @@ export const state = {
                     count,
                     semaphore_driver: semaphoreDriver,
                     max_concurrent: this.mc,
-                    stress_mode: forceStress
+                    task_mode: forceStress ? 'stress' : 'observation'
                 }),
             });
             const data = await res.json();

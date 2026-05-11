@@ -77,7 +77,7 @@ The WebSocket proxy (Go) communicates with the frontend via a **binary protocol*
   - `status` — task status (1 byte, 8 predefined states)
   - `taskId + sem` — semaphore driver type (1 bit, highest bit) packed with task ID (31 bits, lower bits) into a single uint32 (4 bytes)
   - `max_concurrent` — concurrency limit (1 byte, 0–255)
-  - `progress` — completion percentage (7 bits, 0–100) + 1 reserved bit for future mischief (1 byte)
+  - `progress + task_mode` — completion percentage (7 bits, 0–100) + task mode (1 bit, highest bit: 0 = observation, 1 = stress) packed into a single byte
   - `worker_id` — worker that processed the task (1 byte, 0–255)
 
 The binary format ensures minimal overhead (9 bytes per event vs hundreds in JSON) and strict message ordering via FIFO channels.
@@ -98,7 +98,7 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 - **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes.
 - **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization.
 - **Visual Distinction:** The UI differentiates drivers in real-time (rounded squares for Go API, sharp squares for PHP Atomic).
-- **RAND (Random Spam Mode):** The "RAND" button triggers chaotic spam mode, firing hundreds of batches with randomized parameters: `max_concurrent`, `stress_mode`, and semaphore driver change per batch. Perfect for stress testing and visual fireworks on the worker heatmap.
+- **RAND (Random Spam Mode):** The "RAND" button triggers chaotic spam mode, firing hundreds of batches with randomized parameters: `max_concurrent`, `task_mode`, and semaphore driver change per batch. Perfect for stress testing and visual fireworks on the worker heatmap.
 
 ---
 
@@ -112,11 +112,11 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 
 ## 🐎 Two operation modes
 
-- **Observation mode** (`stress_mode: false`, default):
+- **Observation mode** (`task_mode: observation`, default):
   Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
   [`PrecisionProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
-- **Stress test mode** (`stress_mode: true`):
+- **Stress test mode** (`task_mode: stress`):
   Stress test buttons are visually distinct — colored background, border, or accent depending on the theme.
   Instead of `sleep()` — real CPU work: `hash('sha256', $data)` in a loop.
   [`HighLoadProcessor.php`](https://github.com/shmandalf/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)

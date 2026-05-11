@@ -7,6 +7,7 @@ namespace App\Service\Task;
 use App\Contract\Messaging\Broadcaster;
 use App\Contract\Task\SemaphoreDriver;
 use App\Contract\Task\SemaphoreFactory;
+use App\Contract\Task\TaskMode;
 use App\Contract\Task\TaskQueue;
 use App\DTO\Task\TaskExecutionPayload;
 use App\DTO\WebSocket\Message\TaskBatchCreated;
@@ -40,7 +41,7 @@ class TaskService
     ) {
     }
 
-    public function createBatch(int $count, int $maxConcurrent, SemaphoreDriver $semaphoreDriver, string $mode): void
+    public function createBatch(int $count, int $maxConcurrent, SemaphoreDriver $semaphoreDriver, TaskMode $mode): void
     {
         $createdCount = 0;
 
@@ -75,14 +76,13 @@ class TaskService
             // MC range
             $mc = random_int(10, 30);
 
-            // Stress/ Observation mode
-            $mode = random_int(0, 1) === 0
-                ? ProcessorFactory::MODE_STRESS
-                : ProcessorFactory::MODE_OBSERVATION;
-
             // Semaphore driver
             $cases = SemaphoreDriver::cases();
             $sem = $cases[array_rand($cases)];
+
+            // Task mode
+            $cases = TaskMode::cases();
+            $mode = $cases[array_rand($cases)];
 
             $this->createBatch($count, $mc, $sem, $mode);
         }
@@ -101,7 +101,7 @@ class TaskService
         $semaphore = $this->semaphoreFactory->get($payload->sem);
         try {
             $permit = $semaphore->forLimit($payload->mc);
-            $this->notify(TaskStatusUpdate::checkLock($payload->id, $payload->mc, $payload->sem));
+            $this->notify(TaskStatusUpdate::checkLock($payload));
 
             /**
              * Attempt to acquire lock.
@@ -110,19 +110,11 @@ class TaskService
                 if ($payload->attempt >= $this->maxRetries) {
                     $this->manager->nack($payload);
                     $this->logger->debug('Max retries reached', ['id' => $payload->id]);
-                    $this->notify(
-                        TaskStatusUpdate::retriesFailed(
-                            $payload->id,
-                            $payload->mc,
-                            $workerId,
-                            $this->maxRetries,
-                            $payload->sem
-                        )
-                    );
+                    $this->notify(TaskStatusUpdate::retriesFailed($payload, $workerId, $this->maxRetries));
                     return;
                 }
 
-                $this->notify(TaskStatusUpdate::lockFailed($payload->id, $payload->mc, $payload->sem));
+                $this->notify(TaskStatusUpdate::lockFailed($payload));
 
                 /**
                  * Re-queue with delay & jitter
@@ -135,7 +127,7 @@ class TaskService
                     // Ack
                     $this->manager->ack($payload);
 
-                    $this->notify(TaskStatusUpdate::retry($payload->id, $payload->mc, $payload->sem));
+                    $this->notify(TaskStatusUpdate::retry($payload));
                 });
 
                 return;
@@ -157,15 +149,12 @@ class TaskService
              * мы должны "Спасти Рядового Райана, тьфу, Конебрата"
              */
             try {
-                $this->notify(TaskStatusUpdate::lockAcquired($payload->id, $payload->mc, $payload->sem));
+                $this->notify(TaskStatusUpdate::lockAcquired($payload));
 
                 $processor = $this->processorFactory->get($payload->mode);
 
                 $progressCallback = function (int $progress) use ($payload): void {
-                    $this->notify(
-                        TaskStatusUpdate::progress($payload->id, $payload->mc, $progress, $payload->sem)
-                            ->withMessage($progress . '%')
-                    );
+                    $this->notify(TaskStatusUpdate::progress($payload, $progress));
                     Co::sleep(0.001);
                 };
 
@@ -173,7 +162,7 @@ class TaskService
                 $processor->execute($progressCallback);
                 $this->logger->debug('Task finished', ['id' => $payload->id, 'time' => microtime(true)]);
 
-                $this->notify(TaskStatusUpdate::completed($payload->id, $payload->mc, $workerId, $payload->sem));
+                $this->notify(TaskStatusUpdate::completed($payload, $workerId));
             } finally {
                 $permit->release();
                 $this->logger->debug('Lock released', ['id' => $payload->id]);

@@ -18,6 +18,11 @@ const (
 	SemaphoreAPI                // 1 /
 )
 
+const (
+	TaskModeObservation byte = iota // 0 \ 1 bit
+	TaskModeStress                  // 1 /
+)
+
 var StatusMap = map[string]byte{
 	"processing":     StatusProcessing,
 	"check_lock":     StatusCheckLock,
@@ -32,4 +37,9 @@ var StatusMap = map[string]byte{
 var SemaphoreMap = map[string]byte{
 	"shared": SemaphoreShared,
 	"api":    SemaphoreAPI,
+}
+
+var TaskModeMap = map[string]byte{
+	"observation": TaskModeObservation,
+	"stress":      TaskModeStress,
 }

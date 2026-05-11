@@ -61,6 +61,7 @@ type TaskStatusUpdate struct {
 	Progress uint8  `json:"progress"`
 	Worker   uint8  `json:"worker"`
 	Sem      string `json:"sem"`
+	Mode     string `json:"mode"`
 }
 
 func (t *TaskStatusUpdate) Pack() []byte {
@@ -80,11 +81,21 @@ func (t *TaskStatusUpdate) Pack() []byte {
 	if !ok {
 		semBit = 0
 	}
-	packed := (t.ID & 0x7FFFFFFF) | (uint32(semBit) << 31)
-	binary.BigEndian.PutUint32(buf[2:6], packed)
+	packed32 := (t.ID & 0x7FFFFFFF) | (uint32(semBit) << 31)
+	binary.BigEndian.PutUint32(buf[2:6], packed32)
 
 	buf[6] = t.MC
-	buf[7] = t.Progress
+
+	// Pack progress (7 bits) and task mode (1 bit) into a single byte.
+	// Upper bit = task mode (0 for observation, 1 for stress).
+	// Lower 7 bits = progress (0–100).
+	modeBit, ok := TaskModeMap[t.Mode]
+	if !ok {
+		modeBit = 0
+	}
+	packed8 := (t.Progress & 0x7F) | (modeBit << 7)
+	buf[7] = packed8
+
 	buf[8] = t.Worker
 
 	return buf

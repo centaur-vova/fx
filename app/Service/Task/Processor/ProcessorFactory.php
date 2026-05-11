@@ -5,22 +5,20 @@ declare(strict_types=1);
 namespace App\Service\Task\Processor;
 
 use App\Contract\Task\Processor;
+use App\Contract\Task\TaskMode;
 use Psr\Container\ContainerInterface;
 
 final readonly class ProcessorFactory
 {
-    public const string MODE_OBSERVATION = 'observation';
-    public const string MODE_STRESS = 'stress';
-
     public function __construct(private ContainerInterface $container)
     {
     }
 
-    public function get(string $mode): Processor
+    public function get(TaskMode $mode): Processor
     {
         $class = match($mode) {
-            self::MODE_OBSERVATION => PrecisionProcessor::class,
-            default => HighLoadProcessor::class,
+            TaskMode::OBSERVATION => PrecisionProcessor::class,
+            TaskMode::STRESS => HighLoadProcessor::class,
         };
 
         /** @var Processor $processor */

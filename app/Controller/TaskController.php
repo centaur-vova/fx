@@ -12,7 +12,6 @@ use App\DTO\Http\Response\HealthResponse;
 use App\Exception\Http\InvalidTaskBatchException;
 use App\Exception\Http\RateLimitExceededException;
 use App\Service\RateLimiter\RateLimiterService;
-use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Task\TaskService;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
@@ -53,13 +52,10 @@ class TaskController
 
         // Guess mode
         go(function () use ($dto): void {
-            $mode = $dto->stressMode
-                ? ProcessorFactory::MODE_STRESS
-                : ProcessorFactory::MODE_OBSERVATION;
-
             assert($dto->semaphoreDriver !== null);
+            assert($dto->taskMode !== null);
 
-            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $dto->semaphoreDriver, $mode);
+            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $dto->semaphoreDriver, $dto->taskMode);
         });
 
         return ApiResponse::ok('Tasks queued');

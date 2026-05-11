@@ -7,6 +7,7 @@ namespace App\DTO\Task;
 use App\Contract\Support\FromArray;
 use App\Contract\Support\Identifiable;
 use App\Contract\Task\SemaphoreDriver;
+use App\Contract\Task\TaskMode;
 
 /**
  * Payload for Swoole Task Worker execution
@@ -19,7 +20,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
     public function __construct(
         public int $id,
         public int $mc,
-        public string $mode,
+        public TaskMode $mode,
         public SemaphoreDriver $sem,
         public int $attempt = 0,
     ) {
@@ -34,7 +35,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
      * @see go/internal/protocol/messages.go TaskStatusUpdate.Pack()
      * @see resources/js/modules/decoder.js taskId unpacking
      */
-    public static function create(int $mc, string $mode, SemaphoreDriver $sem): self
+    public static function create(int $mc, TaskMode $mode, SemaphoreDriver $sem): self
     {
         // It's magic..
         $id = random_int(0, 0x7FFFFFFF);
@@ -71,7 +72,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
         return new self(
             id: (int) $data['id'],
             mc: (int) $data['mc'],
-            mode: (string) $data['mode'],
+            mode: TaskMode::from($data['mode']),
             sem: SemaphoreDriver::from($data['sem']),
             attempt: (int) ($data['attempt'] ?? 0),
         );

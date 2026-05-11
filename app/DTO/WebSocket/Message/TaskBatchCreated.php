@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTO\WebSocket\Message;
 
 use App\Contract\Task\SemaphoreDriver;
+use App\Contract\Task\TaskMode;
 use JsonSerializable;
 
 final readonly class TaskBatchCreated implements JsonSerializable
@@ -12,7 +13,7 @@ final readonly class TaskBatchCreated implements JsonSerializable
     public function __construct(
         public int $count,
         public int $mc,
-        public string $mode,
+        public TaskMode $mode,
         public SemaphoreDriver $sem,
     ) {
     }
@@ -22,7 +23,7 @@ final readonly class TaskBatchCreated implements JsonSerializable
         return [
             'count' => $this->count,
             'mc' => $this->mc,
-            'mode' => $this->mode,
+            'mode' => $this->mode->value,
             'sem' => $this->sem->value,
         ];
     }
