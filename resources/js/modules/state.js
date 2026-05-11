@@ -1,4 +1,4 @@
-import { COLORS, LABEL_COLORS, LOD } from './config';
+import { COLORS, LABEL_COLORS, LOD, TERMINAL_LOG } from './config';
 import { clearTasks } from './task-store.js';
 import { resetThemeColors } from './theme-config.js';
 
@@ -233,7 +233,7 @@ export const state = {
         return LABEL_COLORS[this.mc];
     },
 
-    updateTaskNum(total, logThreshold) {
+    updateTaskNum(total) {
         this.metrics.taskNum = total;
 
         // LOD Logic
@@ -248,7 +248,11 @@ export const state = {
             this.mode = 'dot';
         }
 
-        this.isLogPanelDisabled = total > logThreshold;
+        this.toggleLogPanelDisabled(total);
+    },
+
+    toggleLogPanelDisabled(total) {
+        this.isLogPanelDisabled = total > TERMINAL_LOG.DISABLED_THRESHOLD;
     },
 
     async flashQueue() {

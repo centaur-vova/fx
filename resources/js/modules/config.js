@@ -89,5 +89,20 @@ export const TASK = {
         6: 'retries_failed',
         7: 'retry'
     },
-    LOG_THRESHOLD: 200
+};
+
+export const TERMINAL_LOG = {
+    DISABLED_THRESHOLD: 300,
+    MAX_LOG_ENTRIES: 100,
+
+    STATUS_COLORS: {
+        completed: 'var(--color-success)',
+        retries_failed: 'var(--color-error)',
+        lock_failed: 'var(--color-error)',
+        retry: 'var(--color-warning)',
+        check_lock: 'var(--color-info)',
+        lock_acquired: 'var(--color-accent)',
+        progress: 'var(--color-urgent)',
+        processing: 'var(--text-muted)',
+    },
 };

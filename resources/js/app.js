@@ -4,6 +4,7 @@ import { decodeMessage } from './modules/decoder.js';
 import { drawShape } from './modules/ui.js';
 import { tasks, clearTasks } from './modules/task-store.js';
 import { updateMessagesChart } from './modules/chart.js';
+import terminalLog from './modules/terminal-log.js';
 import {
     WS,
     TASK,
@@ -12,6 +13,7 @@ import {
     STATUS_LABELS,
     COORDS,
     REMOVE_DELAYS,
+    TERMINAL_LOG,
 } from './modules/config';
 import {
     UI,
@@ -115,10 +117,12 @@ const connect = () => {
 };
 
 const handleUpdateTasks = (data) => {
-    const { taskId, worker, mc, status, sem, message, progress = null } = data;
+    // Terminal log
+    if (tasks.size < TERMINAL_LOG.DISABLED_THRESHOLD) {
+        terminalLog.add(data, tasks);
+    }
 
-    // Logging
-    if (tasks.size < TASK.LOG_THRESHOLD) addLog(taskId, mc, status, message, sem, progress);
+    const { taskId, worker, mc, status, sem, message, progress = null } = data;
 
     if (!tasks.has(taskId)) {
         const jitterX = (Math.random() - 0.5) * 0.22;
@@ -175,69 +179,8 @@ const render = () => {
         }
     });
 
-    store.updateTaskNum(tasks.size, TASK.LOG_THRESHOLD);
+    store.updateTaskNum(tasks.size);
 };
-
-// Helpers
-const addLog = (taskId, mc, status, msg, sem, progress = null) => {
-    // console.li
-    const logContainer = document.getElementById("log-panel");
-    if (!logContainer || store.isLogPanelDisabled) return;
-
-    const progressText = progress > 0 ? ` (${progress}%)` : '';
-    const entry = document.createElement('div');
-    entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
-    const time = new Date().toLocaleTimeString([], { hour12: false });
-
-    // Status color mapping based on semantic roles
-    let statusColor = 'var(--text-muted)';  // default
-
-    switch (status) {
-        case 'completed':
-            statusColor = 'var(--color-success)';
-            break;
-        case 'retries_failed':
-            statusColor = 'var(--color-error)';
-            break;
-        case 'lock_failed':
-            statusColor = 'var(--color-error)';
-            break;
-        case 'retry':
-            statusColor = 'var(--color-warning)';
-            break;
-        case 'check_lock':
-            statusColor = 'var(--color-info)';
-            break;
-        case 'lock_acquired':
-            statusColor = 'var(--color-accent)';
-            break;
-        case 'progress':
-            statusColor = 'var(--color-urgent)';
-            break;
-        case 'processing':
-            statusColor = 'var(--text-muted)';
-            break;
-        default:
-            statusColor = 'var(--text-muted)';
-    }
-
-    // 0 - shared (php), 1 - api (go)
-    const semLabel = sem === 1 ? 'API' : 'PHP';
-    const paddedStatus = status.toUpperCase().padEnd(14, ' ');
-    // Show taskId in hex
-    const hexId = (taskId & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-
-    entry.innerHTML = `
-        <span style="color: var(--text-secondary)">${time}</span>
-        <span style="color: ${statusColor}; font-weight: bold; white-space: pre">${semLabel} » ${paddedStatus}</span>
-        <span style="color: var(--text-primary)">${hexId}</span>
-        <span style="color: var(--text-muted)">${msg}${progressText}</span>
-    `;
-
-    logContainer.appendChild(entry);
-    if (logContainer.children.length > 30) logContainer.removeChild(logContainer.firstChild);
-    logContainer.scrollTop = logContainer.scrollHeight;
-}
 
 let pingTimer = null;
 const startPinger = (ws) => {
