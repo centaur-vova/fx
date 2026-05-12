@@ -239,7 +239,7 @@ _Other jokes are in the code, commits, and KBL v3.0._
 
 ## 🐎 Emojinal Commits
 
-We don't use `feat:`, `fix:`, `chore:`. We use emojis. Every commit starts with a horse 🐎 or another animal that reflects its essence. Conventional commits are for ponies. Emojinal commits are for horses who don't explain — they just do.
+We don't use `feat:`, `fix:`, `chore:`. We use emojis. Every commit starts with a horse 🐎 or another animal that reflects its essence. Emojinal commits are for horses and ponies who don't explain — they just do.
 
 ---
 
