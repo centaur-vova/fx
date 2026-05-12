@@ -1,0 +1,185 @@
+/* ===== Fluttershy Theme — Gentle Chaos Edition ===== */
+
+body {
+  background: linear-gradient(
+    180deg,
+    #fef7ed 0%,
+    #fdf2e0 25%,
+    #fce7d1 50%,
+    #fde8f0 75%,
+    #fef7ed 100%
+  );
+  background-size: 100% 200%;
+  animation: fluttershy-vertical 6s ease-in-out infinite alternate;
+}
+
+@keyframes fluttershy-vertical {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
+
+/* --- Rainbow gradient logo --- */
+h1 span:first-child {
+  background: linear-gradient(
+    90deg,
+    #ee6fa1,
+    #fde047,
+    #a7f3d0,
+    #93c5fd,
+    #c4b5fd
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Hide the default bar, show emoji instead
+.worker-bar {
+  width: 12px !important;
+  height: 12px !important;
+  background: transparent !important;
+  border-radius: 0;
+  position: relative;
+  font-size: 10px;
+  line-height: 12px;
+  text-align: center;
+
+  // Default idle
+  &::after {
+    content: "🐴";
+    opacity: 0.3;
+  }
+
+  &.flash-success::after {
+    content: "🦄";
+    opacity: 1;
+  }
+
+  &.flash-error::after {
+    content: "💀";
+    opacity: 1;
+  }
+}
+
+// Reset default animations — we use emoji, not colors
+.worker-bar.flash-success,
+.worker-bar.flash-error {
+  animation: none;
+}
+
+/* --- Pastel buttons with rainbow hover --- */
+.task-button {
+  background: var(--bg-control);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+  font-family: "Comic Sans MS", "Chalkboard SE", cursive, sans-serif;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #fde047, #f9a8d4, #a7f3d0, #93c5fd);
+    color: #4a3728;
+    border-color: transparent;
+    transform: scale(1.05) rotate(-1deg);
+    box-shadow: 0 4px 15px rgba(238, 111, 161, 0.4);
+  }
+}
+
+/* --- Rainbow scrollbar --- */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #fef7ed;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    #ee6fa1,
+    #fde047,
+    #a7f3d0,
+    #93c5fd,
+    #c4b5fd
+  );
+  border-radius: 6px;
+}
+
+/* --- YAY! Confetti on RAND --- */
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: confetti 1s ease-out forwards;
+}
+
+/* --- Gentle worker bars — like little candies --- */
+.worker-bar {
+  width: 10px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: #f0e8d8;
+  transition: all 0.4s ease;
+
+  &.flash-success {
+    animation: pony-glow-green 0.6s ease-out forwards;
+  }
+  &.flash-error {
+    animation: pony-glow-pink 0.6s ease-out forwards;
+  }
+}
+
+@keyframes pony-glow-green {
+  0% {
+    background: #34d399;
+    box-shadow: 0 0 8px #34d399;
+    transform: scaleY(1.6);
+  }
+  100% {
+    background: #f0e8d8;
+    box-shadow: none;
+    transform: scaleY(1);
+  }
+}
+@keyframes pony-glow-pink {
+  0% {
+    background: #f87171;
+    box-shadow: 0 0 8px #f87171;
+    transform: scaleY(1.6);
+  }
+  100% {
+    background: #f0e8d8;
+    box-shadow: none;
+    transform: scaleY(1);
+  }
+}
+
+// mc slider
+#max-concurrent-slider {
+  background: var(--color-slider-track);
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: #f472b6; // ярко-розовый
+    box-shadow: 0 0 10px #f472b6;
+    border: none;
+  }
+}

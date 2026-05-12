@@ -1,0 +1,45 @@
+:root {
+  /* Semantic color roles — Fluttershy pastel rainbow */
+  --color-error: #f87171; /* soft red */
+  --color-warning: #fbbf24; /* warm yellow */
+  --color-success: #34d399; /* mint green */
+  --color-info: #60a5fa; /* baby blue */
+  --color-accent: #f472b6; /* pink (Fluttershy's mane) */
+  --color-highlight: #c084fc; /* lavender */
+  --color-urgent: #fb923c; /* soft orange */
+  --color-subtle: #a78bfa; /* violet */
+  --color-bright: #38bdf8; /* sky blue */
+  --color-vivid: #fde047; /* sunny yellow (her coat) */
+
+  /* Surface & background — warm cream tones */
+  --bg-primary: #fef7ed; /* warm cream */
+  --bg-secondary: #fdf2e0; /* slightly darker cream */
+  --bg-elevated: #fce7d1; /* warm beige */
+  --bg-control: rgba(255, 248, 240, 0.9);
+  --bg-control-disabled: rgba(245, 235, 220, 0.5);
+  --bg-overlay: rgba(250, 240, 225, 0.5);
+
+  /* Border colors — soft pastel */
+  --border-default: #e5d5c0;
+  --border-subtle: #f5ebe0;
+  --border-emphasized: #f0c4e0;
+  --border-disabled: #f0e8d8;
+
+  /* Text colors — warm and readable */
+  --text-primary: #4a3728; /* dark brown */
+  --text-secondary: #7a6b5c; /* medium brown */
+  --text-muted: #a69480; /* light brown */
+  --text-accent: #e878a8; /* pink */
+  --text-white: #4a3728; /* dark brown (no white, too harsh) */
+
+  /* UI element colors */
+  --color-slider-track: #f5ebe0;
+  --worker-bar-idle: #f0e8d8;
+  --grid-dot: rgba(200, 180, 160, 0.08);
+  --divider-subtle: #f5ebe0;
+
+  /* Opacity variants */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+}
