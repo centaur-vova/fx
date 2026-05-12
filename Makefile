@@ -56,10 +56,10 @@ nats-sub:
 	nats sub "v1.ws.broadcast" --token="$$NATS_TOKEN" -s localhost:4222
 
 run-ws:
-	cd go && go run cmd/ws-proxy/main.go
+	cd go && go run cmd/ws/main.go
 
 run-ws-dev:
-	cd go && go run -tags dev ./cmd/ws-proxy
+	cd go && go run -tags dev ./cmd/ws
 
 run-api:
 	cd go && go run cmd/api/main.go
