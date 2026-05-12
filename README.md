@@ -213,6 +213,7 @@ _Sin City theme: noir aesthetics, RAND button active — hybrid semaphore stress
 Built‑in themes:
 
 - `fast` — default neon style
+- `fluttershy` — pastel rainbow, gentle and caring. For ponies
 - `crystal` — icy blues and purples
 - `sin-city` — noir, mostly gray with red accents
 
