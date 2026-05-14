@@ -29,8 +29,8 @@
 
 - [ ] Вынести создание стримов из `onWorkerStart` в отдельную команду `php bin/nats-init`
 - [ ] Добавить healthcheck `/health` (200 если NATS жив)
-- [ ] Научить коня реконнектиться к NATS без блокировки воркеров
-- [ ] Проверить все места в клиенте, где используется таймаут
+- [x] Научить коня реконнектиться к NATS без блокировки воркеров
+- [x] Проверить все места в клиенте, где используется таймаут
 - [ ] Добавить обработку TimeoutException в createStream() и createConsumer()
 - [ ] Увеличить таймаут для операций инициализации отдельно от операций запросов
 - [ ] Добавить try-catch с показом страницы `/kon-not-dead` (503)
@@ -48,7 +48,7 @@
 ### 🔴 High Priority
 - [ ] **Real-time Pipeline Monitoring**:
   - [x] Implement a live counter for **Incomplete Tasks** (tasks currently being processed).
-  - [ ] Migrate Timer::tick from onOpen to onWorkerStart to prevent timer leakage.
+  - [x] Migrate Timer::tick from onOpen to onWorkerStart to prevent timer leakage.
 - [ ] **Fix Connection Limit Issues**:
   - [ ] Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
   - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`.
@@ -62,10 +62,10 @@
 - [ ] **Load & Stress Testing**:
   - [ ] Implement **k6** or **Locust** scripts to simulate 1,000+ concurrent WebSocket clients.
   - [ ] Measure memory stability and `Swoole\Table` contention under high-frequency broadcasting.
-- [ ] **Theme Fallback**: Add client-side validation for `?theme=` parameter
-  - [ ] Check `allowedThemes = ['fast', 'crystal', 'sin-city']` in the inline script
-  - [ ] Fallback to `fast` theme when an unknown theme name is provided
-  - [ ] Prevent loading of missing CSS/JS files that break layout and coordinates
+- [x] **Theme Fallback**: Add client-side validation for `?theme=` parameter
+  - [x] Check `allowedThemes = ['fast', 'crystal', 'sin-city']` in the inline script
+  - [x] Fallback to `fast` theme when an unknown theme name is provided
+  - [x] Prevent loading of missing CSS/JS files that break layout and coordinates
 - [x] **Architectural Refactoring**:
   - [x] Decouple `server.php` by moving event handlers into dedicated classes.
   - [x] Implement a simple Dependency Injection (DI) container for cleaner bootstrap.
