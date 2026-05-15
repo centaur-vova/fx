@@ -112,7 +112,8 @@ func (h *Hub) Broadcast(data any) {
 	for client := range h.clients {
 		select {
 		case client.Send <- msg:
-		case <-time.After(5 * time.Second):
+		default:
+			// This pony can't keep up with the herd, remove it
 			go h.Remove(client)
 		}
 	}
