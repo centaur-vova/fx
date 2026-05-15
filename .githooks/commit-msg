@@ -16,6 +16,17 @@ if (!file_exists($commitMsgFile)) {
 
 $message = trim(file_get_contents($commitMsgFile));
 
+// Normalize signature: remove accidental indentation before Vsegda vash
+$lines = explode("\n", $message);
+foreach ($lines as &$line) {
+    // Remove leading spaces/tabs before the signature
+    if (preg_match('/^\s*(Vsegda vash,)/', $line)) {
+        $line = ltrim($line);
+    }
+}
+$message = implode("\n", $lines);
+file_put_contents($commitMsgFile, $message);
+
 /**
  * Pattern breakdown:
  * ^(\p{Emoji}\s*)+  - One or more emojis (optional whitespace between)
