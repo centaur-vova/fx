@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"flag"
 	"log"
 	"os"
 	"regexp"
@@ -10,9 +11,12 @@ import (
 )
 
 type AppConfig struct {
-	// API
+	// API & Balancer
 	APIPort  string
 	APIToken string
+
+	BalancerPort    string
+	BalancerApiURLs []string
 
 	// WS
 	WSPort string
@@ -59,9 +63,35 @@ func LoadConfig() *AppConfig {
 	version, buildDate := getVersion()
 	ms, _ := strconv.Atoi(getEnv("METRICS_UPDATE_INTERVAL_MS", "1000"))
 
+	// Try getting command line arguments to override api token/port from .env
+	tokenFlag := flag.String("token", getEnv("API_TOKEN", ""), "Authentication token")
+	portFlag := flag.String("port", getEnv("API_PORT", "8081"), "API port")
+	// Balancer (sharing port setting)
+	balancerPortFlag := flag.String("balancer-port", getEnv("BALANCER_PORT", "8090"), "Balancer ingress port")
+	urlsFlag := flag.String("upstream", getEnv("BALANCER_API_URLS", ""), "Comma-separated list of backend URLs")
+
+	flag.Parse()
+
+	// Parse balancer's API urls
+	var apiURLs []string
+	for rawURL := range strings.SplitSeq(*urlsFlag, ",") {
+		trimmed := strings.TrimSpace(rawURL)
+		if trimmed != "" {
+			apiURLs = append(apiURLs, trimmed)
+		}
+	}
+
+	// Fail-Fast: if no apiURLs provided for the balancer - force quit
+	if len(apiURLs) == 0 {
+		log.Fatal("SNAFUBAR: upstream URL list is empty. Check configuration")
+	}
+
 	return &AppConfig{
-		APIToken: getEnv("API_TOKEN", ""),
-		APIPort:  getEnv("API_PORT", "8081"),
+		APIToken: *tokenFlag,
+		APIPort:  *portFlag,
+
+		BalancerPort:    *balancerPortFlag,
+		BalancerApiURLs: apiURLs,
 
 		WSPort: getEnv("WS_PORT", "8080"),
 

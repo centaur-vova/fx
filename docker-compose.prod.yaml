@@ -1,7 +1,6 @@
 services:
   app:
     image: ghcr.io/centaur-vova/fast-atomic-flow:latest
-    container_name: atomic-flow-app
     restart: always
     env_file:
       - .env
@@ -20,7 +19,6 @@ services:
 
   deez-nutz:
     image: nats:2.12.8-alpine
-    container_name: fast-deez-nutz
     command: ["-c", "/etc/nats.conf", "-js"]
     restart: always
     volumes:
@@ -39,7 +37,6 @@ services:
 
   ws-proxy:
     image: ghcr.io/centaur-vova/fast-atomic-flow-ws:latest
-    container_name: fast-ws
     restart: always
     command: /usr/local/bin/go-proxy
     environment:
@@ -57,17 +54,58 @@ services:
     depends_on:
       - deez-nutz
 
-  api:
+  balancer:
+    image: ghcr.io/centaur-vova/fast-atomic-flow-balancer:latest
+    restart: always
+    command: /usr/local/bin/balancer
+    environment:
+      - PORT=8090
+    ports:
+      - "127.0.0.1:8090:8090"
+    networks:
+      - atomic-network
+    depends_on:
+      - api-1
+      - api-2
+      - api-3
+
+  api-1:
     image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
-    container_name: fast-api
     restart: always
     command: /usr/local/bin/api
     environment:
       - APP_VERSION=${APP_VERSION:-dev}
+      - API_PORT=8081
     env_file:
       - .env
-    ports:
-      - "127.0.0.1:8081:8081"
+    networks:
+      - atomic-network
+    depends_on:
+      - ws-proxy
+
+  api-2:
+    image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
+    restart: always
+    command: /usr/local/bin/api
+    environment:
+      - APP_VERSION=${APP_VERSION:-dev}
+      - API_PORT=8082
+    env_file:
+      - .env
+    networks:
+      - atomic-network
+    depends_on:
+      - ws-proxy
+
+  api-3:
+    image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
+    restart: always
+    command: /usr/local/bin/api
+    environment:
+      - APP_VERSION=${APP_VERSION:-dev}
+      - API_PORT=8083
+    env_file:
+      - .env
     networks:
       - atomic-network
     depends_on:

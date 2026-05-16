@@ -36,6 +36,11 @@ func main() {
 	semPool := semaphore.NewPool()
 	semHandler := semaphore.NewHandler(semPool)
 
+	// API
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK) // kon-not-dead
+	})
+
 	// Semaphore
 	http.HandleFunc("/semaphore/acquire", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Acquire))
 	http.HandleFunc("/semaphore/release", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Release))
