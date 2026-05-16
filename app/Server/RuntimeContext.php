@@ -7,6 +7,7 @@ namespace App\Server;
 use App\Exception\Server\WorkerShutdownException;
 use Swoole\Atomic;
 use Swoole\Coroutine\Channel;
+use Swoole\Event;
 
 /**
  * Manages the server runtime state and lifecycle signals.
@@ -99,5 +100,10 @@ final class RuntimeContext
         if ($this->isShuttingDown()) {
             throw new WorkerShutdownException('Worker is shutting down');
         }
+    }
+
+    public function stop(): void
+    {
+        Event::exit();
     }
 }

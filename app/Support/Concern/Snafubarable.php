@@ -60,11 +60,7 @@ trait Snafubarable
             }
 
             // Signal the Master process to bring a fresh horse
-            $pid = getmypid();
-            if ($pid === false) {
-                exit(1);
-            }
-            Process::kill($pid, SIGKILL);
+            $this->context->stop();
         }
     }
 }

@@ -83,12 +83,7 @@ class ReconnectableClient extends Client
 
                 // A small delay before SNAFUBAR
                 $this->context->sleepOrDie(5.0);
-
-                $pid = getmypid();
-                if ($pid === false) {
-                    exit(1);
-                }
-                Process::kill($pid, SIGKILL);
+                $this->context->stop();
             }
         }
     }
