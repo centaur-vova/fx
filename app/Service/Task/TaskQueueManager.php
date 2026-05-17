@@ -90,7 +90,7 @@ final class TaskQueueManager
                 }
 
                 // Perfect adaptive delay
-                Co::sleep($taskCount ? 0.01 : 0.1);
+                Co::sleep($taskCount ? 0.01 : 1);
             }
         });
     }
