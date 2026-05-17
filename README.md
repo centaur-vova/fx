@@ -59,12 +59,31 @@ Each service does one thing, but with surgical precision. The Worker processes t
 
 ## 🐎 Architecture
 
-| Component         | Technology        | Purpose                             |
-| ----------------- | ----------------- | ----------------------------------- |
-| **API & Workers** | PHP 8.4 + Swoole  | Task intake, semaphores, processing |
-| **Message Bus**   | NATS (Deez Nutz)  | Queues, broadcasts, persistence     |
-| **WebSocket**     | Go 1.26 + Gorilla | Real‑time updates, metrics          |
-| **Queue Storage** | NATS JetStream    | Durable queues with replication     |
+| Component             | Technology         | Purpose                                          |
+| --------------------- | ------------------ | ------------------------------------------------ |
+| **API & Workers**     | PHP 8.4 + Swoole   | Task intake, semaphores, processing              |
+| **API (Distributed)** | Go 1.26 + Redis    | Distributed semaphores, horizontal scaling       |
+| **Balancer**          | Go 1.26 + net/http | Load balancing, health checks, auto-registration |
+| **Message Bus**       | NATS (Deez Nutz)   | Queues, broadcasts, persistence                  |
+| **WebSocket**         | Go 1.26 + Gorilla  | Real‑time updates, metrics                       |
+| **Queue Storage**     | NATS JetStream     | Durable queues with replication                  |
+| **Semaphore Store**   | Redis 8.0 + Lua    | Distributed semaphores, TTL, atomicity           |
+
+---
+
+## 🐎 Balancer (Go Balancer)
+
+A custom HTTP load balancer written in Go with automatic API instance registration.
+
+- **Dynamic upstream:** API instances self-register with the balancer via `/register` on startup. No static list, no `nginx -s reload`
+- **Health checks:** The balancer probes every instance every 5 seconds. Dead instances are excluded from rotation, revived ones are re-added automatically
+- **Lock-free balancing:** Atomic pointer swap on immutable lists. Readers (HTTP requests) never block writers (instance registration)
+- **Round-robin:** Requests are evenly distributed across all alive instances
+- **Graceful degradation:** If all instances are down — returns 503 with the legendary message `API Instances gone fishing (KBL v2.0 Rule)`
+
+| Component    | Technology         | Purpose                                          |
+| ------------ | ------------------ | ------------------------------------------------ |
+| **Balancer** | Go 1.26 + net/http | Load balancing, health checks, auto-registration |
 
 ---
 
@@ -90,15 +109,32 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 
 ### 🐎 Drivers:
 
-- **[PHP] PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency.
-- **[API] Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers.
+- **[PHP] PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency
+- **[API] Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers
 
 ### 🐎 Architectural Features:
 
-- **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes.
-- **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization.
-- **Visual Distinction:** The UI differentiates drivers in real-time (rounded squares for Go API, sharp squares for PHP Atomic).
-- **RAND (Random Spam Mode):** The "RAND" button triggers chaotic spam mode, firing hundreds of batches with randomized parameters: `max_concurrent`, `task_mode`, and semaphore driver change per batch. Perfect for stress testing and visual fireworks on the worker heatmap.
+- **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes
+- **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization
+- **Visual Distinction:** The UI differentiates drivers in real-time (rounded squares for Go API, sharp squares for PHP Atomic)
+- **RAND (Random Spam Mode):** The "RAND" button triggers chaotic spam mode, firing hundreds of batches with randomized parameters: `max_concurrent`, `task_mode`, and semaphore driver change per batch. Perfect for stress testing and visual fireworks on the worker heatmap
+
+---
+
+## 🐎 Distributed Semaphores (Redis + Lua)
+
+Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 and Lua scripts.
+
+- **Atomic acquisition:** Lua scripts execute atomically inside Redis, guaranteeing consistency even with 100+ API instances
+- **Auto-cleanup (TTL):** Each semaphore slot has an individual TTL via `HEXPIRE`. A crashed worker won't hold a slot forever — Redis frees it automatically
+- **Distributed release:** A semaphore can be released from **any** API instance, regardless of where it was acquired. `SlotUID` (a compact string like `"5:3"` — semaphore 5, slot 3) carries all the information needed
+- **Maximum 255 slots:** 1 byte for `max_concurrent`. Enough for any real-world scenario
+- **Client-side polling:** When no slots are available, the API instance polls Redis every 100 ms until the timeout expires
+
+| Component   | Technology | Purpose                             |
+| ----------- | ---------- | ----------------------------------- |
+| **Redis**   | Redis 8.0  | Semaphore store, atomic Lua scripts |
+| **SlotUID** | Go string  | Compact identifier (`"mc:slotIdx"`) |
 
 ---
 
@@ -139,8 +175,10 @@ The mode is passed in the POST request body when creating tasks (`/api/tasks/cre
 git clone https://github.com/centaur-vova/fast-atomic-flow.git
 cd fast-atomic-flow
 cp .env.example .env
-docker compose -f docker-compose.prod.yaml up
+docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
+
+This launches 3 Go API instances, the balancer, Redis, NATS, and PHP Swoole
 
 After starting, open [http://localhost:9501](http://localhost:9501)
 
@@ -193,10 +231,13 @@ These settings control how tasks behave when the semaphore is busy:
 ## 🐎 Technical specifications
 
 - **Runtime:** PHP 8.4, Go 1.26
-- **Engine:** Swoole 6.0+, Gorilla WebSocket
+- **Engine:** Swoole 6.2+, Gorilla WebSocket
 - **Message Bus:** NATS JetStream 2.12+
 - **Queue Capacity:** 10,000 tasks (configurable)
 - **Concurrency:** 1 to 255 (configurable)
+- **API Instances:** 3 (scales via `--scale api=N`)
+- **Semaphore Store:** Redis 8.0 + Lua scripts
+- **Balancer:** Round-robin, auto-registration, health checks every 5 seconds
 
 ---
 
