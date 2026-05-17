@@ -16,7 +16,6 @@ use Basis\Nats\Stream\DiscardPolicy;
 use Basis\Nats\Stream\RetentionPolicy;
 use Basis\Nats\Stream\StorageBackend;
 use Psr\Log\LoggerInterface;
-use Swoole\Process;
 use Throwable;
 
 class ReconnectableClient extends Client
