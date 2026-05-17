@@ -12,8 +12,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m" # < 10Mb
-        max-file: "3"   # Keep 3 files max
+        max-size: "10m"
+        max-file: "3"
     networks:
       - atomic-network
 
@@ -35,14 +35,34 @@ services:
     networks:
       - atomic-network
 
+  redis:
+    image: redis:8.0-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - atomic-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   ws:
     image: ghcr.io/centaur-vova/fast-atomic-flow-ws:latest
     restart: always
     command: /usr/local/bin/go-proxy
     environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - WS_PORT=${WS_PORT}
+      - NATS_HOST=${NATS_HOST}
+      - NATS_PORT=${NATS_PORT}
       - NATS_TOKEN=${NATS_TOKEN}
-    env_file:
-      - .env
+      - NATS_STREAM_TASKS=${NATS_STREAM_TASKS}
+      - NATS_SUBJECT_BROADCAST=${NATS_SUBJECT_BROADCAST}
+      - QUEUE_CAPACITY=${QUEUE_CAPACITY}
+      - SERVER_WORKER_NUM=${SERVER_WORKER_NUM}
+      - METRICS_UPDATE_INTERVAL_MS=${METRICS_UPDATE_INTERVAL_MS}
     ports:
       - "127.0.0.1:8080:8080"
     networks:
@@ -59,28 +79,33 @@ services:
     restart: always
     command: /usr/local/bin/balancer
     environment:
-      - PORT=8090
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - API_TOKEN=${API_TOKEN}
+      - API_PORT=${API_PORT}
+      - REDIS_URL=${REDIS_URL}
     ports:
       - "127.0.0.1:8090:8090"
     networks:
       - atomic-network
     depends_on:
-      - api-1
-      - api-2
-      - api-3
+      - ws
+      - redis
 
   api:
     image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
     restart: always
     command: /usr/local/bin/api
     environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
       - API_PORT=8081
-    env_file:
-      - .env
+      - API_TOKEN=${API_TOKEN}
+      - API_URL=${API_URL}
+      - REDIS_URL=${REDIS_URL}
     networks:
       - atomic-network
     depends_on:
       - ws
+      - redis
 
 volumes:
   deez-nutz-data:

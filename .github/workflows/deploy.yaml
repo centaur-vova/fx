@@ -34,7 +34,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push PHP App (Swoole + NATS)
+      - name: Build and Push PHP App (Swoole)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -55,7 +55,15 @@ jobs:
             APP_VERSION=${{ steps.vars.outputs.version }}
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
 
-      - name: Build and Push Go API (Semaphore)
+      - name: Build and Push Go Balancer
+        uses: docker/build-push-action@v5
+        with:
+          context: ./go
+          file: ./go/Dockerfile.balancer
+          push: true
+          tags: ghcr.io/${{ github.repository }}-balancer:latest
+
+      - name: Build and Push Go API
         uses: docker/build-push-action@v5
         with:
           context: ./go
@@ -81,6 +89,6 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker compose -f docker-compose.prod.yaml pull app ws api
-            docker compose -f docker-compose.prod.yaml up -d --remove-orphans app ws api
+            docker compose -f docker-compose.prod.yaml pull app ws balancer api
+            docker compose -f docker-compose.prod.yaml up -d --remove-orphans --scale api=3 app ws api balancer redis
             docker image prune -f

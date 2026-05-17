@@ -1,0 +1,10 @@
+FROM golang:1.26.0-alpine3.23 AS builder
+
+WORKDIR /build
+COPY . .
+RUN go mod download && \
+    CGO_ENABLED=0 go build -o /balancer ./cmd/balancer
+
+FROM alpine:3.23
+COPY --from=builder /balancer /usr/local/bin/
+CMD ["/usr/local/bin/balancer"]
