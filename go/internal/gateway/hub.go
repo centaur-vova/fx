@@ -2,8 +2,8 @@ package gateway
 
 import (
 	"encoding/json"
+	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/protocol"
-	"log"
 	"math"
 	"net/http"
 	"sync"
@@ -29,12 +29,12 @@ type Client struct {
 type Hub struct {
 	clients   map[*Client]bool
 	clientsMu sync.RWMutex
-	config    *protocol.AppConfig
+	config    *protocol.WSConfig
 	upgrader  websocket.Upgrader
 	nc        *nats.Conn
 }
 
-func NewHub(cfg *protocol.AppConfig, nc *nats.Conn) *Hub {
+func NewHub(cfg *protocol.WSConfig, nc *nats.Conn) *Hub {
 	h := &Hub{
 		clients: make(map[*Client]bool),
 		config:  cfg,
@@ -67,7 +67,7 @@ func (h *Hub) Add(conn *websocket.Conn) {
 func (h *Hub) writePump(client *Client) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Panic in writePump for client: %v", r)
+			logger.Error("💥 Panic in writePump", "error", r)
 		}
 	}()
 
@@ -149,7 +149,7 @@ func (h *Hub) SendToClient(client *Client, data any) {
 func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WS Upgrade error: %v", err)
+		logger.Error("💥 WebSocket upgrade error", "error", err)
 		return
 	}
 
@@ -160,7 +160,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Panic in HandleWS: %v", r)
+			logger.Error("💥 Panic in HandleWS", "error", r)
 			h.Remove(client)
 		}
 	}()
@@ -170,7 +170,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 	h.clientsMu.Unlock()
 	go h.writePump(client)
 
-	log.Printf("New client. Total: %d", h.Count())
+	logger.Info("👤 New client connected", "total", h.Count())
 
 	// Gather details about JetStream
 	// TODO: Cache StreamInfo with short TTL (e.g., 10s) to reduce NATS requests on high load.
@@ -204,7 +204,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 		response, err := router.Route(p)
 		if err != nil {
-			log.Printf("Router error: %v", err)
+			logger.Error("💥 Router error", "error", err)
 			continue
 		}
 
@@ -218,6 +218,8 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
 	for range ticker.C {
 		// RAM
 		memoryMb, err := GetVmRSS()
@@ -241,7 +243,10 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 		freeMemRounded := math.Round(freeMemory*100) / 100
 
 		// NATS stats
-		js, _ := h.nc.JetStream()
+		js, err := h.nc.JetStream()
+		if err != nil {
+			logger.Error("🌊 Failed to get JetStream context", "error", err)
+		}
 		streamInfo, _ := js.StreamInfo(h.config.StreamCh)
 		var natsStats protocol.NatsStats
 		if streamInfo != nil {

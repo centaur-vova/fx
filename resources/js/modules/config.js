@@ -92,8 +92,8 @@ export const TASK = {
 };
 
 export const TERMINAL_LOG = {
-    DISABLED_THRESHOLD: 300,
-    MAX_LOG_ENTRIES: 100,
+    DISABLED_THRESHOLD: 200,
+    MAX_LOG_ENTRIES: 50,
 
     STATUS_COLORS: {
         completed: 'var(--color-success)',

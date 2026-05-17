@@ -1,29 +1,34 @@
 # --- Variables ---
 PHP_BIN = php
 SERVER_FILE = server.php
+# Dev overrides: connect App (Swoole) to Docker NATS / API (Balancer) from host
+APP_NATS_HOST = localhost
+APP_NATS_PORT = 4222
+APP_API_URL = http://localhost:8090
 
 # --- Methods ---
-.PHONY: install build run stop restart distclean watch test test-go test-go-race check help nats-sub
-.PHONY: run-ws run-api run-ws-dev run-api-dev
+.PHONY: install build run stop restart distclean watch test test-go test-go-race check help nats-sub dev
+.PHONY: logs logs-ws logs-balancer logs-api
 
 help:
 	@echo "Usage:"
-	@echo "  make install      - Install composer and npm dependencies"
-	@echo "  make build        - Build frontend assets"
-	@echo "  make run          - Start the Swoole server"
-	@echo "  make stop         - Stop the Swoole server"
-	@echo "  make restart      - Restart the Swoole server"
-	@echo "  make distclean    - Clean frontend build (public/dist)"
-	@echo "  make watch        - Watch frontend changes"
-	@echo "  make test         - Run PHPUnit tests"
-	@echo "  make test-go      - Run Go tests"
-	@echo "  make test-go-race - Run Go tests (race check enabled)"
-	@echo "  make check        - Run full static analysis & quality gate (PHPStan, Lint, Rector)"
-	@echo "  make nats-sub     - Subscribe to a NATS channel and show received messages"
-	@echo "  make run-ws       - Start Go WebSocket proxy"
-	@echo "  make run-ws-dev   - Start Go WebSocket proxy with pprof (development)"
-	@echo "  make run-api      - Start Go API server (semaphore)"
-	@echo "  make run-api-dev  - Start Go API server with pprof (development)"
+	@echo "  make install       - Install composer and npm dependencies"
+	@echo "  make build         - Build frontend assets"
+	@echo "  make run           - Start the Swoole server"
+	@echo "  make stop          - Stop the Swoole server"
+	@echo "  make restart       - Restart the Swoole server"
+	@echo "  make distclean     - Clean frontend build (public/dist)"
+	@echo "  make watch         - Watch frontend changes"
+	@echo "  make test          - Run PHPUnit tests"
+	@echo "  make test-go       - Run Go tests"
+	@echo "  make test-go-race  - Run Go tests (race check enabled)"
+	@echo "  make check         - Run full static analysis & quality gate (PHPStan, Lint, Rector)"
+	@echo "  make nats-sub      - Subscribe to a NATS channel and show received messages"
+	@echo "  make dev           - Start local development environment (2 API instances)"
+	@echo "  make logs          - Show all dev service logs"
+	@echo "  make logs-ws       - Show WebSocket proxy logs"
+	@echo "  make logs-balancer - Show balancer logs"
+	@echo "  make logs-api      - Show API instance logs"
 
 
 install:
@@ -35,7 +40,8 @@ build:
 	npm run build
 
 run:
-	$(PHP_BIN) $(SERVER_FILE)
+	$(PHP_BIN) $(SERVER_FILE) --api-url=$(APP_API_URL) \
+		--nats-host=$(APP_NATS_HOST) --nats-port=$(APP_NATS_PORT)
 
 # Kill all PHP processes (be careful if you have other PHP projects running)
 stop:
@@ -63,14 +69,15 @@ nats-sub:
 	@NATS_TOKEN=$$(sed -n 's/^NATS_TOKEN=//p' .env | tr -d '\r'); \
 	nats sub "v1.ws.broadcast" --token="$$NATS_TOKEN" -s localhost:4222
 
-run-ws:
-	cd go && go run cmd/ws/main.go
+dev:
+	docker compose -f docker-compose.dev.yaml up --scale api=2
 
-run-ws-dev:
-	cd go && go run -tags dev ./cmd/ws
-
-run-api:
-	cd go && go run cmd/api/main.go
-
-run-api-dev:
-	cd go && go run -tags dev ./cmd/api
+# Logs
+logs:
+	docker compose -f docker-compose.dev.yaml logs
+logs-ws:
+	docker compose -f docker-compose.dev.yaml logs ws
+logs-balancer:
+	docker compose -f docker-compose.dev.yaml logs balancer
+logs-api:
+	docker compose -f docker-compose.dev.yaml logs api

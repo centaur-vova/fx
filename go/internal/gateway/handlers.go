@@ -2,9 +2,9 @@ package gateway
 
 import (
 	"encoding/json"
+	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/metrics"
 	"fast-atomic-flow/go/internal/protocol"
-	"log/slog"
 )
 
 // MessageHandler is a function that processes a raw JSON message.
@@ -44,7 +44,7 @@ func (r *MessageRouter) Route(envType string, data json.RawMessage) {
 func (r *MessageRouter) handleBatchCreated(data json.RawMessage) {
 	var msg protocol.TaskBatchCreated
 	if err := json.Unmarshal(data, &msg); err != nil {
-		slog.Error("Failed to unmarshal task.batch.created", "error", err)
+		logger.Error("🧩 Failed to unmarshal task.batch.created", "error", err)
 		return
 	}
 
@@ -59,7 +59,7 @@ func (r *MessageRouter) handleBatchCreated(data json.RawMessage) {
 func (r *MessageRouter) handleTaskStatusUpdate(data json.RawMessage) {
 	var msg protocol.TaskStatusUpdate
 	if err := json.Unmarshal(data, &msg); err != nil {
-		slog.Error("Failed to unmarshal task.status.update", "error", err)
+		logger.Error("🧩 Failed to unmarshal task.status.update", "error", err)
 		return
 	}
 

@@ -1,8 +1,9 @@
 package protocol
 
 import (
+	"fast-atomic-flow/go/internal/logger"
 	"flag"
-	"log"
+	"net/url"
 	"os"
 	"regexp"
 	"runtime"
@@ -10,19 +11,15 @@ import (
 	"strings"
 )
 
-type AppConfig struct {
-	// API & Balancer
-	APIPort  string
-	APIToken string
+type BaseConfig struct {
+	LogLevel string
+}
 
-	BalancerPort    string
-	BalancerApiURLs []string
+type WSConfig struct {
+	BaseConfig
 
 	// WS
 	WSPort string
-
-	// Logging
-	LogLevel string
 
 	// NATS infrastructure
 	NatsURL     string
@@ -57,67 +54,95 @@ func getVersion() (string, string) {
 	return strings.TrimSpace(versionInfo[0]), strings.TrimSpace(versionInfo[1])
 }
 
-func LoadConfig() *AppConfig {
+func LoadWSConfig() *WSConfig {
 	queueCap, _ := strconv.Atoi(os.Getenv("QUEUE_CAPACITY"))
 	workerNum, _ := strconv.Atoi(os.Getenv("SERVER_WORKER_NUM"))
 	version, buildDate := getVersion()
 	ms, _ := strconv.Atoi(getEnv("METRICS_UPDATE_INTERVAL_MS", "1000"))
 
-	// Try getting command line arguments to override api token/port from .env
-	tokenFlag := flag.String("token", getEnv("API_TOKEN", ""), "Authentication token")
-	portFlag := flag.String("port", getEnv("API_PORT", "8081"), "API port")
-	// Balancer (sharing port setting)
-	balancerPortFlag := flag.String("balancer-port", getEnv("BALANCER_PORT", "8090"), "Balancer ingress port")
-	urlsFlag := flag.String("upstream", getEnv("BALANCER_API_URLS", ""), "Comma-separated list of backend URLs")
+	return &WSConfig{
+		BaseConfig: BaseConfig{
+			LogLevel: getEnv("LOG_LEVEL", "info"),
+		},
 
-	flag.Parse()
-
-	// Parse balancer's API urls
-	var apiURLs []string
-	for rawURL := range strings.SplitSeq(*urlsFlag, ",") {
-		trimmed := strings.TrimSpace(rawURL)
-		if trimmed != "" {
-			apiURLs = append(apiURLs, trimmed)
-		}
-	}
-
-	// Fail-Fast: if no apiURLs provided for the balancer - force quit
-	if len(apiURLs) == 0 {
-		log.Fatal("SNAFUBAR: upstream URL list is empty. Check configuration")
-	}
-
-	return &AppConfig{
-		APIToken: *tokenFlag,
-		APIPort:  *portFlag,
-
-		BalancerPort:    *balancerPortFlag,
-		BalancerApiURLs: apiURLs,
-
-		WSPort: getEnv("WS_PORT", "8080"),
-
-		LogLevel: getEnv("LOG_LEVEL", "info"),
-
-		NatsURL:     getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
-		NatsToken:   getEnv("NATS_TOKEN", ""),
-		StreamCh:    getEnv("NATS_STREAM_TASKS", "tasks"),
-		BroadcastCh: getEnv("NATS_SUBJECT_BROADCAST", "v1.ws.broadcast"),
-
-		WorkerNum:     workerNum,
-		CPUCores:      runtime.NumCPU(),
-		QueueCapacity: queueCap,
-		AppVersion:    version,
-		BuildDate:     buildDate,
-
+		WSPort:                  getEnv("WS_PORT", "8080"),
+		NatsURL:                 getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
+		NatsToken:               getEnv("NATS_TOKEN", ""),
+		StreamCh:                getEnv("NATS_STREAM_TASKS", "tasks"),
+		BroadcastCh:             getEnv("NATS_SUBJECT_BROADCAST", "v1.ws.broadcast"),
+		WorkerNum:               workerNum,
+		CPUCores:                runtime.NumCPU(),
+		QueueCapacity:           queueCap,
+		AppVersion:              version,
+		BuildDate:               buildDate,
 		MetricsUpdateIntervalMs: ms,
 	}
 }
 
-func (c *AppConfig) Validate() {
+func (c *WSConfig) Validate() {
 	if !natsChannelRegex.MatchString(c.BroadcastCh) {
-		log.Fatalf("Invalid NATS channel name: '%s'. Only a-z, A-Z, 0-9, . and _ are allowed.", c.BroadcastCh)
+		logger.Emergency("💥 Invalid NATS channel name", "channel", c.BroadcastCh)
+		os.Exit(1)
 	}
 	if !natsChannelRegex.MatchString(c.StreamCh) {
-		log.Fatalf("Invalid NATS channel name: '%s'. Only a-z, A-Z, 0-9, . and _ are allowed.", c.StreamCh)
+		logger.Emergency("💥 Invalid NATS channel name", "channel", c.StreamCh)
+		os.Exit(1)
+	}
+}
+
+// === BALANCER CONFIG ===
+type BalancerConfig struct {
+	BaseConfig
+
+	APIToken     string
+	BalancerPort string
+}
+
+func LoadBalancerConfig() *BalancerConfig {
+	apiURL := getEnv("API_URL", "http://localhost:8090")
+
+	balancerPort := "8090"
+	if parsed, err := url.Parse(apiURL); err == nil {
+		if p := parsed.Port(); p != "" {
+			balancerPort = p
+		}
+	}
+
+	return &BalancerConfig{
+		BaseConfig: BaseConfig{
+			LogLevel: getEnv("LOG_LEVEL", "info"),
+		},
+
+		APIToken:     os.Getenv("API_TOKEN"),
+		BalancerPort: balancerPort,
+	}
+}
+
+// === API INSTANCE CONFIG ===
+type APIConfig struct {
+	BaseConfig
+
+	APIToken    string
+	BalancerURL string
+	APIPort     string
+}
+
+func LoadAPIConfig() *APIConfig {
+	apiPortFlag := flag.String("port", getEnv("API_PORT", "8081"), "API service port")
+	flag.Parse()
+
+	port := *apiPortFlag
+
+	balancerURL := getEnv("API_URL", "http://localhost:8090")
+
+	return &APIConfig{
+		BaseConfig: BaseConfig{
+			LogLevel: getEnv("LOG_LEVEL", "info"),
+		},
+
+		APIToken:    os.Getenv("API_TOKEN"),
+		BalancerURL: balancerURL,
+		APIPort:     port,
 	}
 }
 

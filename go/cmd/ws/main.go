@@ -7,7 +7,6 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/metrics"
 	"fast-atomic-flow/go/internal/protocol"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,62 +19,26 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Wrapper for incoming serialized messages from NATS
-type NatsEnvelope struct {
-	Type string          `json:"_t"`
-	Data json.RawMessage `json:"d"`
-}
-
 var (
-	cfg   *protocol.AppConfig
+	cfg   *protocol.WSConfig
 	nc    *nats.Conn
 	sub   *nats.Subscription
 	subMu sync.Mutex
 	hub   *gateway.Hub
 )
 
-func subscribeToNATS(mRouter *gateway.MessageRouter) {
-	subMu.Lock()
-	defer subMu.Unlock()
-
-	// Unsubscribe if subscribed
-	if sub != nil {
-		sub.Unsubscribe()
-	}
-
-	var err error
-	sub, err = nc.Subscribe(cfg.BroadcastCh, func(m *nats.Msg) {
-		defer func() {
-			if r := recover(); r != nil {
-				slog.Error("Panic in NATS handler", "recover", r)
-			}
-		}()
-
-		var env struct {
-			Type string          `json:"_t"`
-			Data json.RawMessage `json:"d"`
-		}
-		json.Unmarshal(m.Data, &env)
-
-		slog.Debug("NATS -> WS", "subject", m.Subject, "type", env.Type, "data", string(m.Data))
-
-		mRouter.Route(env.Type, env.Data)
-	})
-	if err != nil {
-		slog.Error("Subscribe error", "error", err, "channel", cfg.BroadcastCh)
-	} else {
-		slog.Info("Subscribed to channel", "channel", cfg.BroadcastCh)
-	}
+// Wrapper for incoming serialized messages from NATS
+type NatsEnvelope struct {
+	Type string          `json:"_t"`
+	Data json.RawMessage `json:"d"`
 }
 
 func main() {
 	// ==== LOAD .env ====
-	if err := godotenv.Load("../.env"); err != nil {
-		slog.Info("No .env file found, using system env")
-	}
+	godotenv.Load("../.env")
 
 	// ==== LOAD CONFIG ====
-	cfg = protocol.LoadConfig()
+	cfg = protocol.LoadWSConfig()
 	cfg.Validate()
 
 	// === LOGGER ===
@@ -92,22 +55,23 @@ func main() {
 		nats.MaxReconnects(-1),            // Retry forever
 		nats.ReconnectWait(2*time.Second), // Every 2 second
 		nats.DisconnectErrHandler(func(c *nats.Conn, err error) {
-			slog.Warn("⚠️ NATS DISCONNECTED", "error", err)
+			logger.Warn("⚠️ NATS DISCONNECTED", "error", err)
 		}),
 		nats.ReconnectHandler(func(c *nats.Conn) {
-			slog.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
+			logger.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
 			// Need to resubscribe
 		}),
 		nats.ClosedHandler(func(c *nats.Conn) {
-			slog.Info("🔴 NATS connection CLOSED")
+			logger.Info("🔴 NATS connection CLOSED")
 		}),
 	)
 	if err != nil {
-		slog.Error("NATS Connection failed", "error", err)
+		logger.Error("💥 NATS Connection failed", "error", err)
+		panic(err)
 	}
 	defer nc.Close()
 
-	slog.Info("Go Proxy connected to NATS", "url", cfg.NatsURL)
+	logger.Info("✅ Go Proxy connected to NATS", "url", cfg.NatsURL)
 
 	// ==== STORE ====
 	store := metrics.NewStore()
@@ -128,7 +92,7 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.Error("Panic in WebSocket endpoint", "panic", r)
+				logger.Error("💥 Panic in WebSocket endpoint", "panic", r)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
@@ -148,9 +112,9 @@ func main() {
 
 	// ==== RUN WS SERVER IN GOROUTINE ====
 	go func() {
-		slog.Info("WebSocket Gateway ready", "port", cfg.WSPort)
+		logger.Info("🚀 WebSocket Gateway ready", "port", cfg.WSPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Server crashed", "error", err)
+			logger.Error("💥 Server crashed", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -160,7 +124,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	slog.Info("Shutting down...")
+	logger.Info("🛑 Shutting down...")
 
 	// === GRACEFUL SHUTDOWN ===
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -168,11 +132,45 @@ func main() {
 
 	// === STOP SERVER ===
 	if err := srv.Shutdown(ctx); err != nil {
-		slog.Error("Shutdown error", "error", err)
+		logger.Error("💥 Shutdown error", "error", err)
 	}
 
 	// === PUT NATS INTO A DRAIN STATE ===
 	nc.Drain()
 
-	slog.Info("Stopped")
+	logger.Info("🔴 Stopped")
+}
+
+func subscribeToNATS(mRouter *gateway.MessageRouter) {
+	subMu.Lock()
+	defer subMu.Unlock()
+
+	// Unsubscribe if subscribed
+	if sub != nil {
+		sub.Unsubscribe()
+	}
+
+	var err error
+	sub, err = nc.Subscribe(cfg.BroadcastCh, func(m *nats.Msg) {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Error("💥 Panic in NATS handler", "recover", r)
+			}
+		}()
+
+		var env struct {
+			Type string          `json:"_t"`
+			Data json.RawMessage `json:"d"`
+		}
+		json.Unmarshal(m.Data, &env)
+
+		logger.Trace("NATS -> WS", "subject", m.Subject, "type", env.Type, "data", string(m.Data))
+
+		mRouter.Route(env.Type, env.Data)
+	})
+	if err != nil {
+		logger.Error("💥 Subscribe error", "error", err, "channel", cfg.BroadcastCh)
+	} else {
+		logger.Info("📡 Subscribed to channel", "channel", cfg.BroadcastCh)
+	}
 }

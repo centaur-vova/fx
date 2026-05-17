@@ -64,8 +64,24 @@ class Kernel
         // Load config from .env
         $loader = ConfigLoader::fromEnv($this->basePath);
 
+        // CLI overrides (local dev: --nats-host=localhost)
+        $cliOptions = getopt('', ['api-url:', 'nats-host:', 'nats-port::']);
+
         // System settings
         $workerNum = $loader->getInt('SERVER_WORKER_NUM', 4);
+
+        // API (CLI flags > .env > defaults)
+        $apiUrl = isset($cliOptions['api-url']) && is_string($cliOptions['api-url'])
+            ? $cliOptions['api-url']
+            : $loader->getString('API_URL', 'http://localhost:8090');
+
+        // NATS (CLI flags > .env > defaults)
+        $natsHost = isset($cliOptions['nats-host']) && is_string($cliOptions['nats-host'])
+            ? $cliOptions['nats-host']
+            : $loader->getString('NATS_HOST', 'deez-nutz');
+        $natsPort = isset($cliOptions['nats-port']) && is_string($cliOptions['nats-port'])
+            ? (int) $cliOptions['nats-port']
+            : $loader->getInt('NATS_PORT', 4222);
 
         /** @var array<string, array{max_attempts: int, ttl: int}> $rateLimiters */
         $rateLimiters = $loader->getArray('RATE_LIMITERS', []);
@@ -83,8 +99,8 @@ class Kernel
             taskRetryDelaySec:    $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
             taskMaxRetries:       $loader->getInt('TASK_MAX_RETRIES', 3),
             shutdownTimeoutSec:   $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
-            natsHost:             $loader->getString('NATS_HOST', 'nutz'),
-            natsPort:             $loader->getInt('NATS_PORT', 4222),
+            natsHost:             $natsHost,
+            natsPort:             $natsPort,
             natsToken:            $loader->getString('NATS_TOKEN', ''),
             workerNum:            $workerNum,
             // Cache
@@ -94,7 +110,7 @@ class Kernel
             cacheAutoCleanSec:    $loader->getFloat('CACHE_AUTO_CLEAN_SEC', 60),
             cacheValueMaxSize:    $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
             // API
-            apiUrl:               $loader->getString('API_URL'),
+            apiUrl:               $apiUrl,
             apiToken:             $loader->getString('API_TOKEN'),
             semaphorePermitTtl:   $loader->getInt('SEMAPHORE_PERMIT_TTL', 10),
             // Queue

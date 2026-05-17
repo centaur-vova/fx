@@ -6,7 +6,7 @@ services:
       - .env
     depends_on:
       - deez-nutz
-      - ws-proxy
+      - ws
     ports:
       - "${SERVER_PORT:-9501}:${SERVER_PORT:-9501}"
     logging:
@@ -35,12 +35,12 @@ services:
     networks:
       - atomic-network
 
-  ws-proxy:
+  ws:
     image: ghcr.io/centaur-vova/fast-atomic-flow-ws:latest
     restart: always
     command: /usr/local/bin/go-proxy
     environment:
-      - APP_VERSION=${APP_VERSION:-dev}
+      - NATS_TOKEN=${NATS_TOKEN}
     env_file:
       - .env
     ports:
@@ -69,47 +69,18 @@ services:
       - api-2
       - api-3
 
-  api-1:
+  api:
     image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
     restart: always
     command: /usr/local/bin/api
     environment:
-      - APP_VERSION=${APP_VERSION:-dev}
       - API_PORT=8081
     env_file:
       - .env
     networks:
       - atomic-network
     depends_on:
-      - ws-proxy
-
-  api-2:
-    image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
-    restart: always
-    command: /usr/local/bin/api
-    environment:
-      - APP_VERSION=${APP_VERSION:-dev}
-      - API_PORT=8082
-    env_file:
-      - .env
-    networks:
-      - atomic-network
-    depends_on:
-      - ws-proxy
-
-  api-3:
-    image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
-    restart: always
-    command: /usr/local/bin/api
-    environment:
-      - APP_VERSION=${APP_VERSION:-dev}
-      - API_PORT=8083
-    env_file:
-      - .env
-    networks:
-      - atomic-network
-    depends_on:
-      - ws-proxy
+      - ws
 
 volumes:
   deez-nutz-data:

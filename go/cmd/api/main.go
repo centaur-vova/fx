@@ -5,10 +5,11 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/protocol"
 	"fast-atomic-flow/go/internal/semaphore"
-	"log/slog"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,18 +17,15 @@ import (
 )
 
 var (
-	cfg *protocol.AppConfig
+	cfg *protocol.APIConfig
 )
 
 func main() {
 	// ==== LOAD .env ====
-	if err := godotenv.Load("../.env"); err != nil {
-		slog.Info("No .env file found, using system env")
-	}
+	godotenv.Load("../.env")
 
 	// ==== LOAD CONFIG ====
-	cfg = protocol.LoadConfig()
-	cfg.Validate()
+	cfg = protocol.LoadAPIConfig()
 
 	// === LOGGER ===
 	logger.Init(cfg.LogLevel)
@@ -42,8 +40,8 @@ func main() {
 	})
 
 	// Semaphore
-	http.HandleFunc("/semaphore/acquire", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Acquire))
-	http.HandleFunc("/semaphore/release", semHandler.AuthMiddleware(cfg.APIToken, semHandler.Release))
+	http.HandleFunc("/semaphore/acquire", semHandler.Acquire)
+	http.HandleFunc("/semaphore/release", semHandler.Release)
 	http.HandleFunc("/semaphore/health", semHandler.Health)
 
 	// ==== INIT WEBSOCKET SERVER ====
@@ -53,11 +51,14 @@ func main() {
 		IdleTimeout: 60 * time.Second, // keep idle connections alive long enough
 	}
 
+	// ==== REGISTER API SERVER IN BALANCER ====
+	go registerUpstream()
+
 	// ==== RUN API SERVER IN GOROUTINE ====
 	go func() {
-		slog.Info("API server started", "port", cfg.APIPort)
+		logger.Info("🐎 API server started", "port", cfg.APIPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Server crashed", "error", err)
+			logger.Error("💥 Server crashed", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -67,7 +68,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	slog.Info("Shutting down...")
+	logger.Info("🛑 Shutting down...")
 
 	// === GRACEFUL SHUTDOWN ===
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -75,8 +76,36 @@ func main() {
 
 	// === STOP SERVER ===
 	if err := srv.Shutdown(ctx); err != nil {
-		slog.Error("Shutdown error", "error", err)
+		logger.Error("⚠️ Shutdown error", "error", err)
 	}
 
-	slog.Info("API Server Stopped")
+	logger.Info("🔴 Stopped")
+}
+
+func registerUpstream() {
+	client := http.Client{Timeout: 2 * time.Second}
+	registerURL := cfg.BalancerURL + "/register"
+
+	hostname, _ := os.Hostname()
+	targetURL := fmt.Sprintf("http://%s:%s", hostname, cfg.APIPort)
+
+	for {
+		req, err := http.NewRequest("POST", registerURL, strings.NewReader(targetURL))
+		if err == nil {
+			req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
+			resp, err := client.Do(req)
+
+			if err == nil && resp.StatusCode == http.StatusOK {
+				resp.Body.Close()
+				logger.Info("🚀 Registration successful!", "instance", targetURL)
+				return
+			}
+			if resp != nil {
+				resp.Body.Close()
+			}
+		}
+
+		logger.Warn("⏳ Balancer unavailable. Retrying registration in 3 seconds...")
+		time.Sleep(3 * time.Second) // try again in a few
+	}
 }

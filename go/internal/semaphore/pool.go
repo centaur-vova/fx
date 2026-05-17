@@ -2,8 +2,8 @@ package semaphore
 
 import (
 	"context"
+	"fast-atomic-flow/go/internal/logger"
 	"fmt"
-	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -43,7 +43,7 @@ func (p *Pool) cleanupExpired() {
 	now := time.Now()
 	for uid, permit := range p.permits {
 		if now.After(permit.ExpiresAt) {
-			slog.Debug("TTL expired (cleaner)", "uid", uid)
+			logger.Debug("TTL expired (cleaner)", "uid", uid)
 			p.internalRelease(uid)
 		}
 	}
@@ -64,9 +64,9 @@ func (p *Pool) internalRelease(uid uint64) {
 	if ok {
 		select {
 		case <-sem.slots:
-			slog.Debug("slot released (cleaner)", "uid", uid)
+			logger.Debug("Slot released (cleaner)", "uid", uid)
 		default:
-			slog.Warn("attempted to release an empty slot (cleaner)", "uid", uid)
+			logger.Warn("⚠️ Attempted to release an empty slot (cleaner)", "uid", uid)
 		}
 	}
 }
@@ -130,10 +130,10 @@ func (p *Pool) Release(uid uint64) {
 	if ok {
 		select {
 		case <-sem.slots:
-			slog.Debug("slot released", "uid", uid)
+			logger.Debug("Slot released", "uid", uid)
 		default:
 			// This prevents blocking if the slot was somehow already cleared
-			slog.Warn("attempted to release an empty slot", "uid", uid)
+			logger.Warn("⚠️ Attempted to release an empty slot", "uid", uid)
 		}
 	}
 }

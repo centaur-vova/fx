@@ -1,0 +1,94 @@
+services:
+  deez-nutz:
+    image: nats:2.12.8-alpine
+    command: ["-c", "/etc/nats.conf", "-js"]
+    volumes:
+      - ./nats.conf:/etc/nats.conf:ro
+      - deez-nutz-data:/data
+    environment:
+      - NATS_TOKEN=${NATS_TOKEN}
+      - NATS_PORT=${NATS_PORT}
+    ports:
+      - "127.0.0.1:${NATS_PORT}:${NATS_PORT}"
+    networks:
+      - atomic-network
+    restart: always
+
+  ws:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.dev
+    command: air -c .air.ws.toml
+    environment:
+      # Log level
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # WS
+      - WS_PORT=${WS_PORT}
+      # NATS
+      - NATS_HOST=${NATS_HOST}
+      - NATS_PORT=${NATS_PORT}
+      - NATS_TOKEN=${NATS_TOKEN}
+      - NATS_STREAM_TASKS=${NATS_STREAM_TASKS}
+      - NATS_SUBJECT_BROADCAST=${NATS_SUBJECT_BROADCAST}
+      # Public data (welcome message)
+      - QUEUE_CAPACITY=${QUEUE_CAPACITY}
+      - SERVER_WORKER_NUM=${SERVER_WORKER_NUM}
+      - METRICS_UPDATE_INTERVAL_MS=${METRICS_UPDATE_INTERVAL_MS}
+    ports:
+      - "127.0.0.1:${WS_PORT}:${WS_PORT}"
+    volumes:
+      - ./go:/app
+      - go-mod-cache:/go/pkg/mod
+    networks:
+      - atomic-network
+    depends_on:
+      - deez-nutz
+
+  balancer:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.dev
+    command: air -c .air.balancer.toml
+    environment:
+      # Log level
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Balancer & API
+      - API_TOKEN=${API_TOKEN}
+      - API_PORT=${API_PORT}
+    ports:
+      - "127.0.0.1:${API_PORT}:${API_PORT}"
+    volumes:
+      - ./go:/app
+      - go-mod-cache:/go/pkg/mod
+    networks:
+      - atomic-network
+    depends_on:
+      - ws
+
+  api:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.dev
+    command: air -c .air.api.toml
+    environment:
+      # Log level
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Balancer & API
+      - API_PORT=8080 # Isolated runtime port for scaling instances within the network
+      - API_TOKEN=${API_TOKEN}
+      - API_URL=${API_URL}
+    volumes:
+      - ./go:/app
+      - go-mod-cache:/go/pkg/mod
+    networks:
+      - atomic-network
+    depends_on:
+      - ws
+
+volumes:
+  deez-nutz-data:
+  go-mod-cache:
+
+networks:
+  atomic-network:
+    driver: bridge

@@ -2,7 +2,7 @@ package semaphore
 
 import (
 	"encoding/json"
-	"log/slog"
+	"fast-atomic-flow/go/internal/logger"
 	"net/http"
 	"runtime"
 	"time"
@@ -51,9 +51,12 @@ func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		logger.Debug("Semaphore acquire failed", "error", err)
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
+
+	logger.Debug("Semaphore acquired", "uid", uid)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]uint64{"uid": uid})
@@ -70,6 +73,7 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.pool.Release(req.UID)
+	logger.Debug("Semaphore released", "uid", req.UID)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -80,19 +84,4 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	numGoroutine := runtime.NumGoroutine()
 
 	json.NewEncoder(w).Encode(map[string]int{"permits": permitCount, "numGoroutine": numGoroutine})
-}
-
-// AuthMiddleware wraps a handler to check for a valid Bearer token
-func (h *Handler) AuthMiddleware(apiToken string, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") != "Bearer "+apiToken {
-			slog.Warn("forbidden: invalid or missing auth token",
-				"remote_addr", r.RemoteAddr,
-				"path", r.URL.Path,
-			)
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		next.ServeHTTP(w, r)
-	}
 }
