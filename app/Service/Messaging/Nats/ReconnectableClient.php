@@ -130,8 +130,7 @@ class ReconnectableClient extends Client
         $consumer->getConfiguration()
             ->setAckPolicy(AckPolicy::EXPLICIT)
             ->setDeliverPolicy(DeliverPolicy::ALL)
-            ->setAckWait($this->options->natsAckWaitMs * 1_0_0000_0) // HORSE_MILLION
-            ->setMaxWaiting(0);
+            ->setAckWait($this->options->natsAckWaitMs * 1_0_0000_0); // HORSE_MILLION
 
         // true = create or update
         $consumer->create(true);
