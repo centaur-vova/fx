@@ -46,26 +46,26 @@ final class TaskQueueManager
                     break;
                 }
 
-                $this->logMemoryUsage();
-
                 // Calc free slots count
                 $activeTasks = $this->taskMetaCache->count();
                 $freeSlots = $maxActive - $activeTasks - $reserve;
-                $this->logLoopDebug('Loop iteration', ['freeSlots' => $freeSlots]);
 
                 if ($freeSlots <= 0) {
                     // The task meta cache table is full, wait
-                    Co::sleep(0.01);
+                    Co::sleep(0.1);
                     continue;
                 }
 
                 // Calculate batch size
                 $batchSize = min($this->options->queuePrefetchBatch, $freeSlots);
-
                 if ($batchSize <= 0) {
-                    Co::sleep(0.01);
+                    Co::sleep(0.1);
                     continue;
                 }
+
+                // Log only when we are actually about to pull data
+                $this->logMemoryUsage();
+                $this->logLoopDebug('Loop iteration', ['freeSlots' => $freeSlots]);
 
                 $taskCount = 0;
                 $tasks = $this->taskQueue->pull($batchSize);
@@ -89,8 +89,8 @@ final class TaskQueueManager
                     }
                 }
 
-                // Adaptive delay
-                Co::sleep($taskCount ? 0.001 : 0.01);
+                // Perfect adaptive delay
+                Co::sleep($taskCount ? 0.01 : 0.1);
             }
         });
     }

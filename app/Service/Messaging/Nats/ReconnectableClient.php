@@ -40,27 +40,32 @@ class ReconnectableClient extends Client
      */
     public function reconnect(): bool
     {
+        // Close existing connection if any
         $this->connection?->close();
         $this->connection = null;
 
-        // No need for long pauses, but we use our "horse-power" sleep
-        // It will throw WorkerShutdownException if we are stopping right now
+        // Brief pause before reconnection attempt
         $this->context->sleepOrDie(0.1);
 
         try {
-            // Create new connection
-            $this->connection = new Connection(client: $this);
+            // Create new connection and verify it works
+            $connection = new Connection(client: $this);
+            $connection->ping(); // Will throw if NATS is unreachable
 
-            // New connection will be established on the next command (ping)
-            $this->ping();
+            // Only assign after successful ping
+            $this->connection = $connection;
 
             // Re-create streams and consumers if NATS lost its memory
             $this->ensureTopology();
 
             return true;
         } catch (WorkerShutdownException $e) {
+            // Shutting down — clean up and rethrow
+            $this->connection = null;
             throw $e;
         } catch (Throwable $e) {
+            // Connection failed — ensure connection is null so sendMessage() fails gracefully
+            $this->connection = null;
             $this->internalLogger->error('NATS reconnection failed', [
                 'error' => $e->getMessage(),
             ]);

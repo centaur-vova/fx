@@ -112,9 +112,11 @@ final readonly class MessagingServiceProvider implements ServiceProvider, Worker
         $client = $container->get(NatsClient::class);
 
         // Ping NATS periodically to keep connection alive
+        // Apply a fixed 10% random jitter during initialization to desynchronize workers
+        $jitteredInterval = $options->natsWorkerPingIntervalSec * (mt_rand(90, 110) / 100);
         $scheduler->tick(
             fn () => $client->pingOrRestart($workerId),
-            $options->natsWorkerPingIntervalSec
+            $jitteredInterval
         );
 
         // Create stream & consumer when NOT in the task worker
