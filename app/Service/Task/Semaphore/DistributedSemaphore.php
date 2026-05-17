@@ -27,7 +27,7 @@ final readonly class DistributedSemaphore implements TaskSemaphore
         $semaphorePermitTtl = $this->semaphorePermitTtl;
 
         return new class ($api, $mc, $semaphorePermitTtl) implements SemaphorePermit {
-            private ?int $permitUid = null;
+            private ?string $permitUid = null;
 
             public function __construct(
                 private readonly SemaphoreApi $api,
@@ -38,9 +38,9 @@ final readonly class DistributedSemaphore implements TaskSemaphore
 
             public function acquire(float $lockWaitTimeoutSec): bool
             {
-                $permitUid = (int) $this->api->acquire($this->limit, (int) $lockWaitTimeoutSec, $this->semaphorePermitTtl);
+                $permitUid = $this->api->acquire($this->limit, (int) $lockWaitTimeoutSec, $this->semaphorePermitTtl);
 
-                if ($permitUid <= 0) {
+                if (empty($permitUid)) {
                     return false;
                 }
 

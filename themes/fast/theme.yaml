@@ -10,8 +10,8 @@ settings:
     max_concurrent: 10
     task_buttons:
       - { label: "🌀 25 (PHP)", tasks: 25, stress: false, semaphore_driver: "shared" }
-      - { label: "🌀 100 (Go API)", tasks: 100, stress: false, semaphore_driver: "api" }
-      - { label: "⚡ 250 (PHP)", tasks: 250, class: "warning", stress: true, semaphore_driver: "shared" }
+      - { label: "🌀 25 (Go API)", tasks: 25, stress: false, semaphore_driver: "api" }
+      - { label: "⚡ 500 (PHP)", tasks: 500, class: "warning", stress: true, semaphore_driver: "shared" }
       - { label: "⚡ 500 (Go API)", tasks: 500, class: "accent", stress: true, semaphore_driver: "api" }
       - { label: "🎲 RAND", tasks: 0, class: "danger", full_width: true }
 

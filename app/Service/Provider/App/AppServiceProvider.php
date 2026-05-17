@@ -49,7 +49,7 @@ class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
 
     private function registerCacheStorage(ContainerInterface $c): CacheStorage
     {
-        /** @var Options Options */
+        /** @var Options $options */
         $options = $c->get(Options::class);
         /** @var LoggerInterface $logger */
         $logger = $c->get(LoggerInterface::class);

@@ -12,26 +12,27 @@ class SemaphoreApi
     }
 
     /**
-     * @return int - permit UID
+     * @return string - permit UID
      */
-    public function acquire(int $maxConcurrent, int $lockWaitTimeoutSec = 5, int $permitTTLSec = 10): ?int
+    public function acquire(int $maxConcurrent, int $lockWaitTimeoutSec = 5, int $permitTTLSec = 10): ?string
     {
         try {
-            /** @var array{uid?: int|string|float} $response */
+            /** @var array{uid?: string} $response */
             $response = $this->client->post('/semaphore/acquire', [
                 'max_concurrent' => $maxConcurrent,
                 'lock_wait_timeout' => $lockWaitTimeoutSec,
                 'permit_ttl' => $permitTTLSec,
             ]);
 
-            $uid = isset($response['uid']) ? (int) $response['uid'] : 0;
-            return $uid > 0 ? $uid : null; // Return null if UID is 0 or missing
+            $uid = $response['uid'] ?? null;
+
+            return $uid;
         } catch (\Throwable) {
             return null;
         }
     }
 
-    public function release(int $uid): bool
+    public function release(string $uid): bool
     {
         try {
             $this->client->post('/semaphore/release', [

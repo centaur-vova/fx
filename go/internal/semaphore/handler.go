@@ -14,10 +14,10 @@ const maxPermitTTLSec = 60
 const maxMC = 255
 
 type Handler struct {
-	pool *Pool
+	pool Pool
 }
 
-func NewHandler(pool *Pool) *Handler {
+func NewHandler(pool Pool) *Handler {
 	return &Handler{pool: pool}
 }
 
@@ -59,12 +59,12 @@ func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Semaphore acquired", "uid", uid)
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]uint64{"uid": uid})
+	json.NewEncoder(w).Encode(map[string]SlotUID{"uid": uid})
 }
 
 func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		UID uint64 `json:"uid"`
+		UID SlotUID `json:"uid"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -72,7 +72,12 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.pool.Release(req.UID)
+	if err := h.pool.Release(req.UID); err != nil {
+		logger.Error("Failed to release semaphore", "error", err)
+		http.Error(w, "release failed", http.StatusInternalServerError)
+		return
+	}
+
 	logger.Debug("Semaphore released", "uid", req.UID)
 	w.WriteHeader(http.StatusOK)
 }
@@ -80,8 +85,7 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
-	permitCount := h.pool.PermitCount()
 	numGoroutine := runtime.NumGoroutine()
 
-	json.NewEncoder(w).Encode(map[string]int{"permits": permitCount, "numGoroutine": numGoroutine})
+	json.NewEncoder(w).Encode(map[string]int{"numGoroutine": numGoroutine})
 }

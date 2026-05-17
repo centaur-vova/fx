@@ -14,6 +14,14 @@ services:
       - atomic-network
     restart: always
 
+  redis:
+    image: redis:8.0-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - atomic-network
+
   ws:
     build:
       context: ./go
@@ -55,6 +63,8 @@ services:
       # Balancer & API
       - API_TOKEN=${API_TOKEN}
       - API_PORT=${API_PORT}
+      # Redis
+      - REDIS_URL=${REDIS_URL}
     ports:
       - "127.0.0.1:${API_PORT}:${API_PORT}"
     volumes:
@@ -64,6 +74,7 @@ services:
       - atomic-network
     depends_on:
       - ws
+      - redis
 
   api:
     build:
@@ -77,6 +88,8 @@ services:
       - API_PORT=8080 # Isolated runtime port for scaling instances within the network
       - API_TOKEN=${API_TOKEN}
       - API_URL=${API_URL}
+      # Redis
+      - REDIS_URL=${REDIS_URL}
     volumes:
       - ./go:/app
       - go-mod-cache:/go/pkg/mod
@@ -84,6 +97,7 @@ services:
       - atomic-network
     depends_on:
       - ws
+      - redis
 
 volumes:
   deez-nutz-data:

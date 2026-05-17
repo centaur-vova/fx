@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -30,8 +31,14 @@ func main() {
 	// === LOGGER ===
 	logger.Init(cfg.LogLevel)
 
+	// === REDIS CLIENT ===
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisURL,
+	})
+	semPool := semaphore.NewRedisPool(redisClient)
+
 	// === HTTP HANDLERS ===
-	semPool := semaphore.NewPool()
+
 	semHandler := semaphore.NewHandler(semPool)
 
 	// API

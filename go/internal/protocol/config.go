@@ -125,6 +125,7 @@ type APIConfig struct {
 	APIToken    string
 	BalancerURL string
 	APIPort     string
+	RedisURL    string
 }
 
 func LoadAPIConfig() *APIConfig {
@@ -134,6 +135,7 @@ func LoadAPIConfig() *APIConfig {
 	port := *apiPortFlag
 
 	balancerURL := getEnv("API_URL", "http://localhost:8090")
+	redisURL := getEnv("REDIS_URL", "redis:6379")
 
 	return &APIConfig{
 		BaseConfig: BaseConfig{
@@ -143,6 +145,7 @@ func LoadAPIConfig() *APIConfig {
 		APIToken:    os.Getenv("API_TOKEN"),
 		BalancerURL: balancerURL,
 		APIPort:     port,
+		RedisURL:    redisURL,
 	}
 }
 
