@@ -16,6 +16,7 @@ use Basis\Nats\Stream\DiscardPolicy;
 use Basis\Nats\Stream\RetentionPolicy;
 use Basis\Nats\Stream\StorageBackend;
 use Psr\Log\LoggerInterface;
+use Swoole\Process;
 use Throwable;
 
 class ReconnectableClient extends Client
@@ -82,7 +83,12 @@ class ReconnectableClient extends Client
 
                 // A small delay before SNAFUBAR
                 $this->context->sleepOrDie(5.0);
-                $this->context->stop();
+
+                $pid = getmypid();
+                if ($pid === false) {
+                    exit(1);
+                }
+                Process::kill($pid, SIGKILL);
             }
         }
     }
