@@ -180,7 +180,6 @@ cd fast-atomic-flow
 cp .env.example .env
 docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
-````
 
 Сїѐ ꙁапꙋсти́тъ 3 прича́стника Гѡ АПИ, Вѣсы̀, Ре́дисъ, НАТСЪ и PHP Свѡлъ.
 
