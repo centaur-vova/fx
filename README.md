@@ -40,7 +40,7 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[📖 Читать README на русском](README.ru.md) | [📖 Read in English](README.md)
+[📖 English](README.md) | [📖 Русский](README.ru.md) | [📖 Старославѧнскїй](README.cu.md) | [📖 Kiswahili](README.sw.md)
 
 <img width="2564" height="1788" alt="Fast theme - star dust mode" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 

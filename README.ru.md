@@ -40,7 +40,7 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[📖 Read in English](README.md) | [📖 Читать README на русском](README.ru.md)
+[📖 English](README.md) | [📖 Русский](README.ru.md) | [📖 Старославѧнскїй](README.cu.md) | [📖 Kiswahili](README.sw.md)
 
 <img width="2564" height="1788" alt="Скриншот Fast темы: множество мелких точек (star dust) в зонах Pipeline, демонстрация LOD при большом количестве задач" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
