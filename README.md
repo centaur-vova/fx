@@ -24,6 +24,16 @@
   <!-- Row 4: Brotherhood & License -->
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
   <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
+  <br>
+  <!-- Soon™ -->
+  <img src="https://img.shields.io/badge/🔮-coming_soon...-lightgrey?style=flat" alt="Coming soon">
+  <br>
+  <img src="https://img.shields.io/badge/Kafka-because%20NATS%20is%20not%20enough-231F20?style=flat&logo=apachekafka&logoColor=white" alt="Kafka">
+  <img src="https://img.shields.io/badge/Oracle-16GB%20RAM%20minimum-red?style=flat&logo=oracle&logoColor=white" alt="Oracle">
+  <img src="https://img.shields.io/badge/Symfony-from%202008-orange?style=flat&logo=symfony&logoColor=white" alt="Symfony">
+  <img src="https://img.shields.io/badge/Solidity-sausage%20smart%20contracts-363636?style=flat&logo=solidity&logoColor=white" alt="Solidity">
+  <img src="https://img.shields.io/badge/harmonica-for%20retrospectives-yellow?style=flat" alt="Harmonica">
+  <img src="https://img.shields.io/badge/Swahili-C1%20fluent-green?style=flat" alt="Swahili C1">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
