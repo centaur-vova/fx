@@ -17,51 +17,131 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// ========== CONSTANTS ==========
+const (
+	// Registration settings
+	registrationRetryInterval = 3 * time.Second
+	registrationTimeout       = 2 * time.Second
+	registrationHeartbeat     = 20 * time.Second // must be less than Balancer's instanceTTL (30s)
+
+	// Server
+	serverIdleTimeout  = 60 * time.Second
+	serverReadTimeout  = 10 * time.Second
+	serverWriteTimeout = 10 * time.Second
+	shutdownTimeout    = 5 * time.Second
+
+	// Health check
+	healthCheckPath = "/health"
+)
+
+// ========== GLOBALS ==========
 var (
 	cfg *protocol.APIConfig
 )
 
+// ========== REGISTRATION ==========
+
+// registerUpstream periodically registers this API instance with the balancer
+func registerUpstream(ctx context.Context) {
+	client := http.Client{Timeout: registrationTimeout}
+	registerURL := cfg.BalancerURL + "/register"
+
+	hostname, _ := os.Hostname()
+	targetURL := fmt.Sprintf("http://%s:%s", hostname, cfg.APIPort)
+
+	ticker := time.NewTicker(registrationHeartbeat)
+	defer ticker.Stop()
+
+	doRegister := func() bool {
+		req, err := http.NewRequest("POST", registerURL, strings.NewReader(targetURL))
+		if err != nil {
+			return false
+		}
+		req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
+
+		resp, err := client.Do(req)
+		if resp != nil {
+			defer resp.Body.Close()
+		}
+
+		if err == nil && resp.StatusCode == http.StatusOK {
+			logger.Info("🚀 Registration successful", "instance", targetURL)
+			return true
+		}
+
+		logger.Warn("⚠️ Registration failed", "instance", targetURL, "error", err)
+		return false
+	}
+
+	// First registration (must succeed, retry until it does)
+	for !doRegister() {
+		logger.Warn("⏳ Balancer unavailable. Retrying registration in %v...", registrationRetryInterval)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(registrationRetryInterval):
+		}
+	}
+
+	// Heartbeat loop
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("🛑 Registration stopped")
+			return
+		case <-ticker.C:
+			doRegister()
+		}
+	}
+}
+
+// ========== MAIN ==========
+
 func main() {
-	// ==== LOAD .env ====
+	// Load .env file
 	godotenv.Load("../.env")
 
-	// ==== LOAD CONFIG ====
+	// Load configuration
 	cfg = protocol.LoadAPIConfig()
 
-	// === LOGGER ===
+	// Initialize logger
 	logger.Init(cfg.LogLevel)
 
-	// === REDIS CLIENT ===
+	// Redis client
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: cfg.RedisURL,
 	})
 	semPool := semaphore.NewRedisPool(redisClient)
 
-	// === HTTP HANDLERS ===
-
+	// HTTP handlers
 	semHandler := semaphore.NewHandler(semPool)
 
-	// API
+	// API routes
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK) // kon-not-dead
+		w.WriteHeader(http.StatusOK)
 	})
 
-	// Semaphore
+	// Semaphore routes
 	http.HandleFunc("/semaphore/acquire", semHandler.Acquire)
 	http.HandleFunc("/semaphore/release", semHandler.Release)
 	http.HandleFunc("/semaphore/health", semHandler.Health)
 
-	// ==== INIT WEBSOCKET SERVER ====
+	// WebSocket server
 	srv := &http.Server{
-		Addr:        ":" + cfg.APIPort,
-		Handler:     nil,
-		IdleTimeout: 60 * time.Second, // keep idle connections alive long enough
+		Addr:         ":" + cfg.APIPort,
+		Handler:      nil,
+		IdleTimeout:  serverIdleTimeout,
+		ReadTimeout:  serverReadTimeout,
+		WriteTimeout: serverWriteTimeout,
 	}
 
-	// ==== REGISTER API SERVER IN BALANCER ====
-	go registerUpstream()
+	// Get context
+	ctx, cancel := context.WithCancel(context.Background())
 
-	// ==== RUN API SERVER IN GOROUTINE ====
+	// Register this API server with the balancer
+	go registerUpstream(ctx)
+
+	// Start API server
 	go func() {
 		logger.Info("🐎 API server started", "port", cfg.APIPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -70,49 +150,24 @@ func main() {
 		}
 	}()
 
-	// ==== WAIT FOR QUIT SIGNAL ====
+	// Wait for shutdown signal
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	logger.Info("🛑 Shutting down...")
 
-	// === GRACEFUL SHUTDOWN ===
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// Cancel context to stop registration heartbeat
+	cancel()
 
-	// === STOP SERVER ===
-	if err := srv.Shutdown(ctx); err != nil {
+	// Graceful shutdown
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer shutdownCancel()
+
+	// Stop server
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("⚠️ Shutdown error", "error", err)
 	}
 
 	logger.Info("🔴 Stopped")
-}
-
-func registerUpstream() {
-	client := http.Client{Timeout: 2 * time.Second}
-	registerURL := cfg.BalancerURL + "/register"
-
-	hostname, _ := os.Hostname()
-	targetURL := fmt.Sprintf("http://%s:%s", hostname, cfg.APIPort)
-
-	for {
-		req, err := http.NewRequest("POST", registerURL, strings.NewReader(targetURL))
-		if err == nil {
-			req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
-			resp, err := client.Do(req)
-
-			if err == nil && resp.StatusCode == http.StatusOK {
-				resp.Body.Close()
-				logger.Info("🚀 Registration successful!", "instance", targetURL)
-				return
-			}
-			if resp != nil {
-				resp.Body.Close()
-			}
-		}
-
-		logger.Warn("⏳ Balancer unavailable. Retrying registration in 3 seconds...")
-		time.Sleep(3 * time.Second) // try again in a few
-	}
 }
