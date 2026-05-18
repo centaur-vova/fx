@@ -10,7 +10,6 @@
   <br>
   <!-- Row 2: Quality & Features -->
   <img src="https://img.shields.io/badge/phpstan-уровень%2010-gold?style=flat&logo=php" alt="PHPStan уровень 10">
-  <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/распределённые-семафоры-red?style=flat" alt="Распределённые семафоры">
   <img src="https://img.shields.io/badge/балансировщик-round--robin-9cf?style=flat" alt="Балансировщик">
   <img src="https://img.shields.io/badge/шина%20данных-deez--nutz-8A2BE2?style=flat" alt="Шина данных">
@@ -19,6 +18,7 @@
   <!-- Row 3: Health & License -->
   <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Конебратство">
   <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
+  <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
   <img src="https://img.shields.io/badge/лицензия-KBL%20v3.0-10b981?style=flat" alt="Лицензия KBL 3.0">
 </p>

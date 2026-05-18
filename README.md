@@ -10,7 +10,6 @@
   <br>
   <!-- Row 2: Quality & Features -->
   <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
-  <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/distributed-semaphores-red?style=flat" alt="Distributed Semaphores">
   <img src="https://img.shields.io/badge/load_balancer-round--robin-9cf?style=flat" alt="Load Balancer">
   <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
@@ -18,6 +17,7 @@
   <br>
   <!-- Row 3: Health & License -->
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
+  <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
   <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
