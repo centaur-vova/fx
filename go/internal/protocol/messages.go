@@ -47,6 +47,7 @@ type WelcomeData struct {
 	AppVersion      string `json:"app_version"`
 	BuildDate       string `json:"build_date"`
 	StreamCreatedAt string `json:"stream_created_at"`
+	WorkerLabel     string `json:"worker_label"`
 }
 
 type TaskBatchCreated struct {

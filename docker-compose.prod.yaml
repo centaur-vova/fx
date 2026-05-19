@@ -65,6 +65,8 @@ services:
       - METRICS_UPDATE_INTERVAL_MS=${METRICS_UPDATE_INTERVAL_MS}
     ports:
       - "127.0.0.1:8080:8080"
+    volumes:
+      - ./go/config:/app/config:ro
     networks:
       - atomic-network
     ulimits:

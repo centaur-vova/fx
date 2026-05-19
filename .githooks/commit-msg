@@ -37,7 +37,7 @@ file_put_contents($commitMsgFile, $message);
  * \s                - Mandatory space
  * .{5,}             - Description must be at least 5 characters long
  */
-$pattern = '/^(\p{Emoji}\s*)+(🚨 \e\[1;31mСРОЧНО\e\[0m|ci|feat|fix|perf|ui|chore|docs|refactor|style|test)(\(.+\))?!?: .{5,}/ui';
+$pattern = '/^(\p{Emoji}\s*)+(🚨 \e\[1;31mСРОЧНО\e\[0m|ci|feat|fix|perf|ui|chore|docs|refactor|style|test|shizo)(\(.+\))?!?: .{5,}/ui';
 
 echo "[Commit-msg] Checking message for Emojinal Commits standard...\n";
 

@@ -87,12 +87,13 @@
                 <div
                   class="text-xs pr-6"
                   style="border-right: 1px solid var(--border-default)"
+                  x-show="$store.app.isOnline"
                 >
                   <span
                     class="block text-[9px] font-bold mb-1 uppercase tracking-tighter text-right"
                     style="color: var(--text-muted)"
-                    >Workers</span
-                  >
+                    x-text="$store.app.system.worker_label"
+                  ></span>
                   <!-- Row 1 (Shared) -->
                   <div class="flex items-center gap-1 justify-end">
                     <span

@@ -55,5 +55,9 @@ _ide_helper.php
 _ide_helper_models.php
 .phpstorm.meta.php
 tmp
+
+# === Overridable configs ===
+/go/config/.wankers.conf
+
 # Used for local testing
 docker-compose.yaml

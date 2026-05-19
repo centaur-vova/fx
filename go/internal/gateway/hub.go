@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/protocol"
+	"fast-atomic-flow/go/internal/psychotype"
 	"math"
 	"net/http"
 	"sync"
@@ -27,11 +28,12 @@ type Client struct {
 	closed atomic.Bool
 }
 type Hub struct {
-	clients   map[*Client]bool
-	clientsMu sync.RWMutex
-	config    *protocol.WSConfig
-	upgrader  websocket.Upgrader
-	nc        *nats.Conn
+	clients     map[*Client]bool
+	clientsMu   sync.RWMutex
+	config      *protocol.WSConfig
+	upgrader    websocket.Upgrader
+	nc          *nats.Conn
+	psyDetector *psychotype.Detector
 }
 
 func NewHub(cfg *protocol.WSConfig, nc *nats.Conn) *Hub {
@@ -41,7 +43,8 @@ func NewHub(cfg *protocol.WSConfig, nc *nats.Conn) *Hub {
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
-		nc: nc,
+		nc:          nc,
+		psyDetector: psychotype.NewDetector(),
 	}
 
 	return h
@@ -190,6 +193,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 			QueueCapacity:   h.config.QueueCapacity,
 			AppVersion:      h.config.AppVersion,
 			BuildDate:       h.config.BuildDate,
+			WorkerLabel:     h.psyDetector.Type(r.RemoteAddr),
 			StreamCreatedAt: streamCreatedAt.Local().Format("2006-01-02 15:04:05"),
 		},
 	)
