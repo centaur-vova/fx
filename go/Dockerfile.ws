@@ -10,6 +10,7 @@ RUN go mod download && \
     CGO_ENABLED=0 go build -o /go-proxy ./cmd/ws
 
 FROM alpine:3.23
+WORKDIR /app
 COPY --from=builder /go-proxy /usr/local/bin/
 COPY --from=builder /version.txt /version.txt
 CMD ["/usr/local/bin/go-proxy"]
