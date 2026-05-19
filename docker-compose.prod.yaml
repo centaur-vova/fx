@@ -25,7 +25,7 @@ services:
       - ./nats.conf:/etc/nats.conf:ro
       - deez-nutz-data:/data
     ports:
-      - "127.0.0.1:4222:4222"
+      - "127.0.0.1:${NATS_PORT}:${NATS_PORT}"
     environment:
       - NATS_TOKEN=${NATS_TOKEN}
     ulimits:
@@ -64,7 +64,7 @@ services:
       - SERVER_WORKER_NUM=${SERVER_WORKER_NUM}
       - METRICS_UPDATE_INTERVAL_MS=${METRICS_UPDATE_INTERVAL_MS}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${WS_PORT}:${WS_PORT}"
     volumes:
       - ./go/config:/app/config:ro
     networks:
@@ -86,7 +86,7 @@ services:
       - API_PORT=${API_PORT}
       - REDIS_URL=${REDIS_URL}
     ports:
-      - "127.0.0.1:8090:8090"
+      - "127.0.0.1:${API_PORT}:${API_PORT}"
     networks:
       - atomic-network
     depends_on:
@@ -99,7 +99,7 @@ services:
     command: /usr/local/bin/api
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      - API_PORT=8081
+      - API_PORT=8081 # Internal container port for balancer traffic. Uniform across all instances thanks to Docker network isolation.
       - API_TOKEN=${API_TOKEN}
       - API_URL=${API_URL}
       - REDIS_URL=${REDIS_URL}
