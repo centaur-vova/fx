@@ -15,6 +15,7 @@ use App\Router;
 use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
+use App\Service\Provider\App\ContextServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\App\RuntimeContextServiceProvider;
 use App\Service\Provider\Messaging\BroadcasterServiceProvider;
@@ -57,6 +58,7 @@ class Kernel
         SemaphoreServiceProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,
+        ContextServiceProvider::class, // Otel
     ];
 
     public function __construct(private readonly string $basePath)

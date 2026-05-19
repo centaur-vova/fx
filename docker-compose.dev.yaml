@@ -1,4 +1,21 @@
 services:
+  jaeger:
+    image: jaegertracing/jaeger:2.17.0
+    volumes:
+      - ./jaeger.yaml:/etc/jaeger/config.yaml:ro
+    command:
+      - "--config"
+      - "/etc/jaeger/config.yaml"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    ports:
+      - "127.0.0.1:16686:16686"  # Jaeger UI
+      - "127.0.0.1:4317:4317"    # OTLP gRPC
+      - "127.0.0.1:4318:4318"    # OTLP HTTP
+    networks:
+      - atomic-network
+    restart: always
+
   deez-nutz:
     image: nats:2.12.8-alpine
     command: ["-c", "/etc/nats.conf", "-js"]
@@ -51,6 +68,7 @@ services:
       - atomic-network
     depends_on:
       - deez-nutz
+      - jaeger
 
   balancer:
     build:
@@ -75,6 +93,7 @@ services:
     depends_on:
       - ws
       - redis
+      - jaeger
 
   api:
     build:
@@ -98,6 +117,7 @@ services:
     depends_on:
       - ws
       - redis
+      - jaeger
 
 volumes:
   deez-nutz-data:

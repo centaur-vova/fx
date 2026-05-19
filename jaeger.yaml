@@ -1,0 +1,42 @@
+extensions:
+  # Replaced obsolete "health_check" with the new "healthcheckv2" required by Jaeger v2.17+
+  healthcheckv2: {}
+
+  # Required extension to initialize the internal memory storage
+  jaeger_storage:
+    backends:
+      memory_storage:
+        memory:
+          max_traces: 10000
+
+  # Required extension to enable the Jaeger Web UI (runs on port 16686)
+  jaeger_query:
+    storage:
+      # FIX: Correct map structure matching the v2 specification
+      traces: memory_storage
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  # Routes data directly into the jaeger_storage backend defined above
+  jaeger_storage_exporter:
+    trace_storage: memory_storage
+
+service:
+  # Updated the enabled extensions list
+  extensions: [healthcheckv2, jaeger_storage, jaeger_query]
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter]
