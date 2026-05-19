@@ -52,9 +52,13 @@ func registerUpstream(ctx context.Context) {
 	ticker := time.NewTicker(registrationHeartbeat)
 	defer ticker.Stop()
 
+	// Keep current connection state
+	isAlive := false
+
 	doRegister := func() bool {
 		req, err := http.NewRequest("POST", registerURL, strings.NewReader(targetURL))
 		if err != nil {
+			// Error creating request - not a balancer issue, don't change isAlive
 			return false
 		}
 		req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
@@ -64,18 +68,21 @@ func registerUpstream(ctx context.Context) {
 			defer resp.Body.Close()
 		}
 
-		if err == nil && resp.StatusCode == http.StatusOK {
-			logger.Info("🚀 Registration successful", "instance", targetURL)
-			return true
-		}
+		ok := err == nil && resp.StatusCode == http.StatusOK
 
-		logger.Warn("⚠️ Registration failed", "instance", targetURL, "error", err)
-		return false
+		// Log only on state change
+		if ok && !isAlive {
+			logger.Info("🚀 Reconnected to balancer", "instance", targetURL)
+		} else if !ok && isAlive {
+			logger.Warn("⚠️ Lost connection to balancer", "instance", targetURL)
+		}
+		isAlive = ok
+		return ok
 	}
 
 	// First registration (must succeed, retry until it does)
 	for !doRegister() {
-		logger.Warn("⏳ Balancer unavailable. Retrying registration in %v...", registrationRetryInterval)
+		logger.Warn("⏳ Balancer unavailable. Retrying registration...", "retry_interval", registrationRetryInterval)
 		select {
 		case <-ctx.Done():
 			return
