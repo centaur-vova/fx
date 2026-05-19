@@ -7,6 +7,7 @@ namespace App\Service\Queue\Nats;
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Queue\Consumer;
 use App\Contract\Queue\Message;
+use App\Contract\Queue\Purgeable;
 use App\Contract\Queue\Queue;
 use App\Contract\Task\TaskQueue;
 
@@ -61,7 +62,7 @@ class NatsTaskQueue implements TaskQueue
 
     public function purge(): void
     {
-        if (!method_exists($this->queue, 'purge')) {
+        if (!($this->queue instanceof Purgeable)) {
             throw new \RuntimeException('Purge not supported for this queue implementation');
         }
         $this->queue->purge();

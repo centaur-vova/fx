@@ -6,6 +6,7 @@ namespace App\Service\Queue\Nats;
 
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Queue\Consumer;
+use App\Contract\Queue\Purgeable;
 use App\Contract\Queue\Queue;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Message\Ack;
@@ -13,7 +14,7 @@ use Basis\Nats\Message\Nak;
 use Basis\Nats\Message\Payload;
 use Basis\Nats\Stream\Stream;
 
-class NatsQueue implements Queue
+class NatsQueue implements Queue, Purgeable
 {
     private readonly Stream $stream;
 
