@@ -56,17 +56,6 @@ func (h *Hub) GetClientsCount() int {
 	return len(h.clients)
 }
 
-func (h *Hub) Add(conn *websocket.Conn) {
-	client := &Client{
-		Conn: conn,
-		Send: make(chan ClientMessage, clientSendBufferSize),
-	}
-	h.clientsMu.Lock()
-	h.clients[client] = true
-	h.clientsMu.Unlock()
-	go h.writePump(client)
-}
-
 func (h *Hub) writePump(client *Client) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -158,7 +147,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 	client := &Client{
 		Conn: conn,
-		Send: make(chan ClientMessage, 256),
+		Send: make(chan ClientMessage, clientSendBufferSize),
 	}
 
 	defer func() {
