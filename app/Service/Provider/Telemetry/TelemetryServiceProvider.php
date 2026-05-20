@@ -17,7 +17,6 @@ use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\Context\Context as OtelContext;
 use OpenTelemetry\Context\ContextStorage as OtelContextStorage;
 use OpenTelemetry\Contrib\Context\Swoole\SwooleContextStorage;
-use OpenTelemetry\SDK\Trace\TracerProvider;
 use OpenTelemetry\SDK\Trace\TracerProviderFactory;
 use Psr\Container\ContainerInterface;
 
@@ -46,10 +45,7 @@ final class TelemetryServiceProvider implements ServiceProvider, Bootable, Worke
 
     public function onWorkerStop(ContainerInterface $c, int $workerId): void
     {
-        $tracerProvider = Globals::tracerProvider();
-        if ($tracerProvider instanceof TracerProvider) {
-            $tracerProvider->shutdown();
-        }
+        TraceContext::shutdown();
     }
 
     private function setupOtel(): void

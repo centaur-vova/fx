@@ -46,7 +46,7 @@ class TaskService
 
     public function createBatch(int $count, int $maxConcurrent, SemaphoreDriver $semaphoreDriver, TaskMode $mode): void
     {
-        $span = TraceContext::start(
+        $batchScope = TraceContext::start(
             'task.batch.create',
             SpanKind::KIND_PRODUCER,
             [
@@ -56,6 +56,7 @@ class TaskService
                 'batch.task_mode' => $mode->value,
             ]
         );
+        $span = $batchScope->span;
 
         try {
             $createdCount = 0;
@@ -87,13 +88,15 @@ class TaskService
             $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
             throw $e;
         } finally {
-            $span->end();
+            $batchScope->detach();
+
         }
     }
 
     public function createRandomBatches(): void
     {
-        $span = TraceContext::start('task.batch.random', SpanKind::KIND_INTERNAL);
+        $batchScope = TraceContext::start('task.batch.random', SpanKind::KIND_INTERNAL);
+        $span = $batchScope->span;
 
         try {
             // Total # of batches
@@ -123,7 +126,7 @@ class TaskService
             $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
             throw $e;
         } finally {
-            $span->end();
+            $batchScope->detach();
         }
     }
 

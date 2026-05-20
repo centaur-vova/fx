@@ -12,7 +12,7 @@ final class TraceScope
     public function __construct(
         public readonly SpanInterface $span,
         private readonly ScopeInterface $scope,
-        private readonly ScopeInterface $rootScope,
+        private readonly ?ScopeInterface $rootScope = null,
     ) {
     }
 
@@ -23,6 +23,6 @@ final class TraceScope
     {
         $this->span->end();
         $this->scope->detach();
-        $this->rootScope->detach();
+        $this->rootScope?->detach();
     }
 }

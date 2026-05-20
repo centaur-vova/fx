@@ -11,7 +11,6 @@ use App\DTO\Http\Response\ApiResponse;
 use App\Exception\Http\InternalServerErrorException;
 use App\Exception\Http\NotFoundException;
 use App\Service\Telemetry\TraceContext;
-use OpenTelemetry\API\Globals;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
@@ -63,11 +62,11 @@ class Router
         }
 
         // OTEL: Start a root HTTP span for this request lifecycle
-        $span = TraceContext::start("http.{$method}", SpanKind::KIND_SERVER, [
+        $batchScope = TraceContext::start("http.{$method}", SpanKind::KIND_SERVER, [
             'http.method' => $method,
             'http.target' => $path,
         ]);
-        $scope = $span->activate();
+        $span = $batchScope->span;
 
         try {
             if (!isset($this->routes[$key])) {
@@ -108,15 +107,11 @@ class Router
             $response->status($status->value);
 
             $result = ApiResponse::error($e->getMessage());
+
         } finally {
             // OTEL: Always close the span and detach scopes to prevent memory bloating
-            $span->end();
-            $scope->detach();
-            // OTEL Check if the provider actually supports flushing (is an SDK implementation)
-            $tracerProvider = Globals::tracerProvider();
-            if (method_exists($tracerProvider, 'forceFlush')) {
-                $tracerProvider->forceFlush();
-            }
+            $batchScope->detach();
+            TraceContext::flush();
         }
 
         $json = json_encode($result);

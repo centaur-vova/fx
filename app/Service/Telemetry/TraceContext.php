@@ -11,6 +11,8 @@ use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Context\ContextInterface;
+use OpenTelemetry\Context\ScopeInterface;
+use OpenTelemetry\SDK\Trace\TracerProvider;
 
 final class TraceContext
 {
@@ -32,15 +34,22 @@ final class TraceContext
      * @param SpanKind::KIND_* $kind
      * @param array<string, mixed> $attributes
      */
-    public static function start(string $name, int $kind = SpanKind::KIND_INTERNAL, array $attributes = []): SpanInterface
-    {
+    public static function start(
+        string $name,
+        int $kind = SpanKind::KIND_INTERNAL,
+        array $attributes = [],
+        ?ScopeInterface $rootScope = null,
+    ): TraceScope {
         $span = self::tracer()->spanBuilder($name)->setSpanKind($kind);
 
         foreach ($attributes as $key => $value) {
             $span->setAttribute($key, $value);
         }
 
-        return $span->startSpan();
+        $startedSpan = $span->startSpan();
+        $scope = $startedSpan->activate();
+
+        return new TraceScope($startedSpan, $scope, $rootScope);
     }
 
     /**
@@ -83,16 +92,32 @@ final class TraceContext
      */
     public static function continueOrStart(string $name, ?string $traceparent, int $kind = SpanKind::KIND_INTERNAL, array $attributes = []): TraceScope
     {
-        // Reset Swoole context to root for clean task isolation
-        $rootScope = Context::getRoot()->activate();
+        if ($traceparent === null) {
+            // No traceparent — start a fresh root span
+            $rootScope = Context::getRoot()->activate();
+            return TraceContext::start($name, $kind, $attributes, $rootScope);
+        }
 
-        // Continue existing trace or start a new root span
-        $span = self::continue($name, $traceparent, $kind, $attributes)
-            ?? self::start($name, $kind, $attributes);
+        // Extract parent context and continue the trace
+        $carrier = ['traceparent' => $traceparent];
+        $parentContext = TraceContextPropagator::getInstance()->extract($carrier);
 
-        $scope = $span->activate();
+        // Activate parent context so the new span becomes a child
+        $rootScope = $parentContext->activate();
 
-        return new TraceScope($span, $scope, $rootScope);
+        $span = self::tracer()
+            ->spanBuilder($name)
+            ->setParent($parentContext)
+            ->setSpanKind($kind);
+
+        foreach ($attributes as $key => $value) {
+            $span->setAttribute($key, $value);
+        }
+
+        $startedSpan = $span->startSpan();
+        $scope = $startedSpan->activate();
+
+        return new TraceScope($startedSpan, $scope, $rootScope);
     }
 
     /**
@@ -129,5 +154,25 @@ final class TraceContext
         }
 
         return Globals::tracerProvider()->getTracer(self::$serviceName);
+    }
+
+    /**
+     * Shutdown the tracer provider and flush any pending spans.
+     * Should be called on worker stop.
+     */
+    public static function shutdown(): void
+    {
+        $tracerProvider = Globals::tracerProvider();
+        if ($tracerProvider instanceof TracerProvider) {
+            $tracerProvider->shutdown();
+        }
+    }
+
+    public static function flush(): void
+    {
+        $tracerProvider = Globals::tracerProvider();
+        if (method_exists($tracerProvider, 'forceFlush')) {
+            $tracerProvider->forceFlush();
+        }
     }
 }
