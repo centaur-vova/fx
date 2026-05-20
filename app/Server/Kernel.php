@@ -24,15 +24,8 @@ use App\Service\Provider\Task\TaskServiceProvider;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\TaskService;
 use App\Support\StdoutLogger;
-
-use function DI\autowire;
-
 use DI\Container;
 use DI\ContainerBuilder;
-
-use function DI\create;
-use function DI\get;
-
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -40,6 +33,10 @@ use Swoole\Http\Server;
 use Swoole\Server\Task;
 use Swoole\Timer;
 use Throwable;
+
+use function DI\autowire;
+use function DI\create;
+use function DI\get;
 
 class Kernel
 {
@@ -91,8 +88,6 @@ class Kernel
             serverHost:           $loader->getString('SERVER_HOST', '0.0.0.0'),
             logLevel:             $loader->getString('LOG_LEVEL', 'info'),
             serverPort:           $loader->getInt('SERVER_PORT', 9501),
-            dispatchMode:         $loader->getInt('SERVER_DISPATCH_MODE', 2),
-            socketBufferMb:       $loader->getInt('SOCKET_BUFFER_SIZE_MB', 64),
             taskMaxBatchSize:     $loader->getInt('TASK_MAX_BATCH_SIZE', 5000),
             taskSemaphoreLimit:   $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
             taskLockTimeoutSec:   $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
@@ -158,10 +153,6 @@ class Kernel
             // Workers
             'worker_num' => $options->workerNum,
             'task_worker_num' => $options->workerNum, // same as Server's worker_num
-
-            // System
-            'dispatch_mode' => $options->dispatchMode,
-            'socket_buffer_size' => $options->socketBufferMb * 1024 * 1024,
 
             // Enable coroutines
             'enable_coroutine' => true,

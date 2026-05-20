@@ -19,8 +19,6 @@ readonly class Options
         public string $serverHost,
         public int $serverPort,
         public int $workerNum,
-        public int $dispatchMode,
-        public int $socketBufferMb,
 
         // ========== App Cache ==========
         public string $cacheStorageDriver,

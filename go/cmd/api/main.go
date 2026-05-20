@@ -133,7 +133,6 @@ func main() {
 	http.HandleFunc("/semaphore/release", semHandler.Release)
 	http.HandleFunc("/semaphore/health", semHandler.Health)
 
-	// WebSocket server
 	srv := &http.Server{
 		Addr:         ":" + cfg.APIPort,
 		Handler:      nil,
