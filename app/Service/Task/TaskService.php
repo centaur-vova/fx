@@ -15,8 +15,11 @@ use App\DTO\WebSocket\Message\TaskStatusUpdate;
 use App\Exception\Server\WorkerShutdownException;
 use App\Server\RuntimeContext;
 use App\Service\Task\Processor\ProcessorFactory;
+use App\Service\Telemetry\TraceContext;
 use App\Support\Concern\Snafubarable;
 use JsonSerializable;
+use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Timer;
@@ -43,48 +46,84 @@ class TaskService
 
     public function createBatch(int $count, int $maxConcurrent, SemaphoreDriver $semaphoreDriver, TaskMode $mode): void
     {
-        $createdCount = 0;
+        $span = TraceContext::start(
+            'task.batch.create',
+            SpanKind::KIND_PRODUCER,
+            [
+                'batch.count' => $count,
+                'batch.max_concurrent' => $maxConcurrent,
+                'batch.semaphore_driver' => $semaphoreDriver->value,
+                'batch.task_mode' => $mode->value,
+            ]
+        );
 
-        for ($i = 0; $i < $count; $i++) {
-            $result = $this->taskQueue->push(
-                TaskExecutionPayload::create(
-                    mc: $maxConcurrent,
-                    mode: $mode,
-                    sem: $semaphoreDriver,
-                )
-            );
+        try {
+            $createdCount = 0;
 
-            if ($result) {
-                $createdCount++;
+            for ($i = 0; $i < $count; $i++) {
+                $result = $this->taskQueue->push(
+                    TaskExecutionPayload::create(
+                        mc: $maxConcurrent,
+                        mode: $mode,
+                        sem: $semaphoreDriver,
+                        traceparent: TraceContext::inject(),
+                    )
+                );
+
+                if ($result) {
+                    $createdCount++;
+                }
             }
-        }
 
-        if ($createdCount > 0) {
-            $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode, $semaphoreDriver));
+            if ($createdCount > 0) {
+                $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode, $semaphoreDriver));
+            }
+
+            $span->setAttribute('batch.created_count', $createdCount);
+            $span->setStatus(StatusCode::STATUS_OK);
+
+        } catch (\Throwable $e) {
+            $span->recordException($e);
+            $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
+            throw $e;
+        } finally {
+            $span->end();
         }
     }
 
     public function createRandomBatches(): void
     {
-        // Total # of batches
-        $batches = random_int(500, 1000);
+        $span = TraceContext::start('task.batch.random', SpanKind::KIND_INTERNAL);
 
-        for ($i = 0; $i < $batches; $i++) {
-            // Tasks per batch
-            $count = random_int(1, 5);
+        try {
+            // Total # of batches
+            $batches = random_int(500, 1000);
+            $span->setAttribute('random.total_batches', $batches);
 
-            // MC range
-            $mc = random_int(10, 30);
+            for ($i = 0; $i < $batches; $i++) {
+                // Tasks per batch
+                $count = random_int(1, 5);
 
-            // Semaphore driver
-            $cases = SemaphoreDriver::cases();
-            $sem = $cases[array_rand($cases)];
+                // MC range
+                $mc = random_int(10, 30);
 
-            // Task mode
-            $cases = TaskMode::cases();
-            $mode = $cases[array_rand($cases)];
+                // Semaphore driver
+                $cases = SemaphoreDriver::cases();
+                $sem = $cases[array_rand($cases)];
 
-            $this->createBatch($count, $mc, $sem, $mode);
+                // Task mode
+                $cases = TaskMode::cases();
+                $mode = $cases[array_rand($cases)];
+
+                $this->createBatch($count, $mc, $sem, $mode);
+            }
+
+        } catch (\Throwable $e) {
+            $span->recordException($e);
+            $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
+            throw $e;
+        } finally {
+            $span->end();
         }
     }
 

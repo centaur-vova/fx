@@ -7,23 +7,22 @@ namespace App\Server;
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\WorkerStartAware;
-use App\Contract\Storage\CacheStorage;
-use App\Contract\Task\TaskQueue;
+use App\Contract\Provider\WorkerStopAware;
 use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Router;
 use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
-use App\Service\Provider\App\ContextServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\App\RuntimeContextServiceProvider;
 use App\Service\Provider\Messaging\BroadcasterServiceProvider;
 use App\Service\Provider\Messaging\MessagingServiceProvider;
 use App\Service\Provider\Task\SemaphoreServiceProvider;
 use App\Service\Provider\Task\TaskServiceProvider;
-use App\Service\RateLimiter\RateLimiterService;
+use App\Service\Provider\Telemetry\TelemetryServiceProvider;
 use App\Service\Task\TaskService;
+use App\Service\Telemetry\TraceContext;
 use App\Support\StdoutLogger;
 
 use function DI\autowire;
@@ -34,6 +33,8 @@ use DI\ContainerBuilder;
 use function DI\create;
 use function DI\get;
 
+use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -58,7 +59,7 @@ class Kernel
         SemaphoreServiceProvider::class,
         TaskServiceProvider::class,
         RateLimiterServiceProvider::class,
-        ContextServiceProvider::class, // Otel
+        TelemetryServiceProvider::class,
     ];
 
     public function __construct(private readonly string $basePath)
@@ -132,6 +133,8 @@ class Kernel
             taskMaxActive:        $loader->getInt('TASK_MAX_ACTIVE', 2048),
             // How long to keep task receipt after completion before evicting from cache.
             taskMetaTtlSec:       $loader->getInt('TASK_META_TTL_SEC', 10),
+            // Otel
+            otelServiceName:      $loader->getString('OTEL_SERVICE_NAME', 'fast-atomic-flow'),
             // Misc
             rateLimiters:         $rateLimiters,
         );
@@ -206,16 +209,6 @@ class Kernel
                 Server::class => $server,
                 Options::class => $options,
 
-                // Config options (explicit)
-                'options.task_max_retries' => $options->taskMaxRetries,
-                'options.task_retry_delay_sec' => $options->taskRetryDelaySec,
-                'options.task_lock_timeout_sec' => $options->taskLockTimeoutSec,
-                'options.task_max_batch_size' => $options->taskMaxBatchSize,
-                'options.task_semaphore_limit' => $options->taskSemaphoreLimit,
-
-                // Channels & Jet streams
-                'options.broadcast_subject' => $options->broadcastSubject,
-
                 // Logger
                 StdoutLogger::class => create()
                     ->constructor(fn (Options $opt) => $opt->logLevel),
@@ -223,21 +216,14 @@ class Kernel
 
                 // Task Service
                 TaskService::class => autowire()
-                    ->constructorParameter('broadcastSubject', get('options.broadcast_subject'))
-                    ->constructorParameter('maxRetries', get('options.task_max_retries'))
-                    ->constructorParameter('retryDelaySec', get('options.task_retry_delay_sec'))
-                    ->constructorParameter('lockTimeoutSec', get('options.task_lock_timeout_sec')),
+                    ->constructorParameter('broadcastSubject', static fn (Options $o) => $o->broadcastSubject)
+                    ->constructorParameter('maxRetries', static fn (Options $o) => $o->taskMaxRetries)
+                    ->constructorParameter('retryDelaySec', static fn (Options $o) => $o->taskRetryDelaySec)
+                    ->constructorParameter('lockTimeoutSec', static fn (Options $o) => $o->taskLockTimeoutSec),
 
-                TaskController::class => create()
-                    ->constructor(
-                        get(TaskService::class),
-                        get(TaskQueue::class),
-                        get(CacheStorage::class),
-                        get(RateLimiterService::class),
-                        get(LoggerInterface::class),
-                        get('options.task_max_batch_size'),
-                        get('options.task_semaphore_limit'),
-                    ),
+                TaskController::class => autowire()
+                    ->constructorParameter('taskMaxBatchSize', static fn (Options $o) => $o->taskMaxBatchSize)
+                    ->constructorParameter('taskSemaphoreLimit', static fn (Options $o) => $o->taskSemaphoreLimit),
 
                 Router::class => autowire(Router::class),
 
@@ -271,26 +257,44 @@ class Kernel
     {
         // Task Lifecycle
         $this->server->on('task', function (Server $server, Task $task): void {
+            if (!($task->data instanceof TaskExecutionPayload)) {
+                return;
+            }
+
             /** @var int $workerId */
             $workerId = $server->worker_id;
 
-            try {
-                if ($task->data instanceof TaskExecutionPayload) {
-                    /** @var TaskService $taskService */
-                    $taskService = $this->container->get(TaskService::class);
+            // Continue span
+            $scope = TraceContext::continueOrStart(
+                'task.process',
+                $task->data->traceparent,
+                SpanKind::KIND_CONSUMER, // Consuming data from queue
+                [
+                    'task.id' => $task->data->id,
+                    'task.mc' => $task->data->mc,
+                    'task.semaphore_driver' => $task->data->sem->value,
+                    'task.mode' => $task->data->mode->value,
+                ]
+            );
 
-                    $taskService->processTask($task->data, $workerId);
-                    $task->finish(true);
-                }
+            try {
+                /** @var TaskService $taskService */
+                $taskService = $this->container->get(TaskService::class);
+                $taskService->processTask($task->data, $workerId);
+                $task->finish(true);
 
             } catch (Throwable $e) {
+                $scope->span->recordException($e);
+                $scope->span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
                 $this->logger->error('Task execution failed', [
                     'error' => $e->getMessage(),
                     'worker_id' => $server->worker_id,
                     'trace' => $e->getTraceAsString(),
                 ]);
-
                 $task->finish(false);
+
+            } finally {
+                $scope->detach();
             }
         });
 
@@ -329,6 +333,14 @@ class Kernel
         // Graceful shutdown
         $this->server->on('WorkerStop', function ($server, int $workerId): void {
             $this->logger->info("[System] Worker #$workerId stopped.");
+
+            foreach (self::PROVIDERS as $providerClass) {
+                $provider = $this->container->get($providerClass);
+
+                if ($provider instanceof WorkerStopAware) {
+                    $provider->onWorkerStop($this->container, $workerId);
+                }
+            }
         });
 
         // Request handling

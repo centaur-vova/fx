@@ -72,6 +72,9 @@ readonly class Options
         public string $taskQueueSubject,
         public string $taskQueueStream,
 
+        // ========== OpenTelemetry/Jaeger ==========
+        public string $otelServiceName,
+
         // ========== Misc ==========
         public array $rateLimiters,
     ) {

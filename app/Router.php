@@ -10,9 +10,10 @@ use App\DTO\Http\Request\CreateTasks;
 use App\DTO\Http\Response\ApiResponse;
 use App\Exception\Http\InternalServerErrorException;
 use App\Exception\Http\NotFoundException;
+use App\Service\Telemetry\TraceContext;
 use OpenTelemetry\API\Globals;
-use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator as OtelPropagator;
-use OpenTelemetry\API\Trace\StatusCode as OtelStatus;
+use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -61,19 +62,11 @@ class Router
             return;
         }
 
-        // OTEL: Extract potential incoming distributed trace headers (e.g., from Go API Gateway)
-        // Swoole stores request headers downcased, OtelPropagator reads them seamlessly
-        $parentContext = OtelPropagator::getInstance()->extract($request->header ?? []);
-
         // OTEL: Start a root HTTP span for this request lifecycle
-        $tracer = Globals::tracerProvider()->getTracer('fast-atomic-flow'); // @TODO - replace hardcoded literal?
-        $span = $tracer->spanBuilder("http.{$method}")
-            ->setParent($parentContext)
-            ->setAttribute('http.method', $method)
-            ->setAttribute('http.target', $path)
-            ->startSpan();
-
-        // OTEL: Activate the span within the current root Swoole request coroutine
+        $span = TraceContext::start("http.{$method}", SpanKind::KIND_SERVER, [
+            'http.method' => $method,
+            'http.target' => $path,
+        ]);
         $scope = $span->activate();
 
         try {
@@ -93,11 +86,11 @@ class Router
                 };
 
                 // OTEL: Track successful execution status in Jaeger
-                $span->setStatus(OtelStatus::STATUS_OK);
+                $span->setStatus(StatusCode::STATUS_OK);
 
             } catch (HttpException $e) {
                 // OTEL: Keep the trace green for standard validation/rate-limit API exceptions
-                $span->setStatus(OtelStatus::STATUS_OK);
+                $span->setStatus(StatusCode::STATUS_OK);
 
                 throw $e;
             } catch (\Throwable $e) {
@@ -105,7 +98,7 @@ class Router
 
                 // OTEL: Mark trace as red error if something crashed completely
                 $span->recordException($e);
-                $span->setStatus(OtelStatus::STATUS_ERROR, $e->getMessage());
+                $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
 
                 throw new InternalServerErrorException($e->getMessage());
             }

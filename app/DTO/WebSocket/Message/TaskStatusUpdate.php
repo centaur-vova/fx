@@ -9,6 +9,23 @@ use App\Contract\Task\TaskMode;
 use App\DTO\Task\TaskExecutionPayload;
 use JsonSerializable;
 
+/**
+ * Task status sent via NATS to WebSocket clients.
+ * 🦒 Hali ya kazi inayotumwa kupitia NATS hadi kwa wateja wa WebSocket.
+ *
+ * Each event carries a traceparent for OpenTelemetry context propagation
+ * to the Go proxy.
+ * 🦒 Kila tukio linabeba kitambulisho cha kufuatilia (traceparent) kwa ajili ya
+ *   usambazaji wa muktadha wa OpenTelemetry hadi kwa wakala wa Go.
+ *
+ * traceparent is NOT consumed by Go WS Proxy yet.
+ * 🦒 traceparent haitumiki na Go WS Proxy bado.
+ *
+ * UGNI (U Gonna Need It): keep it here for future distributed tracing.
+ * 🦒 UGNI (Utahitaji Baadaye): weka hapa kwa ajili ya usambazaji wa siku zijazo.
+ *
+ * PS: Пипец я осёл, куда я ввязался. Ладно, выучу суахили по-любому.
+ */
 final readonly class TaskStatusUpdate implements JsonSerializable
 {
     public const string EVENT_PROCESSING = 'processing';
@@ -29,6 +46,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
         public ?string $message,
         public ?int $progress = null,
         public ?int $worker = null,
+        public ?string $traceparent = null,
     ) {
     }
 
@@ -44,6 +62,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
             mc: $payload->mc,
             sem: $payload->sem,
             mode: $payload->mode,
+            traceparent: $payload->traceparent,
             worker: $worker,
             status: $status,
             message: $message,
@@ -102,6 +121,7 @@ final readonly class TaskStatusUpdate implements JsonSerializable
             'worker' => $this->worker,
             'sem' => $this->sem->value,
             'mode' => $this->mode->value,
+            'traceparent' => $this->traceparent,
         ];
     }
 }

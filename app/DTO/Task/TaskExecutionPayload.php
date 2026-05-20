@@ -23,6 +23,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
         public TaskMode $mode,
         public SemaphoreDriver $sem,
         public int $attempt = 0,
+        public ?string $traceparent = null,
     ) {
     }
 
@@ -35,7 +36,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
      * @see go/internal/protocol/messages.go TaskStatusUpdate.Pack()
      * @see resources/js/modules/decoder.js taskId unpacking
      */
-    public static function create(int $mc, TaskMode $mode, SemaphoreDriver $sem): self
+    public static function create(int $mc, TaskMode $mode, SemaphoreDriver $sem, ?string $traceparent = null): self
     {
         // It's magic..
         $id = random_int(0, 0x7FFFFFFF);
@@ -45,6 +46,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
             mc: $mc,
             mode: $mode,
             sem: $sem,
+            traceparent: $traceparent,
         );
     }
 
@@ -55,6 +57,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
             mc: $this->mc,
             mode: $this->mode,
             sem: $this->sem,
+            traceparent: $this->traceparent,
             attempt: $this->attempt + 1,
         );
     }
@@ -65,7 +68,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
     }
 
     /**
-     * @param array{id: int|string, mc: int|string, mode: string, sem: string, attempt?: int|string} $data
+     * @param array{id: int|string, mc: int|string, mode: string, sem: string, traceparent?: string, attempt?: int|string} $data
      */
     public static function fromArray(array $data): self
     {
@@ -74,6 +77,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
             mc: (int) $data['mc'],
             mode: TaskMode::from($data['mode']),
             sem: SemaphoreDriver::from($data['sem']),
+            traceparent: $data['traceparent'] ?? null,
             attempt: (int) ($data['attempt'] ?? 0),
         );
     }
