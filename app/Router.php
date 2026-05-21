@@ -11,8 +11,8 @@ use App\DTO\Http\Response\ApiResponse;
 use App\Exception\Http\InternalServerErrorException;
 use App\Exception\Http\NotFoundException;
 use App\Service\Telemetry\TraceContext;
+use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
-use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -61,13 +61,6 @@ class Router
             return;
         }
 
-        // OTEL: Start a root HTTP span for this request lifecycle
-        $batchScope = TraceContext::start("http.{$method}", SpanKind::KIND_SERVER, [
-            'http.method' => $method,
-            'http.target' => $path,
-        ]);
-        $span = $batchScope->span;
-
         try {
             if (!isset($this->routes[$key])) {
                 throw new NotFoundException('Not Found');
@@ -78,39 +71,38 @@ class Router
             $payload = $this->getJsonPayload($request);
 
             try {
-                $result = match ($path) {
-                    '/api/tasks/create' => $controller->$action($request, CreateTasks::fromArray($payload)),
-                    '/api/tasks/purge' => $controller->$action($request),
-                    default => $controller->$action($server),
-                };
+                $result = TraceContext::run(
+                    "http.{$method}",
+                    null,
+                    SpanKind::KIND_SERVER,
+                    [
+                        'http.method' => $method,
+                        'http.target' => $path,
+                    ],
+                    function (SpanInterface $span) use ($controller, $action, $request, $server, $path) {
+                        $payload = $this->getJsonPayload($request);
 
-                // OTEL: Track successful execution status in Jaeger
-                $span->setStatus(StatusCode::STATUS_OK);
+                        return match ($path) {
+                            '/api/tasks/create' => $controller->$action($request, CreateTasks::fromArray($payload)),
+                            '/api/tasks/purge' => $controller->$action($request),
+                            default => $controller->$action($server),
+                        };
+                    },
+                    [HttpException::class] // Dont treat these exceptions as errors in tracing
+                );
 
             } catch (HttpException $e) {
-                // OTEL: Keep the trace green for standard validation/rate-limit API exceptions
-                $span->setStatus(StatusCode::STATUS_OK);
+                $status = $e->getHttpStatus();
+                $response->status($status->value);
 
-                throw $e;
+                $result = ApiResponse::error($e->getMessage());
+
             } catch (\Throwable $e) {
                 $this->logger->error('Unhandled exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-
-                // OTEL: Mark trace as red error if something crashed completely
-                $span->recordException($e);
-                $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
-
                 throw new InternalServerErrorException($e->getMessage());
             }
 
-        } catch (HttpException $e) {
-            $status = $e->getHttpStatus();
-            $response->status($status->value);
-
-            $result = ApiResponse::error($e->getMessage());
-
         } finally {
-            // OTEL: Always close the span and detach scopes to prevent memory bloating
-            $batchScope->detach();
             TraceContext::flush();
         }
 

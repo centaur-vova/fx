@@ -33,8 +33,8 @@ use DI\ContainerBuilder;
 use function DI\create;
 use function DI\get;
 
+use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
-use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -263,38 +263,33 @@ class Kernel
 
             /** @var int $workerId */
             $workerId = $server->worker_id;
-
-            // Continue span
-            $scope = TraceContext::continueOrStart(
-                'task.process',
-                $task->data->traceparent,
-                SpanKind::KIND_CONSUMER, // Consuming data from queue
-                [
-                    'task.id' => $task->data->id,
-                    'task.mc' => $task->data->mc,
-                    'task.semaphore_driver' => $task->data->sem->value,
-                    'task.mode' => $task->data->mode->value,
-                ]
-            );
+            /** @var TaskService $taskService */
+            $taskService = $this->container->get(TaskService::class);
 
             try {
-                /** @var TaskService $taskService */
-                $taskService = $this->container->get(TaskService::class);
-                $taskService->processTask($task->data, $workerId);
+                TraceContext::run(
+                    'task.process',
+                    $task->data->traceparent,
+                    SpanKind::KIND_CONSUMER,
+                    [
+                        'task.id' => $task->data->id,
+                        'task.mc' => $task->data->mc,
+                        'task.semaphore_driver' => $task->data->sem->value,
+                        'task.mode' => $task->data->mode->value,
+                        'worker.id' => $workerId,
+                    ],
+                    fn (SpanInterface $span) => $taskService->processTask($task->data, $workerId, $span)
+                );
+
                 $task->finish(true);
 
             } catch (Throwable $e) {
-                $scope->span->recordException($e);
-                $scope->span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
                 $this->logger->error('Task execution failed', [
                     'error' => $e->getMessage(),
                     'worker_id' => $server->worker_id,
-                    'trace' => $e->getTraceAsString(),
                 ]);
                 $task->finish(false);
 
-            } finally {
-                $scope->detach();
             }
         });
 

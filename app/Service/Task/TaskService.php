@@ -18,8 +18,8 @@ use App\Service\Task\Processor\ProcessorFactory;
 use App\Service\Telemetry\TraceContext;
 use App\Support\Concern\Snafubarable;
 use JsonSerializable;
+use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
-use OpenTelemetry\API\Trace\StatusCode;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Timer;
@@ -46,91 +46,71 @@ class TaskService
 
     public function createBatch(int $count, int $maxConcurrent, SemaphoreDriver $semaphoreDriver, TaskMode $mode): void
     {
-        $batchScope = TraceContext::start(
+        TraceContext::run(
             'task.batch.create',
+            TraceContext::inject(),
             SpanKind::KIND_PRODUCER,
             [
-                'batch.count' => $count,
-                'batch.max_concurrent' => $maxConcurrent,
-                'batch.semaphore_driver' => $semaphoreDriver->value,
-                'batch.task_mode' => $mode->value,
-            ]
-        );
-        $span = $batchScope->span;
+            'batch.count' => $count,
+            'batch.max_concurrent' => $maxConcurrent,
+            'batch.semaphore_driver' => $semaphoreDriver->value,
+            'batch.task_mode' => $mode->value,
+        ],
+            function (SpanInterface $span) use ($count, $maxConcurrent, $semaphoreDriver, $mode): void {
+                $createdCount = 0;
 
-        try {
-            $createdCount = 0;
+                for ($i = 0; $i < $count; $i++) {
+                    $result = $this->taskQueue->push(
+                        TaskExecutionPayload::create(
+                            mc: $maxConcurrent,
+                            mode: $mode,
+                            sem: $semaphoreDriver,
+                            traceparent: TraceContext::inject(),
+                        )
+                    );
 
-            for ($i = 0; $i < $count; $i++) {
-                $result = $this->taskQueue->push(
-                    TaskExecutionPayload::create(
-                        mc: $maxConcurrent,
-                        mode: $mode,
-                        sem: $semaphoreDriver,
-                        traceparent: TraceContext::inject(),
-                    )
-                );
-
-                if ($result) {
-                    $createdCount++;
+                    if ($result) {
+                        $createdCount++;
+                    }
                 }
+
+                if ($createdCount > 0) {
+                    $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode, $semaphoreDriver));
+                }
+
+                $span->setAttribute('batch.created_count', $createdCount);
             }
-
-            if ($createdCount > 0) {
-                $this->notify(new TaskBatchCreated($createdCount, $maxConcurrent, $mode, $semaphoreDriver));
-            }
-
-            $span->setAttribute('batch.created_count', $createdCount);
-            $span->setStatus(StatusCode::STATUS_OK);
-
-        } catch (\Throwable $e) {
-            $span->recordException($e);
-            $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
-            throw $e;
-        } finally {
-            $batchScope->detach();
-
-        }
+        );
     }
 
     public function createRandomBatches(): void
     {
-        $batchScope = TraceContext::start('task.batch.random', SpanKind::KIND_INTERNAL);
-        $span = $batchScope->span;
+        TraceContext::run(
+            'task.batch.random',
+            TraceContext::inject(),
+            SpanKind::KIND_INTERNAL,
+            [],
+            function (SpanInterface $span): void {
+                $batches = random_int(500, 1000);
+                $span->setAttribute('random.total_batches', $batches);
 
-        try {
-            // Total # of batches
-            $batches = random_int(500, 1000);
-            $span->setAttribute('random.total_batches', $batches);
+                for ($i = 0; $i < $batches; $i++) {
+                    $count = random_int(1, 5);
+                    $mc = random_int(10, 30);
 
-            for ($i = 0; $i < $batches; $i++) {
-                // Tasks per batch
-                $count = random_int(1, 5);
+                    $cases = SemaphoreDriver::cases();
+                    $sem = $cases[array_rand($cases)];
 
-                // MC range
-                $mc = random_int(10, 30);
+                    $cases = TaskMode::cases();
+                    $mode = $cases[array_rand($cases)];
 
-                // Semaphore driver
-                $cases = SemaphoreDriver::cases();
-                $sem = $cases[array_rand($cases)];
-
-                // Task mode
-                $cases = TaskMode::cases();
-                $mode = $cases[array_rand($cases)];
-
-                $this->createBatch($count, $mc, $sem, $mode);
+                    $this->createBatch($count, $mc, $sem, $mode);
+                }
             }
-
-        } catch (\Throwable $e) {
-            $span->recordException($e);
-            $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
-            throw $e;
-        } finally {
-            $batchScope->detach();
-        }
+        );
     }
 
-    public function processTask(TaskExecutionPayload $payload, int $workerId): void
+    public function processTask(TaskExecutionPayload $payload, int $workerId, SpanInterface $span): void
     {
         // Quick check if shutting down
         if ($this->context->isShuttingDown()) {

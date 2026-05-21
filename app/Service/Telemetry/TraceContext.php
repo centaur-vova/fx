@@ -8,6 +8,7 @@ use OpenTelemetry\API\Globals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Context\ContextInterface;
@@ -53,71 +54,48 @@ final class TraceContext
     }
 
     /**
-     * Continue a trace from an incoming traceparent header.
+     * Execute a callback within a traced span, handling lifecycle automatically.
      *
-     * @param non-empty-string $name
-     * @param SpanKind::KIND_* $kind
-     * @param array<string, mixed> $attributes
-     */
-    public static function continue(string $name, ?string $traceparent, int $kind = SpanKind::KIND_SERVER, array $attributes = []): ?SpanInterface
-    {
-        // Dont create a new span if no traceparent provided
-        if ($traceparent === null) {
-            return null;
-        }
-        $carrier = ['traceparent' => $traceparent];
-        $parentContext = TraceContextPropagator::getInstance()->extract($carrier);
-
-        $span = self::tracer()
-            ->spanBuilder($name)
-            ->setParent($parentContext)
-            ->setSpanKind($kind);
-
-        foreach ($attributes as $key => $value) {
-            $span->setAttribute($key, $value);
-        }
-
-        return $span->startSpan();
-    }
-
-    /**
-     * Continue a trace from traceparent, or start a new root span if null.
-     * Resets Swoole context to prevent cross-task contamination.
+     * Starts or continues a span, executes the callback, records exceptions,
+     * and cleans up the span and scope in a finally block.
      *
+     * @template T
      * @param non-empty-string $name Span name
-     * @param ?string $traceparent Incoming traceparent header
-     * @param SpanKind::KIND_* $kind Span kind
+     * @param string|null $traceparent Incoming traceparent header (null = new root span)
+     * @param SpanKind::KIND_* $kind Span kind (e.g., SpanKind::KIND_SERVER)
      * @param array<string, mixed> $attributes Span attributes
-     * @return TraceScope
+     * @param callable(SpanInterface): T $callback Business logic to execute
+     * @param array<int, class-string<\Throwable>> $skipReportingFor Exception classes that should NOT be recorded as errors
+     * @return T The return value of the callback
+     * @throws \Throwable Rethrows any exception after recording it in the span
      */
-    public static function continueOrStart(string $name, ?string $traceparent, int $kind = SpanKind::KIND_INTERNAL, array $attributes = []): TraceScope
-    {
-        if ($traceparent === null) {
-            // No traceparent — start a fresh root span
-            $rootScope = Context::getRoot()->activate();
-            return TraceContext::start($name, $kind, $attributes, $rootScope);
+    public static function run(
+        string $name,
+        ?string $traceparent,
+        int $kind,
+        array $attributes,
+        callable $callback,
+        array $skipReportingFor = [],
+    ): mixed {
+        $scope = self::continueOrStart($name, $traceparent, $kind, $attributes);
+
+        try {
+            $result = $callback($scope->span);
+            $scope->span->setStatus(StatusCode::STATUS_OK);
+            return $result;
+        } catch (\Throwable $e) {
+            $shouldReport = array_all($skipReportingFor, fn ($class) => !$e instanceof $class);
+            if ($shouldReport) {
+                $scope->span->recordException($e);
+                $scope->span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
+            } else {
+                $scope->span->setStatus(StatusCode::STATUS_OK);
+            }
+
+            throw $e;
+        } finally {
+            $scope->detach();
         }
-
-        // Extract parent context and continue the trace
-        $carrier = ['traceparent' => $traceparent];
-        $parentContext = TraceContextPropagator::getInstance()->extract($carrier);
-
-        // Activate parent context so the new span becomes a child
-        $rootScope = $parentContext->activate();
-
-        $span = self::tracer()
-            ->spanBuilder($name)
-            ->setParent($parentContext)
-            ->setSpanKind($kind);
-
-        foreach ($attributes as $key => $value) {
-            $span->setAttribute($key, $value);
-        }
-
-        $startedSpan = $span->startSpan();
-        $scope = $startedSpan->activate();
-
-        return new TraceScope($startedSpan, $scope, $rootScope);
     }
 
     /**
@@ -174,5 +152,45 @@ final class TraceContext
         if (method_exists($tracerProvider, 'forceFlush')) {
             $tracerProvider->forceFlush();
         }
+    }
+
+    /**
+     * Continue a trace from traceparent, or start a new root span if null.
+     * Resets Swoole context to prevent cross-task contamination.
+     *
+     * @param non-empty-string $name Span name
+     * @param ?string $traceparent Incoming traceparent header
+     * @param SpanKind::KIND_* $kind Span kind
+     * @param array<string, mixed> $attributes Span attributes
+     * @return TraceScope
+     */
+    private static function continueOrStart(string $name, ?string $traceparent, int $kind = SpanKind::KIND_INTERNAL, array $attributes = []): TraceScope
+    {
+        if ($traceparent === null) {
+            // No traceparent — start a fresh root span
+            $rootScope = Context::getRoot()->activate();
+            return TraceContext::start($name, $kind, $attributes, $rootScope);
+        }
+
+        // Extract parent context and continue the trace
+        $carrier = ['traceparent' => $traceparent];
+        $parentContext = TraceContextPropagator::getInstance()->extract($carrier);
+
+        // Activate parent context so the new span becomes a child
+        $rootScope = $parentContext->activate();
+
+        $span = self::tracer()
+            ->spanBuilder($name)
+            ->setParent($parentContext)
+            ->setSpanKind($kind);
+
+        foreach ($attributes as $key => $value) {
+            $span->setAttribute($key, $value);
+        }
+
+        $startedSpan = $span->startSpan();
+        $scope = $startedSpan->activate();
+
+        return new TraceScope($startedSpan, $scope, $rootScope);
     }
 }
