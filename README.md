@@ -7,6 +7,7 @@
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
   <img src="https://img.shields.io/badge/Redis-8.0-DC382D?style=flat&logo=redis&logoColor=white" alt="Redis 8.0">
+  <img src="https://img.shields.io/badge/Jaeger-2.17-60D0E4?style=flat&logo=jaeger&logoColor=white" alt="Jaeger 2.17">
   <br>
   <!-- Row 2: Quality & Features -->
   <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
@@ -40,11 +41,17 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[📖 English](README.md) | [📖 Русский](README.ru.md) | [📖 Старославѧнскїй](README.cu.md) | [📖 Kiswahili](README.sw.md)
+[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) | [📜 Старославѧнскїй](README.cu.md) | [🦒 Kiswahili](README.sw.md)
 
 <img width="2564" height="1788" alt="Fast theme - star dust mode" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
-🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz) | **Dashboard:** [fast.af.l3373.xyz/dashboard](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617)
+---
+
+🌐 **Live:**
+
+- 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Demo
+- 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Metrics
+- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — Traces
 
 ---
 
@@ -86,6 +93,7 @@ Each service does one thing, but with surgical precision. The Worker processes t
 | **WebSocket**         | Go 1.26 + Gorilla  | Real‑time updates, metrics                       |
 | **Queue Storage**     | NATS JetStream     | Durable queues with replication                  |
 | **Semaphore Store**   | Redis 8.0 + Lua    | Distributed semaphores, TTL, atomicity           |
+| **Tracing** | OpenTelemetry + Jaeger 2.17 | Distributed trace collection and visualization |
 
 ---
 
@@ -156,6 +164,32 @@ Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 a
 
 ---
 
+## 🐎 Distributed Tracing (Jaeger)
+
+Fast Atomic Flow includes distributed tracing powered by OpenTelemetry + Jaeger.
+
+- **Full pipeline visibility:** traces propagate from the HTTP request through NATS JetStream into Swoole Task Workers and back to WebSocket clients.
+- **Context propagation:** `traceparent` is injected into every task payload and status update, so the trace survives queue boundaries.
+- **Swoole-safe isolation:** each Task Worker resets its OpenTelemetry context before processing a new task, preventing cross-task trace contamination.
+- **Jaeger UI:** open [fast.af.l3373.xyz/jaeger/](https://fast.af.l3373.xyz/jaeger/) to explore traces in real time.
+
+| Component       | Technology                  | Purpose                                        |
+| --------------- | --------------------------- | ---------------------------------------------- |
+| **Tracing**     | OpenTelemetry + Jaeger 2.17 | Distributed trace collection and visualization |
+| **Propagation** | W3C Trace Context           | `traceparent` header across HTTP, NATS, Swoole |
+| **SDK**         | Custom TraceContext service | Span lifecycle, context isolation, force-flush |
+
+### 🐎 Jaeger UI base path
+
+If you proxy Jaeger behind nginx at a custom location (e.g., `/jaeger/`), set the base path in `jaeger.yaml`:
+
+```yaml
+jaeger_query:
+  base_path: /jaeger
+```
+
+---
+
 ## 🐎 How it works
 
 1. You create tasks through the interface
@@ -196,7 +230,7 @@ cp .env.example .env
 docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
 
-This launches 3 Go API instances, the balancer, Redis, NATS, and PHP Swoole
+This launches 3 Go API instances, the balancer, Redis, NATS, Jaeger, and PHP Swoole
 
 After starting, open [http://localhost:9501](http://localhost:9501)
 
@@ -256,6 +290,7 @@ These settings control how tasks behave when the semaphore is busy:
 - **API Instances:** 3 (scales via `--scale api=N`)
 - **Semaphore Store:** Redis 8.0 + Lua scripts
 - **Balancer:** Round-robin, auto-registration, health checks every 5 seconds
+- **Tracing:** OpenTelemetry + Jaeger 2.17
 
 ---
 

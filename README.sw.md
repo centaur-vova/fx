@@ -7,6 +7,7 @@
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
   <img src="https://img.shields.io/badge/Redis-8.0-DC382D?style=flat&logo=redis&logoColor=white" alt="Redis 8.0">
+  <img src="https://img.shields.io/badge/Jaeger-2.17-60D0E4?style=flat&logo=jaeger&logoColor=white" alt="Jaeger 2.17">
   <br>
   <!-- Mstari wa 2: Ubora -->
   <img src="https://img.shields.io/badge/phpstan-kiwango%2010-gold?style=flat&logo=php" alt="PHPStan Kiwango 10">
@@ -40,7 +41,17 @@
 
 **Ochestrator wa Atomiki juu ya Swoole + NATS + Go wakala wa WebSocket**
 
-[📖 English](README.md) | [📖 Русский](README.ru.md) | [📖 Старославѧнскїй](README.cu.md) | [📖 Kiswahili](README.sw.md)
+[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) | [📜 Старославѧнскїй](README.cu.md) | [🦒 Kiswahili](README.sw.md)
+
+<img width="2564" height="1788" alt="Onyesho la mandhari ya Fast: vumbi la nyota katika kanda za Pipeline, maonyesho ya LOD yenye kazi nyingi" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
+
+---
+
+🌐 **Live:**
+
+- 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Onyesho
+- 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Vipimo
+- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — Ufuatiliaji
 
 ---
 
@@ -82,6 +93,7 @@ Kila huduma hufanya jambo moja, lakini kwa usahihi wa upasuaji. Mfanyakazi hucha
 | **WebSocket**          | Go 1.26 + Gorilla  | Sasisho za wakati halisi, vipimo                               |
 | **Hifadhi ya Foleni**  | NATS JetStream     | Foleni za kudumu zenye urudufishaji                            |
 | **Hifadhi ya Semafo**  | Redis 8.0 + Lua    | Semafo zilizosambazwa, TTL, atomiki                            |
+| **Ufuatiliaji** | OpenTelemetry + Jaeger 2.17 | Ukusanyaji na taswira ya trace zilizosambazwa |
 
 ---
 
@@ -152,6 +164,32 @@ Tangu Mei 2026, API ya Go inatumia **semafo zilizosambazwa** zinazoendeshwa na R
 
 ---
 
+## 🐎 Ufuatiliaji Uliosambazwa (Jaeger)
+
+Fast Atomic Flow inajumuisha ufuatiliaji uliosambazwa unaotumia OpenTelemetry + Jaeger.
+
+- **Mwonekano kamili wa pipeline:** traces hupitia kutoka ombi la HTTP kupitia NATS JetStream hadi kwa Swoole Task Workers na kurudi kwa wateja wa WebSocket.
+- **Usambazaji wa muktadha:** `traceparent` huingizwa katika kila kazi na sasisho la hali, hivyo trace haiishi kwenye mipaka ya foleni.
+- **Utengaji salama wa Swoole:** kila Task Worker husafisha muktadha wa OpenTelemetry kabla ya kuchakata kazi mpya, kuzuia uchafuzi wa trace kati ya kazi.
+- **Jaeger UI:** fungua [fast.af.l3373.xyz/jaeger/](https://fast.af.l3373.xyz/jaeger/) kutazama traces kwa wakati halisi.
+
+| Kipengele       | Teknolojia                  | Kusudi                                              |
+| --------------- | --------------------------- | --------------------------------------------------- |
+| **Ufuatiliaji** | OpenTelemetry + Jaeger 2.17 | Ukusanyaji na taswira ya trace zilizosambazwa       |
+| **Usambazaji**  | W3C Trace Context           | Kichwa cha `traceparent` kupitia HTTP, NATS, Swoole |
+| **SDK**         | TraceContext maalum         | Usimamizi wa span, utengaji wa muktadha, flush      |
+
+### 🐎 Kuweka Jaeger UI nyuma ya nginx
+
+Ikiwa unapitisha Jaeger kupitia nginx kwenye njia maalum (kwa mfano, `/jaeger/`), weka njia ya msingi katika `jaeger.yaml`:
+
+```yaml
+jaeger_query:
+  base_path: /jaeger
+```
+
+---
+
 ## 🐎 Jinsi Inavyofanya Kazi
 
 1. Unaunda kazi kupitia kiolesura
@@ -167,7 +205,109 @@ Tangu Mei 2026, API ya Go inatumia **semafo zilizosambazwa** zinazoendeshwa na R
 
 **Kipengele muhimu**: kazi zilizo na maadili tofauti ya `max_concurrent` hutumia semafo huru na zinaweza kukimbia sambamba bila kuingiliana.
 
+<img width="2559" height="1788" alt="Mandhari ya Crystal — hali ya uchunguzi" src="https://github.com/user-attachments/assets/a782287c-50f4-4383-b090-cef9dbdbf2e0" />
+
 > _Katika eneo la In Progress — hakuna kazi zaidi ya inavyoruhusiwa na semafo (nambari ndani ya mraba). Zilizobaki zinasubiri kwenye Foleni au Check Lock. Wazi — kama farasi wasiojazana kwenye zizi moja._
+
+---
+
+## 🐎 Kuanza Haraka
+
+### 🐎 Endesha kutoka picha zilizojengwa awali (GHCR)
+
+```bash
+git clone https://github.com/centaur-vova/fast-atomic-flow.git
+cd fast-atomic-flow
+cp .env.example .env
+docker compose -f docker-compose.prod.yaml up -d --scale api=3
+```
+
+Hii inazindua vielelezo 3 vya Go API, mizani, Redis, NATS, Jaeger, na PHP Swoole.
+
+Baada ya kuanza, fungua [http://localhost:9501](http://localhost:9501)
+
+### 🐎 Maendeleo ya ndani
+
+Kwa wale wanaotaka kuchimba msimbo, kubadilisha mtiririko wa kazi, na kuendesha kila kitu ndani (PHP + Go kiasili, NATS katika Docker) — tazama [Local Development Workflow](https://github.com/centaur-vova/fast-atomic-flow/wiki/Local-Development-Workflow)
+
+---
+
+## 🐎 Usanidi
+
+### 🐎 NATS
+
+| Kigezo              | Chaguo-msingi | Maelezo                |
+| ------------------- | ------------- | ---------------------- |
+| `NATS_HOST`         | `deez-nutz`   | Mwenyeji wa seva NATS  |
+| `NATS_PORT`         | `4222`        | Bandari ya NATS        |
+| `NATS_TOKEN`        | `alfa-omega`  | Tokeni ya ufikiaji     |
+| `NATS_TIMEOUT_SEC`  | `1`           | Muda wa kusubiri jibu  |
+| `NATS_STREAM_TASKS` | `tasks`       | Jina la mkondo wa kazi |
+
+### 🐎 Swoole
+
+| Kigezo                     | Chaguo-msingi | Maelezo                             |
+| -------------------------- | ------------- | ----------------------------------- |
+| `SERVER_PORT`              | `9501`        | Bandari ya HTTP API                 |
+| `SERVER_WORKER_NUM`        | `6`           | Idadi ya wafanyakazi                |
+| `TASK_SEMAPHORE_MAX_LIMIT` | `255`         | Kikomo cha juu cha semafo (max 255) |
+
+### 🐎 Wakala wa WebSocket wa Go
+
+| Kigezo    | Chaguo-msingi | Maelezo              |
+| --------- | ------------- | -------------------- |
+| `WS_PORT` | `8080`        | Bandari ya WebSocket |
+
+### 🐎 Urekebishaji wa Semafo na Jaribio Tena
+
+Mipangilio hii inadhibiti jinsi kazi zinavyofanya wakati semafo iko busy:
+
+| Kigezo                  | Chaguo-msingi | Maelezo                                                                                    |
+| ----------------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| `TASK_LOCK_TIMEOUT_SEC` | 5             | Muda wa juu zaidi ambao kazi inasubiri nafasi ya semafo kabla ya kukata tamaa              |
+| `TASK_RETRY_DELAY_SEC`  | 2             | Ucheleweshaji kabla ya kuweka upya kazi kwenye foleni baada ya jaribio lisilofanikiwa      |
+| `TASK_MAX_RETRIES`      | 3             | Ni mara ngapi kazi iliyofeli inajaribiwa tena kabla ya kuwekwa alama kama `retries_failed` |
+
+⚠️ **Muhimu:** Mipangilio hii inaathiri usawa wa kazi. Majaribio mengi sana yanaweza kupakia foleni kupita kiasi.
+
+---
+
+## 🐎 Vipimo vya Kiufundi
+
+- **Runtime:** PHP 8.4, Go 1.26
+- **Injini:** Swoole 6.2+, Gorilla WebSocket
+- **Basi ya Ujumbe:** NATS JetStream 2.12+
+- **Uwezo wa Foleni:** kazi 10,000 (inaweza kusanidiwa)
+- **Ushindani:** 1 hadi 255 (inaweza kusanidiwa)
+- **Vielelezo vya API:** 3 (vinaongezwa kupitia `--scale api=N`)
+- **Hifadhi ya Semafo:** Redis 8.0 + hati za Lua
+- **Mizani:** Round-robin, usajili wa moja kwa moja, ukaguzi wa afya kila sekunde 5
+- **Ufuatiliaji:** OpenTelemetry + Jaeger 2.17
+
+---
+
+## 🐎 Mandhari
+
+Fast Atomic Flow inasaidia mandhari ya kuona. Kila mandhari inafafanuliwa kama faili tofauti ya YAML na inaweza kubadilishwa kupitia parameter ya URL `?theme=<name>`.
+
+**Kubadilisha kwa urahisi:** Bonyeza tu **viungo vya mandhari kwenye footer ya ukurasa** — `fast` 🚀, `crystal` 💎, au `sin city` 🖤. Hakuna haja ya kuandika URL.
+
+<img width="2568" height="1793" alt="Mandhari ya Sin City — mtindo wa noir na kitufe cha RAND" src="https://github.com/user-attachments/assets/392398ee-ba1c-4a0e-ad5b-918257d34631" />
+
+_Mandhari ya Sin City: aesthetics ya noir, kitufe cha RAND kimeamilishwa — mtihani wa dhiki wa semafo ya mseto._
+
+Mandhari zilizojengwa ndani:
+
+- `fast` — mtindo wa kawaida wa neon
+- `fluttershy` — upinde wa mvua wa pastel, mpole na wenye kujali. Kwa farasi wadogo
+- `crystal` — bluu za barafu na zambarau
+- `sin-city` — noir, zaidi ya kijivu na lafudhi nyekundu
+
+**Vitufe vya kazi vinavyofahamu mandhari:** Kila kitufe kinaweza kutaja kiendesha-semafo chake (`shared` kwa PHP Atomiki, `api` kwa Go Imesambazwa).  
+Kitufe cha **RAND** katika kila mandhari huanzisha makundi ya nasibu kwa **viendesha vyote** kwa wakati mmoja — bora kwa mtihani wa dhiki wa usanifu wa mseto.
+
+**Mandhari maalum:** Unaweza kuunda mandhari yako mwenyewe kwa kuongeza folda mpya chini ya `themes/` na faili ya `theme.yaml` (rangi, viwianishi vya kanda, seti za vitufe, viendesha-semafo kwa kila kitufe, n.k.).  
+Tazama [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) kwa maelezo.
 
 ---
 

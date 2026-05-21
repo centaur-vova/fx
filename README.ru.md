@@ -7,6 +7,7 @@
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?style=flat&logo=go&logoColor=white" alt="Go 1.26">
   <img src="https://img.shields.io/badge/NATS-JetStream-27AAE1?style=flat&logo=nats&logoColor=white" alt="NATS JetStream">
   <img src="https://img.shields.io/badge/Redis-8.0-DC382D?style=flat&logo=redis&logoColor=white" alt="Redis 8.0">
+  <img src="https://img.shields.io/badge/Jaeger-2.17-60D0E4?style=flat&logo=jaeger&logoColor=white" alt="Jaeger 2.17">
   <br>
   <!-- Row 2: Quality & Features -->
   <img src="https://img.shields.io/badge/phpstan-уровень%2010-gold?style=flat&logo=php" alt="PHPStan уровень 10">
@@ -40,11 +41,17 @@
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[📖 English](README.md) | [📖 Русский](README.ru.md) | [📖 Старославѧнскїй](README.cu.md) | [📖 Kiswahili](README.sw.md)
+[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) | [📜 Старославѧнскїй](README.cu.md) | [🦒 Kiswahili](README.sw.md)
 
 <img width="2564" height="1788" alt="Скриншот Fast темы: множество мелких точек (star dust) в зонах Pipeline, демонстрация LOD при большом количестве задач" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
-🌐 **Demo:** [fast.af.l3373.xyz](https://fast.af.l3373.xyz) | **Dashboard:** [fast.af.l3373.xyz/dashboard](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617)
+---
+
+🌐 **Live:**
+
+- 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Демо
+- 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Метрики
+- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — Трейсы
 
 ---
 
@@ -86,6 +93,7 @@
 | **WebSocket**         | Go 1.26 + Gorilla  | Реалтайм-обновления, метрики                 |
 | **Queue Storage**     | NATS JetStream     | Надёжные очереди с репликацией               |
 | **Semaphore Store**   | Redis 8.0 + Lua    | Распределённые семафоры, TTL, атомарность    |
+| **Трейсинг** | OpenTelemetry + Jaeger 2.17 | Распределённый сбор и визуализация трейсов |
 
 ---
 
@@ -156,6 +164,32 @@ Fast.AF использует систему с двумя драйверами �
 
 ---
 
+## 🐎 Распределённый трейсинг (Jaeger)
+
+Fast Atomic Flow включает распределённый трейсинг на базе OpenTelemetry + Jaeger.
+
+- **Полная видимость пайплайна:** трейсы проходят от HTTP-запроса через NATS JetStream в Swoole Task Workers и обратно к WebSocket-клиентам.
+- **Пропагация контекста:** `traceparent` внедряется в каждую задачу и статус-обновление, поэтому трейс не прерывается на границах очереди.
+- **Изоляция в Swoole:** каждый Task Worker сбрасывает контекст OpenTelemetry перед обработкой новой задачи, исключая склеивание трейсов.
+- **Jaeger UI:** откройте [fast.af.l3373.xyz/jaeger/](https://fast.af.l3373.xyz/jaeger/), чтобы смотреть трейсы в реальном времени.
+
+| Компонент      | Технология                  | Назначение                                           |
+| -------------- | --------------------------- | ---------------------------------------------------- |
+| **Трейсинг**   | OpenTelemetry + Jaeger 2.17 | Распределённый сбор и визуализация трейсов           |
+| **Пропагация** | W3C Trace Context           | Заголовок `traceparent` через HTTP, NATS, Swoole     |
+| **SDK**        | Собственный TraceContext    | Управление спанами, изоляция контекста, сброс буфера |
+
+### 🐎 Настройка Jaeger UI за nginx
+
+Если вы проксируете Jaeger через nginx (например, на `/jaeger/`), укажите базовый путь в `jaeger.yaml`:
+
+```yaml
+jaeger_query:
+  base_path: /jaeger
+```
+
+---
+
 ## 🐎 Как это работает
 
 1. Вы создаёте задачи через интерфейс
@@ -196,7 +230,7 @@ cp .env.example .env
 docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
 
-Это запустит 3 инстанса Go API, балансировщик, Redis, NATS и PHP Swoole
+Это запустит 3 инстанса Go API, балансировщик, Redis, NATS, Jaeger и PHP Swoole
 
 После запуска открой [http://localhost:9501](http://localhost:9501)
 
@@ -256,6 +290,7 @@ docker compose -f docker-compose.prod.yaml up -d --scale api=3
 - **API Instances:** 3 (масштабируется через `--scale api=N`)
 - **Semaphore Store:** Redis 8.0 + Lua scripts
 - **Balancer:** Round-robin, auto-registration, health checks каждые 5 секунд
+- **Трейсинг:** OpenTelemetry + Jaeger 2.17
 
 ---
 

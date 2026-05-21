@@ -11,6 +11,8 @@ extensions:
 
   # Required extension to enable the Jaeger Web UI (runs on port 16686)
   jaeger_query:
+    # Base path for the Jaeger UI. Adjust to match your nginx proxy location.
+    base_path: /
     storage:
       # FIX: Correct map structure matching the v2 specification
       traces: memory_storage
