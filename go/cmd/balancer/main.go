@@ -148,10 +148,9 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 
 // NextInstance returns the next alive instance using round-robin selection
 func (u *Upstream) NextInstance() *ApiInstance {
-	u.mu.RLock()
-	defer u.mu.RUnlock()
+	instances := u.getInstancesCopy()
 
-	n := len(u.ApiInstances)
+	n := len(instances)
 	if n == 0 {
 		return nil
 	}
