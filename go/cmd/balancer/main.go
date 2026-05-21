@@ -47,8 +47,11 @@ const (
 
 // ========== GLOBALS ==========
 var (
-	cfg      *protocol.BalancerConfig
-	upstream *Upstream
+	cfg           *protocol.BalancerConfig
+	upstream      *Upstream
+	totalRequests atomic.Uint64
+	totalErrors   atomic.Uint64
+	startTime     = time.Now()
 )
 
 // ========== TYPES ==========
@@ -72,8 +75,11 @@ type Upstream struct {
 
 // HealthResponse is the response for the health check endpoint
 type HealthResponse struct {
-	Up   uint64 `json:"up"`
-	Down uint64 `json:"down"`
+	Up            uint64 `json:"up"`
+	Down          uint64 `json:"down"`
+	TotalRequests uint64 `json:"total_requests"`
+	TotalErrors   uint64 `json:"total_errors"`
+	UptimeSeconds uint64 `json:"uptime_seconds"`
 }
 
 // ========== API INSTANCE METHODS ==========
@@ -288,10 +294,8 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 // handleHealth returns the current health status of all instances
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	upstream.mu.RLock()
-	defer upstream.mu.RUnlock()
 
 	var up, down uint64
-
 	for _, i := range upstream.ApiInstances {
 		if i.Alive.Load() {
 			up++
@@ -299,13 +303,17 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 			down++
 		}
 	}
+	upstream.mu.RUnlock()
 
 	w.Header().Set("Content-Type", contentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 
 	resp := HealthResponse{
-		Up:   up,
-		Down: down,
+		Up:            up,
+		Down:          down,
+		TotalRequests: totalRequests.Load(),
+		TotalErrors:   totalErrors.Load(),
+		UptimeSeconds: uint64(time.Since(startTime).Seconds()),
 	}
 
 	json.NewEncoder(w).Encode(resp)
@@ -340,12 +348,16 @@ func main() {
 
 	// Proxy all other requests
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Stats
+		totalRequests.Add(1)
+
 		peer := upstream.NextInstance()
 		if peer != nil {
 			peer.Proxy.ServeHTTP(w, r)
 			return
 		}
 		http.Error(w, "API Instances gone fishing (KBL v2.0 Rule)", http.StatusServiceUnavailable)
+		totalErrors.Add(1)
 	})
 
 	port := cfg.BalancerPort
