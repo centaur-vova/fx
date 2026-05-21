@@ -84,10 +84,12 @@ class ReconnectableClient extends Client
             $this->internalLogger->info('Reconnecting to NATS', ['workerId' => $workerId]);
 
             if (!$this->reconnect()) {
-                $this->internalLogger->critical("Unrecoverable NATS error. Killing worker #$workerId");
-
                 // A small delay before SNAFUBAR
-                $this->context->sleepOrDie(5.0);
+                $delayWithJitter = random_int(5, 10); // 5-10 seconds
+                $this
+                    ->internalLogger
+                    ->critical("Unrecoverable NATS error, worker #{$workerId}. Reconnecting in {$delayWithJitter} seconds");
+                $this->context->sleepOrDie($delayWithJitter);
 
                 $pid = getmypid();
                 if ($pid === false) {
