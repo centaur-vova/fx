@@ -7,6 +7,7 @@ import (
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -23,9 +24,12 @@ import (
 // ========== CONSTANTS ==========
 const (
 	// Health check settings
-	healthCheckTimeout  = 2 * time.Second
-	healthCheckInterval = 5 * time.Second
-	healthCheckPath     = "/health"
+	healthCheckTimeout         = 2 * time.Second
+	healthCheckInterval        = 5 * time.Second
+	healthCheckKeepAlive       = 30 * time.Second
+	healthCheckIdleConnTimeout = 90 * time.Second
+	healthCheckMaxIdleConns    = 10
+	healthCheckPath            = "/health"
 
 	// Instance lifecycle
 	instanceTTL     = 30 * time.Second
@@ -158,7 +162,16 @@ func (u *Upstream) NextInstance() *ApiInstance {
 
 // HealthCheck runs periodic health checks on all instances
 func (u *Upstream) HealthCheck(ctx context.Context) {
-	client := &http.Client{Timeout: healthCheckTimeout}
+	// Init transport
+	var healthCheckTransport = &http.Transport{
+		DialContext: (&net.Dialer{
+			KeepAlive: healthCheckKeepAlive,
+		}).DialContext,
+		MaxIdleConns:    healthCheckMaxIdleConns,
+		IdleConnTimeout: healthCheckIdleConnTimeout,
+	}
+
+	client := &http.Client{Timeout: healthCheckTimeout, Transport: healthCheckTransport}
 	ticker := time.NewTicker(healthCheckInterval)
 	defer ticker.Stop()
 
