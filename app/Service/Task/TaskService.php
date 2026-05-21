@@ -51,11 +51,11 @@ class TaskService
             TraceContext::inject(),
             SpanKind::KIND_PRODUCER,
             [
-            'batch.count' => $count,
-            'batch.max_concurrent' => $maxConcurrent,
-            'batch.semaphore_driver' => $semaphoreDriver->value,
-            'batch.task_mode' => $mode->value,
-        ],
+                'batch.count' => $count,
+                'batch.max_concurrent' => $maxConcurrent,
+                'batch.semaphore_driver' => $semaphoreDriver->value,
+                'batch.task_mode' => $mode->value,
+            ],
             function (SpanInterface $span) use ($count, $maxConcurrent, $semaphoreDriver, $mode): void {
                 $createdCount = 0;
 
@@ -110,18 +110,30 @@ class TaskService
         );
     }
 
-    public function processTask(TaskExecutionPayload $payload, int $workerId, SpanInterface $span): void
+    public function processTask(TaskExecutionPayload $payload, int $workerId, SpanInterface $taskSpan): void
     {
         // Quick check if shutting down
         if ($this->context->isShuttingDown()) {
+            $taskSpan->setAttribute('task.shutting_down', true);
             $this->manager->nack($payload); // Return to queue
             return;
         }
 
+        $taskSpan->setAttribute('worker.id', $workerId);
         $this->logger->debug('Entered processTask', ['id' => $payload->id]);
 
         $semaphore = $this->semaphoreFactory->get($payload->sem);
         try {
+            // Semaphore span
+            $semSpan = TraceContext::startSpan(
+                'task.semaphore.acquire',
+                SpanKind::KIND_INTERNAL,
+                [
+                    'semaphore.driver' => $payload->sem->value,
+                    'semaphore.mc' => $payload->mc,
+                ]
+            );
+
             $permit = $semaphore->forLimit($payload->mc);
             $this->notify(TaskStatusUpdate::checkLock($payload));
 
@@ -129,7 +141,17 @@ class TaskService
              * Attempt to acquire lock.
              */
             if (!$permit->acquire((float) $this->lockTimeoutSec)) {
+                $semSpan
+                    ->addEvent('semaphore.timeout')
+                    ->setAttribute('semaphore.acquired', false)
+                    ->setAttribute('semaphore.attempt', $payload->attempt);
+
                 if ($payload->attempt >= $this->maxRetries) {
+                    $taskSpan->setAttribute('task.retries_exhausted', true);
+                    $semSpan
+                        ->addEvent('task.retries_exhausted')
+                        ->end();
+
                     $this->manager->nack($payload);
                     $this->logger->debug('Max retries reached', ['id' => $payload->id]);
                     $this->notify(TaskStatusUpdate::retriesFailed($payload, $workerId, $this->maxRetries));
@@ -137,6 +159,10 @@ class TaskService
                 }
 
                 $this->notify(TaskStatusUpdate::lockFailed($payload));
+
+                $semSpan
+                    ->addEvent('retry.scheduled')
+                    ->end();
 
                 /**
                  * Re-queue with delay & jitter
@@ -154,6 +180,11 @@ class TaskService
 
                 return;
             }
+
+            $semSpan
+                ->addEvent('semaphore.acquired')
+                ->setAttribute('semaphore.acquired', true)
+                ->end();
 
             /**
              * @author Конь-Вовá <vsegda-vash-kon-vova@chat.deepseek.com>
@@ -173,9 +204,19 @@ class TaskService
             try {
                 $this->notify(TaskStatusUpdate::lockAcquired($payload));
 
+                // Task execution span
+                $execSpan = TraceContext::startSpan(
+                    'task.execution',
+                    SpanKind::KIND_INTERNAL,
+                    [
+                        'task.mode' => $payload->mode->value,
+                    ]
+                );
+
                 $processor = $this->processorFactory->get($payload->mode);
 
-                $progressCallback = function (int $progress) use ($payload): void {
+                $progressCallback = function (int $progress) use ($payload, $execSpan): void {
+                    $execSpan->setAttribute('task.progress', $progress);
                     $this->notify(TaskStatusUpdate::progress($payload, $progress));
                     Co::sleep(0.001);
                 };
@@ -184,19 +225,28 @@ class TaskService
                 $processor->execute($progressCallback);
                 $this->logger->debug('Task finished', ['id' => $payload->id, 'time' => microtime(true)]);
 
+                $execSpan->setAttribute('task.completed', true);
+                $execSpan->end();
+
                 $this->notify(TaskStatusUpdate::completed($payload, $workerId));
             } finally {
                 $permit->release();
                 $this->logger->debug('Lock released', ['id' => $payload->id]);
+                $semSpan->addEvent('semaphore.released');
+                $taskSpan->setAttribute('semaphore.released', true);
             }
 
             $this->manager->ack($payload);
 
         } catch (WorkerShutdownException) {
             // Worker shutting down, early return
+            $taskSpan->setAttribute('task.shutting_down', true);
             return;
         } catch (Throwable $e) {
             $this->logger->error('Fatal task error', ['id' => $payload->id, 'error' => $e->getMessage()]);
+            $taskSpan
+                ->setAttribute('task.error', $e->getMessage())
+                ->addEvent('error', ['message' => $e->getMessage()]);
             $this->manager->nack($payload);
         }
     }

@@ -99,6 +99,25 @@ final class TraceContext
     }
 
     /**
+     * Start a lightweight child span (no TraceScope, no rootScope).
+     * For internal spans inside an already active trace.
+     *
+     * @param non-empty-string $name Span name
+     * @param SpanKind::KIND_* $kind Span kind (e.g., SpanKind::KIND_SERVER)
+     * @param array<string, mixed> $attributes Span attributes
+     */
+    public static function startSpan(string $name, int $kind = SpanKind::KIND_INTERNAL, array $attributes = []): SpanInterface
+    {
+        $span = self::tracer()->spanBuilder($name)->setSpanKind($kind);
+
+        foreach ($attributes as $key => $value) {
+            $span->setAttribute($key, $value);
+        }
+
+        return $span->startSpan();
+    }
+
+    /**
      * Extract current trace context as a traceparent string for propagation.
      */
     public static function inject(): ?string

@@ -290,6 +290,8 @@ class Kernel
                 ]);
                 $task->finish(false);
 
+            } finally {
+                TraceContext::flush();
             }
         });
 
