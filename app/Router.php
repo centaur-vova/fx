@@ -62,15 +62,13 @@ class Router
         }
 
         try {
-            if (!isset($this->routes[$key])) {
-                throw new NotFoundException('Not Found');
-            }
-
             [$controller, $action] = $this->routes[$key];
 
-            $payload = $this->getJsonPayload($request);
-
             try {
+                if (!isset($this->routes[$key])) {
+                    throw new NotFoundException('Not Found');
+                }
+
                 $result = TraceContext::run(
                     "http.{$method}",
                     null,
