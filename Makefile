@@ -7,7 +7,7 @@ APP_NATS_PORT = 4222
 APP_API_URL = http://localhost:8090
 
 # --- Methods ---
-.PHONY: install build app stop restart distclean watch test test-go test-go-race check help nats-sub dev
+.PHONY: install build app stop restart distclean watch test test-php test-go test-go-race check help nats-sub dev
 .PHONY: logs logs-ws logs-balancer logs-api
 
 help:
@@ -53,7 +53,9 @@ restart: stop app
 distclean:
 	rm -rf public/dist
 
-test:
+test: test-php test-go
+
+test-php:
 	./vendor/bin/phpunit --colors=always
 
 test-go:
