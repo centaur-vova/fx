@@ -138,7 +138,7 @@ func main() {
 	// === PUT NATS INTO A DRAIN STATE ===
 	nc.Drain()
 
-	logger.Info("🔴 Stopped")
+	logger.Info("🛑 Stopped")
 }
 
 func subscribeToNATS(mRouter *gateway.MessageRouter) {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fast-atomic-flow/go/internal/cb"
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
@@ -62,6 +63,7 @@ type ApiInstance struct {
 	Alive     atomic.Bool
 	ExpiresAt atomic.Int64
 	Proxy     *httputil.ReverseProxy
+	CB        cb.CircuitBreaker
 	mu        sync.RWMutex
 }
 
@@ -220,6 +222,7 @@ func (u *Upstream) checkInstance(client *http.Client, inst *ApiInstance) {
 
 	if isHealthy {
 		inst.Touch()
+		inst.CB.ForceClose()
 		if !inst.IsAlive() {
 			inst.SetAlive(true)
 			logger.Info("🐎 Reanimated", "instance", inst.URL.Host)
@@ -351,12 +354,47 @@ func main() {
 		totalRequests.Add(1)
 
 		peer := upstream.NextInstance()
-		if peer != nil {
-			peer.Proxy.ServeHTTP(w, r)
+		if peer == nil {
+			http.Error(w, "API Instances gone fishing (KBL v2.0 Rule)", http.StatusServiceUnavailable)
+			totalErrors.Add(1)
 			return
 		}
-		http.Error(w, "API Instances gone fishing (KBL v2.0 Rule)", http.StatusServiceUnavailable)
-		totalErrors.Add(1)
+
+		// CB check
+		allowed, isHalfOpen := peer.CB.CanRequest()
+		if !allowed {
+			http.Error(w, "Circuit Breaker: Instance is cooling down", http.StatusServiceUnavailable)
+			totalErrors.Add(1)
+			return
+		}
+		if isHalfOpen {
+			logger.Info("🟡 Circuit Breaker HALF-OPEN - probing instance", "instance", peer.URL.Host)
+		}
+
+		// Catch network errors during proxying
+		peer.Proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
+			logger.Error("💥 Proxy error inside handler", "host", peer.URL.Host, "error", err)
+
+			// Unalive the peer if CB just became opened
+			if peer.CB.RecordFailure() {
+				peer.SetAlive(false)
+				logger.Warn("🔴 Circuit Breaker OPENED - instance isolated", "instance", peer.URL.Host)
+			}
+			rw.WriteHeader(http.StatusBadGateway)
+		}
+
+		// Try proxying the request
+		peer.Proxy.ServeHTTP(w, r)
+
+		// Check if the peer instance has just recovered
+		if peer.CB.RecordSuccess() {
+			logger.Info("🟢 Circuit Breaker CLOSED - instance fully recovered", "instance", peer.URL.Host)
+		}
+
+		// Mark the peer as alive
+		if peer.CB.GetState() == cb.StateClosed && !peer.IsAlive() {
+			peer.SetAlive(true)
+		}
 	})
 
 	port := cfg.BalancerPort
@@ -396,5 +434,5 @@ func main() {
 		logger.Error("💥 Shutdown error", "error", err)
 	}
 
-	logger.Info("🔴 Stopped")
+	logger.Info("🛑 Stopped")
 }

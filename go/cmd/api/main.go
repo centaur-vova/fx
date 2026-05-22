@@ -175,5 +175,5 @@ func main() {
 		logger.Error("⚠️ Shutdown error", "error", err)
 	}
 
-	logger.Info("🔴 Stopped")
+	logger.Info("🛑 Stopped")
 }
