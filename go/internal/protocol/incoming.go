@@ -15,7 +15,7 @@ func (p *PingMessage) Handle(data json.RawMessage) ([]byte, error) {
 	}
 	json.Unmarshal(data, &payload)
 
-	// Возвращаем готовый JSON-ответ
+	// Return pong
 	return json.Marshal(map[string]any{
 		"event": "pong",
 		"data":  map[string]any{"ts": payload.TS},

@@ -3,7 +3,6 @@ package gateway
 import (
 	"encoding/json"
 	"fast-atomic-flow/go/internal/logger"
-	"fast-atomic-flow/go/internal/metrics"
 	"fast-atomic-flow/go/internal/protocol"
 )
 
@@ -13,13 +12,24 @@ type MessageHandler func(json.RawMessage)
 // MessageRouter routes incoming NATS messages to appropriate handlers
 // based on their type field.
 type MessageRouter struct {
-	store    *metrics.Store
-	hub      *Hub
+	store    MetricsStore
+	hub      Broadcaster
 	handlers map[string]MessageHandler
 }
 
+type MetricsStore interface {
+	IncTasksCreated(count int, maxConcurrent int, mode string)
+	IncTasksCompleted(maxConcurrent int)
+	IncTasksFailed(maxConcurrent int)
+	IncTasksRetried(maxConcurrent int)
+}
+
+type Broadcaster interface {
+	Broadcast(data any)
+}
+
 // NewMessageRouter creates a MessageRouter with all handlers registered.
-func NewMessageRouter(store *metrics.Store, hub *Hub) *MessageRouter {
+func NewMessageRouter(store MetricsStore, hub Broadcaster) *MessageRouter {
 	r := &MessageRouter{
 		store: store,
 		hub:   hub,
