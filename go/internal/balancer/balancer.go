@@ -1,0 +1,273 @@
+package balancer
+
+import (
+	"context"
+	"fast-atomic-flow/go/internal/cb"
+	"fast-atomic-flow/go/internal/logger"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+// ========== TYPES ==========
+
+// ApiInstance represents a single upstream API instance
+type ApiInstance struct {
+	URL         *url.URL
+	Alive       atomic.Bool
+	ExpiresAt   atomic.Int64
+	Proxy       *httputil.ReverseProxy
+	CB          cb.CircuitBreaker
+	instanceTTL time.Duration
+	mu          sync.RWMutex
+}
+
+// Upstream manages a pool of API instances with round-robin load balancing
+type Upstream struct {
+	mu           sync.RWMutex
+	ApiInstances []*ApiInstance
+	current      uint64
+	checkWg      sync.WaitGroup
+	cfg          Config
+}
+
+type Config struct {
+	InstanceTTL     time.Duration
+	CleanupInterval time.Duration
+	HealthCheck     HealthCheckConfig
+}
+
+type HealthCheckConfig struct {
+	Timeout         time.Duration
+	Interval        time.Duration
+	KeepAlive       time.Duration
+	IdleConnTimeout time.Duration
+	MaxIdleConns    int
+	Path            string
+}
+
+// ========== API INSTANCE METHODS ==========
+
+// SetAlive sets the alive status of the instance
+func (h *ApiInstance) SetAlive(alive bool) {
+	h.Alive.Store(alive)
+}
+
+// IsAlive returns whether the instance is considered alive
+func (h *ApiInstance) IsAlive() bool {
+	return h.Alive.Load()
+}
+
+// Touch updates the expiration timestamp of the instance
+// Extends the instance's life by instanceTTL
+func (h *ApiInstance) Touch() {
+	h.ExpiresAt.Store(time.Now().Add(h.instanceTTL).UnixNano())
+}
+
+// ========== UPSTREAM METHODS ==========
+
+func NewUpstream(cfg Config) *Upstream {
+	return &Upstream{
+		cfg: cfg,
+	}
+}
+
+func (u *Upstream) Counts() (up, down uint64) {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+
+	for _, i := range u.ApiInstances {
+		if i.Alive.Load() {
+			up++
+		} else {
+			down++
+		}
+	}
+
+	return
+}
+
+// RegisterInstance adds or updates an API instance in the pool
+func (u *Upstream) RegisterInstance(targetURL string) {
+	// Ignore empty URLs
+	if targetURL == "" {
+		return
+	}
+
+	origin, err := url.Parse(targetURL)
+	if err != nil {
+		logger.Error("💥 Invalid URL", "url", targetURL, "error", err)
+		return
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	// Check if instance already exists (case insensitive)
+	for _, inst := range u.ApiInstances {
+		if strings.EqualFold(inst.URL.String(), targetURL) {
+			// Update existing instance
+			inst.Touch()
+			if !inst.IsAlive() {
+				inst.SetAlive(true)
+				logger.Info("🐎 Instance re-registered and revived", "instance", targetURL)
+			} else {
+				logger.Debug("💓 Heartbeat received", "instance", targetURL)
+			}
+			return
+		}
+	}
+
+	// New instance - create and add
+	proxy := httputil.NewSingleHostReverseProxy(origin)
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, e error) {
+		logger.Error("💥 Proxy error", "host", origin.Host, "error", e)
+		w.WriteHeader(http.StatusBadGateway)
+	}
+
+	instance := &ApiInstance{
+		URL:         origin,
+		Proxy:       proxy,
+		instanceTTL: u.cfg.InstanceTTL,
+	}
+	instance.SetAlive(true)
+	instance.Touch()
+
+	u.ApiInstances = append(u.ApiInstances, instance)
+	logger.Info("➕ New API instance registered", "instance", targetURL)
+}
+
+// NextInstance returns the next alive instance using round-robin selection
+func (u *Upstream) NextInstance() *ApiInstance {
+	instances := u.getInstancesCopy()
+
+	n := len(instances)
+	if n == 0 {
+		return nil
+	}
+
+	// Find first alive instance
+	for range n {
+		idx := atomic.AddUint64(&u.current, 1) % uint64(n)
+		if u.ApiInstances[idx].IsAlive() {
+			return u.ApiInstances[idx]
+		}
+	}
+	return nil
+}
+
+// HealthCheck runs periodic health checks on all instances
+func (u *Upstream) HealthCheck(ctx context.Context) {
+	cfg := u.cfg.HealthCheck
+
+	// Init transport
+	var healthCheckTransport = &http.Transport{
+		DialContext: (&net.Dialer{
+			KeepAlive: cfg.KeepAlive,
+		}).DialContext,
+		MaxIdleConns:    cfg.MaxIdleConns,
+		IdleConnTimeout: cfg.IdleConnTimeout,
+	}
+
+	client := &http.Client{Timeout: cfg.Timeout, Transport: healthCheckTransport}
+	ticker := time.NewTicker(cfg.Interval)
+	defer ticker.Stop()
+
+	// Run check immediately on start
+	u.checkAllInstances(client)
+
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("🛑 Health Check stopped, waiting for active checks...")
+			u.checkWg.Wait()
+			logger.Info("🛑 All Health Check completed")
+			return
+		case <-ticker.C:
+			u.checkAllInstances(client)
+		}
+	}
+}
+
+// checkAllInstances triggers health checks for all instances concurrently
+func (u *Upstream) checkAllInstances(client *http.Client) {
+	instances := u.getInstancesCopy()
+
+	for _, i := range instances {
+		u.checkWg.Add(1)
+		go func(inst *ApiInstance) {
+			defer u.checkWg.Done()
+			u.checkInstance(client, inst)
+		}(i)
+	}
+}
+
+// checkInstance performs a single health check on an instance
+func (u *Upstream) checkInstance(client *http.Client, inst *ApiInstance) {
+	resp, err := client.Get(inst.URL.String() + u.cfg.HealthCheck.Path)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
+	isHealthy := err == nil && resp != nil && resp.StatusCode == http.StatusOK
+	if isHealthy {
+		inst.Touch()
+		inst.CB.ForceClose()
+		if !inst.IsAlive() {
+			inst.SetAlive(true)
+			logger.Info("🐎 Reanimated", "instance", inst.URL.Host)
+		}
+	} else if inst.IsAlive() {
+		inst.SetAlive(false)
+		logger.Warn("🛑 Expired", "instance", inst.URL.Host)
+	}
+}
+
+// CleanupDeadInstances periodically removes expired instances
+func (u *Upstream) CleanupDeadInstances(ctx context.Context) {
+	ticker := time.NewTicker(u.cfg.CleanupInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			u.removeDeadInstances()
+		}
+	}
+}
+
+// removeDeadInstances removes instances that have exceeded their TTL
+func (u *Upstream) removeDeadInstances() {
+	instances := u.getInstancesCopy()
+
+	now := time.Now().UnixNano()
+	alive := make([]*ApiInstance, 0, len(instances))
+	for _, inst := range instances {
+		if inst.ExpiresAt.Load() > now {
+			alive = append(alive, inst)
+		} else {
+			logger.Warn("🗑️ Removing expired instance", "instance", inst.URL.Host)
+		}
+	}
+
+	u.mu.Lock()
+	u.ApiInstances = alive
+	u.mu.Unlock()
+}
+
+// getInstancesCopy returns a thread-safe copy of the instances slice
+func (u *Upstream) getInstancesCopy() []*ApiInstance {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+
+	instances := make([]*ApiInstance, len(u.ApiInstances))
+	copy(instances, u.ApiInstances)
+	return instances
+}

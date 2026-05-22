@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
-  <img src="https://img.shields.io/badge/test_coverage-0.01%25-red?style=flat" alt="Test Coverage: 0.01%">
+  <!-- img src="https://img.shields.io/badge/test_coverage-XX%25-red?style=flat" alt="Test Coverage: XX%" -->
   <br>
   <!-- Row 4: Brotherhood & License -->
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">

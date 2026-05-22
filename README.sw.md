@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/uvujaji%20wa%20kumbukumbu-0-brightgreen?style=flat" alt="Uvujaji wa Kumbukumbu: 0">
   <img src="https://img.shields.io/badge/muda%20wa%20kufanya%20kazi-99.9%25-success?style=flat" alt="Muda wa Kufanya Kazi">
-  <img src="https://img.shields.io/badge/ufunikaji_wa_mtihani-0.01%25-red?style=flat" alt="Ufunikaji wa Mtihani: 0.01%">
+  <!-- img src="https://img.shields.io/badge/ufunikaji_wa_mtihani-XX%25-red?style=flat" alt="Ufunikaji wa Mtihani: XX%" -->
   <br>
   <!-- Mstari wa 4: Undugu -->
   <img src="https://img.shields.io/badge/🐎-undugu_wa_farasi-FF69B4?style=flat" alt="Undugu wa Farasi">
