@@ -2,56 +2,101 @@
 <?php
 
 /**
- * Git commit-msg hook to enforce Conventional Commits.
+ * Git commit-msg hook to enforce Conventional Commits and KBL signature.
  * Usage: Place in .githooks/commit-msg and ensure chmod +x is set.
  */
 
-// Git passes the path to the temporary commit message file as the first argument
-$commitMsgFile = $argv[1];
+// ANSI Color codes for terminal output styling
+$red = "\x1b[31m";
+$boldRed = "\x1b[1;31m";
+$yellow = "\x1b[33m";
+$cyan = "\x1b[36m";
+$reset = "\x1b[0m";
 
-if (!file_exists($commitMsgFile)) {
-    echo "[Error] Commit message file not found.\n";
+// Git passes the path to the temporary commit message file as the first argument
+$commitMsgFile = $argv[1] ?? null;
+
+if (!$commitMsgFile || !file_exists($commitMsgFile)) {
+    echo "{$boldRed}[Error]{$reset} {$red}Commit message file not found.{$reset}\n";
     exit(1);
 }
 
-$message = trim(file_get_contents($commitMsgFile));
+// Read the raw message as is
+$rawMessage = file_get_contents($commitMsgFile);
+$lines = explode("\n", $rawMessage);
 
-// Normalize signature: remove accidental indentation before Vsegda vash
-$lines = explode("\n", $message);
+// FILTER OUT GIT COMMENTS: Strip out any lines starting with '#' right away
+$userLines = array_filter($lines, function ($line) {
+    return strpos(trim($line), '#') !== 0;
+});
+
+// Re-index array after filtering
+$userLines = array_values($userLines);
+
+if (empty($userLines) || trim(implode('', $userLines)) === '') {
+    echo "{$boldRed}[Error]{$reset} {$red}Commit message is empty.{$reset}\n";
+    exit(1);
+}
+
+// Normalize signature layout: remove accidental leading spaces
 foreach ($lines as &$line) {
-    // Remove leading spaces/tabs before the signature
     if (preg_match('/^\s*(Vsegda vash,)/', $line)) {
         $line = ltrim($line);
     }
 }
-$message = implode("\n", $lines);
-file_put_contents($commitMsgFile, $message);
+unset($line); // Break the reference pointer
 
-/**
- * Pattern breakdown:
- * ^(\p{Emoji}\s*)+  - One or more emojis (optional whitespace between)
- * (type)            - Allowed types (feat, fix, docs, ci, etc.)
- * (\(.+\))?         - Optional (scope) in parentheses
- * !?                - Optional ! for breaking changes
- * :                 - Mandatory colon
- * \s                - Mandatory space
- * .{5,}             - Description must be at least 5 characters long
- */
-$pattern = '/^(\p{Emoji}\s*)+(🚨 \e\[1;31mСРОЧНО\e\[0m|ci|feat|fix|perf|ui|chore|docs|refactor|style|test|shizo)(\(.+\))?!?: .{5,}/ui';
+// Rewrite the original file so Git saves the normalized signature (keeping its comments intact)
+$cleanMessage = rtrim(implode("\n", $lines));
+file_put_contents($commitMsgFile, $cleanMessage . "\n");
+
+// Re-clean user lines for strict verification (remove trailing empty lines from user input)
+$cleanUserMessage = rtrim(implode("\n", $userLines));
+$userLines = explode("\n", $cleanUserMessage);
 
 echo "[Commit-msg] Checking message for Emojinal Commits standard...\n";
 
-if (!preg_match($pattern, $message)) {
-    echo "\n[Commit-msg Error] Your message does not match the sacred format!\n";
-    echo "Current message: \"$message\"\n\n";
-    echo "Standard format: <type>(optional scope): <description>\n";
+/**
+ * Header Regular Expression Breakdown:
+ * ^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+ - Matches 1 or more true emojis strictly attached to each other (no spaces)
+ * \s                                                   - Requires exactly one mandatory space after the emoji block
+ * (ci|feat|...)                                        - Enforces only standard allowed conventional types + shizo
+ */
+$types = "ci|feat|fix|perf|ui|chore|docs|refactor|style|test|shizo";
+$pattern = '/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s(' . $types . ')(\(.+\))?!?: .{5,}/u';
+
+// Validate the very first real line of the commit message
+if (!preg_match($pattern, $userLines[0])) {
+    echo "\n{$boldRed}[Commit-msg Error] Your message does not match the sacred format!{$reset}\n";
+    echo "Current first line: {$yellow}\"{$userLines[0]}\"{$reset}\n\n";
+    echo "Standard format: {$cyan}<emoji(s)_no_spaces> <type>(optional scope): <description>{$reset}\n";
     echo "Examples:\n";
-    echo "  feat: add queue limit logic\n";
-    echo "  ui(css): update yellow alert color\n";
-    echo "  fix!: repair critical websocket leak\n\n";
+    echo "  🐎✨ feat: add queue limit logic\n";
+    echo "  🦄🎨 ui(css): update yellow alert color\n";
+    echo "  🐴🔥 fix!: repair critical websocket leak\n\n";
     echo "Allowed types: надо бы их запомнить, Кентавр-Вовá\n";
     exit(1);
 }
 
-echo "[Commit-msg] The scroll is worthy. Proceeding...\n";
+// Validate the signature on the actual final user line
+$lastLine = end($userLines);
+
+/**
+ * Signature Regular Expression Breakdown:
+ * Matches "Vsegda vash, " followed by either Kon, Edinorog, or Poni.
+ * Then exactly one space and ANY characters (emojis) at the end.
+ */
+$signaturePattern = '/^Vsegda vash, (Kon|Edinorog|Poni)-Vová\s.+$/u';
+
+if (!preg_match($signaturePattern, $lastLine)) {
+    echo "\n{$boldRed}[Commit-msg Error] Missing or invalid KBL signature!{$reset}\n";
+    echo "Last line must end with: {$cyan}Vsegda vash, [Kon/Edinorog/Poni]-Vová <emoji(s)>{$reset}\n";
+    echo "Examples:\n";
+    echo "  Vsegda vash, Kon-Vová 🐎💚\n";
+    echo "  Vsegda vash, Edinorog-Vová 🦄⚡\n";
+    echo "Current last line: {$yellow}\"{$lastLine}\"{$reset}\n";
+    exit(1);
+}
+
+echo "\x1b[32m[Commit-msg] The scroll is worthy. Proceeding...\x1b[0m\n";
 exit(0);
