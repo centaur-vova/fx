@@ -80,6 +80,17 @@ func (cb *CircuitBreaker) ForceClose() {
 	cb.state.Store(StateClosed)
 }
 
+// CB ForceOpen
+func (cb *CircuitBreaker) ForceOpen() {
+	// Push it to the limits, oh yeah
+	cb.consecutiveFailures.Store(maxConsecutiveFailures)
+	// Walk along the razor's edge
+	cb.state.Store(StateOpen)
+	// But don't look down, just keep your head
+	// Or you'll be finished
+	cb.lastStateChange.Store(time.Now().UnixNano())
+}
+
 // GetState returns current state (monitoring/handlers)
 func (cb *CircuitBreaker) GetState() uint32 {
 	return cb.state.Load()

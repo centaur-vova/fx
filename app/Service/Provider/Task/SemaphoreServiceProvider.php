@@ -10,7 +10,7 @@ use App\Contract\Task\SemaphoreDriver;
 use App\Contract\Task\SemaphoreFactory;
 use App\Contract\Task\TaskSemaphore;
 use App\Server\Options;
-use App\Service\Api\SemaphoreApi;
+use App\Service\Api\BalancerApi;
 use App\Service\Task\Semaphore\DistributedSemaphore;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use DI\ContainerBuilder;
@@ -84,8 +84,8 @@ final readonly class SemaphoreServiceProvider implements ServiceProvider, Bootab
         /** @var Options $options */
         $options = $c->get(Options::class);
 
-        /** @var SemaphoreApi $api */
-        $api = $c->get(SemaphoreApi::class);
+        /** @var BalancerApi $api */
+        $api = $c->get(BalancerApi::class);
 
         return new DistributedSemaphore(
             api: $api,

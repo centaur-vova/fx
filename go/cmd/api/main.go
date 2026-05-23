@@ -29,9 +29,6 @@ const (
 	serverReadTimeout  = 10 * time.Second
 	serverWriteTimeout = 10 * time.Second
 	shutdownTimeout    = 5 * time.Second
-
-	// Health check
-	healthCheckPath = "/health"
 )
 
 // ========== GLOBALS ==========
@@ -44,7 +41,7 @@ var (
 // registerUpstream periodically registers this API instance with the balancer
 func registerUpstream(ctx context.Context) {
 	client := http.Client{Timeout: registrationTimeout}
-	registerURL := cfg.BalancerURL + "/register"
+	registerURL := cfg.BalancerURL + "/instance/register"
 
 	hostname, _ := os.Hostname()
 	targetURL := fmt.Sprintf("http://%s:%s", hostname, cfg.APIPort)

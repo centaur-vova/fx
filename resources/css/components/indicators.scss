@@ -1,0 +1,44 @@
+/* === API INDICATORS === */
+.api-indicators {
+  position: absolute;
+  bottom: 1rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+
+  .api-indicator-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .api-label {
+      font-size: 8px;
+      font-family: monospace;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      min-width: 140px;
+      text-align: right;
+    }
+
+    .api-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      background-color: var(--worker-bar-idle);
+
+      &.alive {
+        background-color: var(--color-success);
+      }
+      &.half-open {
+        background-color: var(--color-warning);
+      }
+      &.dead {
+        background-color: var(--color-error);
+      }
+    }
+  }
+}

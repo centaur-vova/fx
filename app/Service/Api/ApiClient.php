@@ -48,7 +48,6 @@ class ApiClient
      * @return array<string, mixed>|null
      *
      * @throws ApiException
-     * @throws \JsonException
      */
     private function request(string $method, string $path, array $data = []): ?array
     {
@@ -89,7 +88,7 @@ class ApiClient
                 ]);
 
                 $client = null;
-                return null;
+                throw new ApiException("HTTP request failed: {$errMsg} (code: {$errCode})");
             }
 
             /** @var string|null $body */

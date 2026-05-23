@@ -9,8 +9,11 @@ use App\Contract\Task\TaskQueue;
 use App\DTO\Http\Request\CreateTasks;
 use App\DTO\Http\Response\ApiResponse;
 use App\DTO\Http\Response\HealthResponse;
+use App\Exception\Http\BadRequestException;
+use App\Exception\Http\InternalServerErrorException;
 use App\Exception\Http\InvalidTaskBatchException;
 use App\Exception\Http\RateLimitExceededException;
+use App\Service\Api\BalancerApi;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Task\TaskService;
 use Psr\Log\LoggerInterface;
@@ -24,6 +27,7 @@ class TaskController
         private readonly TaskQueue $taskQueue,
         private readonly CacheStorage $cache,
         private readonly RateLimiterService $rateLimiterService,
+        private readonly BalancerApi $balancerApi,
         private readonly LoggerInterface $logger,
         private readonly int $taskMaxBatchSize,
         private readonly int $taskSemaphoreLimit,
@@ -62,9 +66,10 @@ class TaskController
     }
 
     /**
+     * @param array<string, mixed> $payload
      * @throws RateLimitExceededException
      */
-    public function purgeQueue(Request $request): ApiResponse
+    public function purgeQueue(Server $server, Request $request, array $payload): ApiResponse
     {
         try {
             $this->rateLimit('purge-queue', $request);
@@ -76,11 +81,20 @@ class TaskController
         }
     }
 
-    public function health(Server $server): HealthResponse
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * TODO: move to the separate controller
+     * TODO: add caching
+     */
+    public function health(Server $server, Request $request, array $payload): HealthResponse
     {
+        // Balancer's health
+        $balancerHealth = $this->balancerApi->health();
+
+        // PHP Swoole specific data
         /** @var array{tasking_num: int, task_worker_num: int} $stats */
         $stats = $server->stats();
-
         $taskLastCreated = (int) $this->cache->get('task-last-created');
 
         return new HealthResponse(
@@ -91,7 +105,43 @@ class TaskController
             taskWorkers: $stats['task_worker_num'],
             idleWorkers: $stats['task_worker_num'] - $stats['tasking_num'],
             taskLastCreated: $taskLastCreated,
+            balancerHealth: $balancerHealth,
         );
+    }
+
+    /**
+     * Mark a specific instance as alive/unalived
+     *
+     * @param array<string, mixed> $payload
+     */
+    public function toggleInstance(Server $server, Request $request, array $payload): ApiResponse
+    {
+        $this->rateLimit('toggle-instance', $request);
+
+        $hash = $payload['hash'] ?? null;
+        $alive = $payload['alive'] ?? false;
+
+        if (!$hash || !is_string($hash)) {
+            throw new BadRequestException('Instance hash required');
+        }
+
+        try {
+            if ($alive) {
+                if ($this->balancerApi->reviveInstance($hash)) {
+                    return ApiResponse::ok('API Instance successfully revived');
+                }
+            } else {
+                if ($this->balancerApi->forceUnaliveInstance($hash)) {
+                    return ApiResponse::ok('API Instance successfully unalived');
+                }
+            }
+
+            // Shouldn't get here
+            throw new InternalServerErrorException();
+        } catch (\Throwable $e) {
+            $this->logger->error('Kill instance failed', ['hash' => $hash, 'error' => $e->getMessage()]);
+            throw new InternalServerErrorException('Internal error');
+        }
     }
 
     /**

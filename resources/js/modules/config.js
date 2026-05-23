@@ -77,6 +77,10 @@ export const WS = {
     PING_INTERVAL_MS: 3000
 };
 
+export const HEALTH_CHECK = {
+    INTERVAL_MS: 1000,
+};
+
 export const TASK = {
     // Binary id mappings
     STATUS_MAP: {

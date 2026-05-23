@@ -36,6 +36,7 @@ class Router
             'POST|/api/tasks/create' => [$this->taskController, 'createTasks'],
             'POST|/api/tasks/purge' => [$this->taskController, 'purgeQueue'],
             'GET|/api/tasks/health' => [$this->taskController, 'health'],
+            'POST|/api/balancer/instance/toggle' => [$this->taskController, 'toggleInstance'],
         ];
     }
 
@@ -62,12 +63,12 @@ class Router
         }
 
         try {
-            [$controller, $action] = $this->routes[$key];
-
             try {
                 if (!isset($this->routes[$key])) {
                     throw new NotFoundException('Not Found');
                 }
+
+                [$controller, $action] = $this->routes[$key];
 
                 $result = TraceContext::run(
                     "http.{$method}",
@@ -82,8 +83,7 @@ class Router
 
                         return match ($path) {
                             '/api/tasks/create' => $controller->$action($request, CreateTasks::fromArray($payload)),
-                            '/api/tasks/purge' => $controller->$action($request),
-                            default => $controller->$action($server),
+                            default => $controller->$action($server, $request, $payload),
                         };
                     },
                     [HttpException::class] // Dont treat these exceptions as errors in tracing

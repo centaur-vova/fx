@@ -7,6 +7,7 @@ import { updateMessagesChart } from './modules/chart.js';
 import terminalLog from './modules/terminal-log.js';
 import {
     WS,
+    HEALTH_CHECK,
     TASK,
     BRAND_LOGO,
     PING_INTERVAL_MS,
@@ -75,7 +76,9 @@ const connect = () => {
         console.log("%c REACTOR ONLINE ", "background: #064e3b; color: #10b981; font-weight: bold;");
         store.isOnline = true;
         store.reconnectAttempts = 0;
+
         startPinger(ws);
+        store.startBalancerPoller(HEALTH_CHECK.INTERVAL_MS);
     };
 
     ws.onclose = () => {
@@ -84,6 +87,7 @@ const connect = () => {
 
         store.resetMetrics();
         stopPinger();
+        store.stopBalancerPoller();
         clearTasks();
 
         setTimeout(connect, 3000);
@@ -182,6 +186,7 @@ const render = () => {
     store.updateTaskNum(tasks.size);
 };
 
+// Ping timer
 let pingTimer = null;
 const startPinger = (ws) => {
     pingTimer = setInterval(() => {

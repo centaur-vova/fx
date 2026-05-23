@@ -96,6 +96,7 @@ for (const theme of themes) {
     console.log(`📦 Theme: ${config.name} (${theme})`);
 
     // --- Build theme CSS ---
+    const loaderScss = path.join(cssDir, 'loader.scss');
     const varsScss = path.join(themePath, 'variables.scss');
     const themeScss = path.join(themePath, 'theme.scss');
     const baseScss = path.join(cssDir, 'style.scss');
@@ -105,6 +106,7 @@ for (const theme of themes) {
 
     // Concatenate SCSS sources: base styles + variables + theme overrides
     let scssContent = '';
+    if (fs.existsSync(loaderScss)) scssContent += fs.readFileSync(loaderScss, 'utf8') + '\n\n';
     if (fs.existsSync(varsScss)) scssContent += fs.readFileSync(varsScss, 'utf8') + '\n\n';
     if (fs.existsSync(baseScss)) scssContent += fs.readFileSync(baseScss, 'utf8') + '\n\n';
     if (fs.existsSync(themeScss)) scssContent += fs.readFileSync(themeScss, 'utf8');

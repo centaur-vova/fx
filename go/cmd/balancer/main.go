@@ -19,7 +19,7 @@ import (
 const (
 	// Health check settings
 	healthCheckTimeout         = 2 * time.Second
-	healthCheckInterval        = 5 * time.Second
+	healthCheckInterval        = 10 * time.Second
 	healthCheckKeepAlive       = 30 * time.Second
 	healthCheckIdleConnTimeout = 90 * time.Second
 	healthCheckMaxIdleConns    = 10
@@ -79,9 +79,14 @@ func main() {
 	// Setup router
 	mux := http.NewServeMux()
 
-	// Routes
+	// Health
 	mux.HandleFunc("GET /health", balancer.HealthHandler(upstream))
-	mux.HandleFunc("POST /register", middleware.AuthMiddleware(cfg.APIToken, balancer.RegisterHandler(upstream)))
+	// Register API instance (called by API service)
+	mux.HandleFunc("POST /instance/register", middleware.AuthMiddleware(cfg.APIToken, balancer.RegisterHandler(upstream)))
+	// Force alive/unalive state on the API instance
+	mux.HandleFunc("POST /instance/unalive", balancer.ForceUnaliveHandler(upstream))
+	mux.HandleFunc("POST /instance/revive", balancer.ReviveHandler(upstream))
+	// Proxy
 	mux.HandleFunc("/", balancer.ProxyHandler(upstream))
 
 	// Server

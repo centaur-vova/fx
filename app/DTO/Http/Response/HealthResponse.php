@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DTO\Http\Response;
 
+use App\DTO\Balancer\Health;
 use JsonSerializable;
 
 final readonly class HealthResponse implements JsonSerializable
@@ -17,6 +18,7 @@ final readonly class HealthResponse implements JsonSerializable
         public int $idleWorkers,
         // Timestamp when new task(s) was last created
         public int $taskLastCreated,
+        public ?Health $balancerHealth,
     ) {
     }
 
@@ -39,6 +41,7 @@ final readonly class HealthResponse implements JsonSerializable
             'tasks' => [
                 'last_created' => $this->taskLastCreated,
             ],
+            'balancer' => $this->balancerHealth ? $this->balancerHealth->jsonSerialize() : [],
         ];
     }
 }

@@ -18,20 +18,20 @@ func TestUpstream_Counts(t *testing.T) {
 	u.RegisterInstance("http://c:8083")
 
 	// Unalive one instance
-	u.ApiInstances[1].SetAlive(false)
+	u.ApiInstances[1].SetUnalive(false)
 
 	up, down := u.Counts()
 	assert.Equal(t, uint64(2), up)
 	assert.Equal(t, uint64(1), down)
 
 	// Unalive another instance
-	u.ApiInstances[2].SetAlive(false)
+	u.ApiInstances[2].SetUnalive(false)
 	up, down = u.Counts()
 	assert.Equal(t, uint64(1), up)
 	assert.Equal(t, uint64(2), down)
 
 	// Everyone's dead :(
-	u.ApiInstances[0].SetAlive(false)
+	u.ApiInstances[0].SetUnalive(false)
 	up, down = u.Counts()
 	assert.Equal(t, uint64(0), up)
 	assert.Equal(t, uint64(3), down)
@@ -67,7 +67,7 @@ func TestUpstream_NextInstance_Empty(t *testing.T) {
 func TestUpstream_NextInstance_OnlyDead(t *testing.T) {
 	u := &Upstream{}
 	u.RegisterInstance("http://a:8081")
-	u.ApiInstances[0].SetAlive(false)
+	u.ApiInstances[0].SetUnalive(false)
 	assert.Nil(t, u.NextInstance())
 }
 
@@ -93,8 +93,8 @@ func TestUpstream_NextInstance_SkipsDead(t *testing.T) {
 	u.RegisterInstance("http://c:8083")
 
 	// Kill two
-	u.ApiInstances[0].SetAlive(false)
-	u.ApiInstances[2].SetAlive(false)
+	u.ApiInstances[0].SetUnalive(false)
+	u.ApiInstances[2].SetUnalive(false)
 
 	// All calls should return the only alive one
 	for range 5 {
@@ -117,7 +117,7 @@ func TestUpstream_CheckInstance_Healthy(t *testing.T) {
 		HealthCheck: HealthCheckConfig{Path: "/health"},
 	})
 	inst := &ApiInstance{URL: parseURL(t, server.URL)}
-	inst.SetAlive(true)
+	inst.SetAlive()
 
 	client := server.Client()
 	u.checkInstance(client, inst)
@@ -135,7 +135,7 @@ func TestUpstream_CheckInstance_Unhealthy(t *testing.T) {
 		HealthCheck: HealthCheckConfig{Path: "/health"},
 	})
 	inst := &ApiInstance{URL: parseURL(t, server.URL)}
-	inst.SetAlive(true)
+	inst.SetAlive()
 
 	client := server.Client()
 	u.checkInstance(client, inst)

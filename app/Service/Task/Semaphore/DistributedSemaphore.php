@@ -6,7 +6,7 @@ namespace App\Service\Task\Semaphore;
 
 use App\Contract\Task\SemaphorePermit;
 use App\Contract\Task\TaskSemaphore;
-use App\Service\Api\SemaphoreApi;
+use App\Service\Api\BalancerApi;
 
 /**
  * Distributed semaphore using a Go microservice via HTTP.
@@ -17,7 +17,7 @@ use App\Service\Api\SemaphoreApi;
  */
 final readonly class DistributedSemaphore implements TaskSemaphore
 {
-    public function __construct(private SemaphoreApi $api, private int $semaphorePermitTtl)
+    public function __construct(private BalancerApi $api, private int $semaphorePermitTtl)
     {
     }
 
@@ -30,7 +30,7 @@ final readonly class DistributedSemaphore implements TaskSemaphore
             private ?string $permitUid = null;
 
             public function __construct(
-                private readonly SemaphoreApi $api,
+                private readonly BalancerApi $api,
                 private readonly int $limit,
                 private readonly int $semaphorePermitTtl,
             ) {
@@ -38,7 +38,7 @@ final readonly class DistributedSemaphore implements TaskSemaphore
 
             public function acquire(float $lockWaitTimeoutSec): bool
             {
-                $permitUid = $this->api->acquire($this->limit, (int) $lockWaitTimeoutSec, $this->semaphorePermitTtl);
+                $permitUid = $this->api->acquireSemaphore($this->limit, (int) $lockWaitTimeoutSec, $this->semaphorePermitTtl);
 
                 if (empty($permitUid)) {
                     return false;
@@ -51,7 +51,7 @@ final readonly class DistributedSemaphore implements TaskSemaphore
             public function release(): void
             {
                 if ($this->permitUid !== null) {
-                    $this->api->release($this->permitUid);
+                    $this->api->releaseSemaphore($this->permitUid);
                 }
             }
         };

@@ -2,8 +2,10 @@ package balancer
 
 import (
 	"context"
+	"encoding/hex"
 	"fast-atomic-flow/go/internal/cb"
 	"fast-atomic-flow/go/internal/logger"
+	"hash/fnv"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -18,11 +20,16 @@ import (
 
 // ApiInstance represents a single upstream API instance
 type ApiInstance struct {
-	URL         *url.URL
-	Alive       atomic.Bool
-	ExpiresAt   atomic.Int64
-	Proxy       *httputil.ReverseProxy
-	CB          cb.CircuitBreaker
+	URL           *url.URL
+	Alive         atomic.Bool
+	forceUnalived atomic.Bool // set manually
+	ExpiresAt     atomic.Int64
+	Proxy         *httputil.ReverseProxy
+	CB            cb.CircuitBreaker
+	Hash          string
+	Requests      atomic.Uint64
+	Errors        atomic.Uint64
+
 	instanceTTL time.Duration
 	mu          sync.RWMutex
 }
@@ -31,7 +38,7 @@ type ApiInstance struct {
 type Upstream struct {
 	mu           sync.RWMutex
 	ApiInstances []*ApiInstance
-	current      uint64
+	current      atomic.Uint64
 	checkWg      sync.WaitGroup
 	cfg          Config
 }
@@ -53,9 +60,28 @@ type HealthCheckConfig struct {
 
 // ========== API INSTANCE METHODS ==========
 
-// SetAlive sets the alive status of the instance
-func (h *ApiInstance) SetAlive(alive bool) {
-	h.Alive.Store(alive)
+// SetAlive makes the instance as alive
+func (h *ApiInstance) SetAlive() {
+	h.Alive.Store(true)
+	h.forceUnalived.Store(false)
+}
+
+// SetUnalive marks the instance as dead, optionally forcing it to stay dead
+// until manually revived or re-registered.
+//
+// If force is true, the instance won't be automatically revived by health checks
+// or successful proxy responses. Only explicit Revive() or re-registration will bring it back.
+func (h *ApiInstance) SetUnalive(force bool) {
+	h.Alive.Store(false)
+	if force {
+		h.forceUnalived.Store(force)
+	}
+}
+
+// IsForcedUnalived returns true if the instance was forcefully marked as dead
+// and should not be automatically revived by health checks or proxy handlers.
+func (h *ApiInstance) IsForcedUnalived() bool {
+	return h.forceUnalived.Load()
 }
 
 // IsAlive returns whether the instance is considered alive
@@ -113,8 +139,8 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 		if strings.EqualFold(inst.URL.String(), targetURL) {
 			// Update existing instance
 			inst.Touch()
-			if !inst.IsAlive() {
-				inst.SetAlive(true)
+			if !inst.IsAlive() && !inst.IsForcedUnalived() {
+				inst.SetAlive()
 				logger.Info("🐎 Instance re-registered and revived", "instance", targetURL)
 			} else {
 				logger.Debug("💓 Heartbeat received", "instance", targetURL)
@@ -133,9 +159,10 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 	instance := &ApiInstance{
 		URL:         origin,
 		Proxy:       proxy,
+		Hash:        shortHash(targetURL),
 		instanceTTL: u.cfg.InstanceTTL,
 	}
-	instance.SetAlive(true)
+	instance.SetAlive()
 	instance.Touch()
 
 	u.ApiInstances = append(u.ApiInstances, instance)
@@ -153,7 +180,7 @@ func (u *Upstream) NextInstance() *ApiInstance {
 
 	// Find first alive instance
 	for range n {
-		idx := atomic.AddUint64(&u.current, 1) % uint64(n)
+		idx := u.current.Add(1) % uint64(n)
 		if u.ApiInstances[idx].IsAlive() {
 			return u.ApiInstances[idx]
 		}
@@ -218,12 +245,12 @@ func (u *Upstream) checkInstance(client *http.Client, inst *ApiInstance) {
 	if isHealthy {
 		inst.Touch()
 		inst.CB.ForceClose()
-		if !inst.IsAlive() {
-			inst.SetAlive(true)
+		if !inst.IsAlive() && !inst.IsForcedUnalived() {
+			inst.SetAlive()
 			logger.Info("🐎 Reanimated", "instance", inst.URL.Host)
 		}
 	} else if inst.IsAlive() {
-		inst.SetAlive(false)
+		inst.SetUnalive(false)
 		logger.Warn("🛑 Expired", "instance", inst.URL.Host)
 	}
 }
@@ -250,7 +277,7 @@ func (u *Upstream) removeDeadInstances() {
 	now := time.Now().UnixNano()
 	alive := make([]*ApiInstance, 0, len(instances))
 	for _, inst := range instances {
-		if inst.ExpiresAt.Load() > now {
+		if inst.ExpiresAt.Load() > now || inst.IsForcedUnalived() {
 			alive = append(alive, inst)
 		} else {
 			logger.Warn("🗑️ Removing expired instance", "instance", inst.URL.Host)
@@ -262,6 +289,22 @@ func (u *Upstream) removeDeadInstances() {
 	u.mu.Unlock()
 }
 
+// Revive clears the forced unalived flag and marks the instance as alive.
+// This allows the instance to be used again for routing requests.
+func (u *Upstream) ReviveInstance(hash string) bool {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	for _, inst := range u.ApiInstances {
+		if inst.Hash == hash {
+			inst.SetAlive()
+			logger.Info("🐎 Instance revived", "instance", inst.URL.Host, "hash", hash)
+			return true
+		}
+	}
+	return false
+}
+
 // getInstancesCopy returns a thread-safe copy of the instances slice
 func (u *Upstream) getInstancesCopy() []*ApiInstance {
 	u.mu.RLock()
@@ -270,4 +313,10 @@ func (u *Upstream) getInstancesCopy() []*ApiInstance {
 	instances := make([]*ApiInstance, len(u.ApiInstances))
 	copy(instances, u.ApiInstances)
 	return instances
+}
+
+func shortHash(s string) string {
+	h := fnv.New64a()
+	h.Write([]byte(s))
+	return hex.EncodeToString(h.Sum(nil)[:4]) // 8 characters
 }
