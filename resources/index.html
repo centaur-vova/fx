@@ -291,7 +291,10 @@
                 x-for="(inst, idx) in $store.app.api.instances"
                 :key="inst.hash"
               >
-                <div class="api-indicator-item">
+                <div
+                  class="api-indicator-item"
+                  @click="$store.app.toggleApi(inst)"
+                >
                   <span
                     class="api-label"
                     x-text="'API #' + (idx + 1) + ' | req: ' + inst.requests"
@@ -303,7 +306,6 @@
                         'half-open': inst.cb_state === 'half-open',
                         'dead': !inst.alive || inst.cb_state === 'open'
                     }"
-                    @click="$store.app.toggleApi(inst)"
                   ></div>
                 </div>
               </template>
