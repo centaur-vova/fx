@@ -196,7 +196,7 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 
 		peer := u.NextInstance()
 		if peer == nil {
-			http.Error(w, "API Instances gone fishing (KBL v2.0 Rule)", http.StatusServiceUnavailable)
+			http.Error(w, "API Instances gone fishing (KBL v4.0 Rule)", http.StatusServiceUnavailable)
 			totalErrors.Add(1)
 			return
 		}

@@ -1,4 +1,4 @@
-# MTIRIRIKO WA ATOMIK KWA KASI · KBL v3.0
+# MTIRIRIKO WA ATOMIK KWA KASI · KBL v4.0
 
 <p align="center">
   <!-- Mstari wa 1: Teknolojia -->
@@ -24,7 +24,7 @@
   <br>
   <!-- Mstari wa 4: Undugu -->
   <img src="https://img.shields.io/badge/🐎-undugu_wa_farasi-FF69B4?style=flat" alt="Undugu wa Farasi">
-  <img src="https://img.shields.io/badge/leseni-KBL%20v3.0-10b981?style=flat" alt="Leseni KBL 3.0">
+  <img src="https://img.shields.io/badge/leseni-KBL%20v4.0-10b981?style=flat" alt="Leseni KBL 4.0">
   <br>
   <!-- Inakuja Hivi Karibuni -->
   <hr>
@@ -105,7 +105,7 @@ Mizani maalum ya HTTP iliyoandikwa kwa Go yenye usajili wa moja kwa moja wa viel
 - **Ukaguzi wa afya:** Mizani huchunguza kila kielelezo kila sekunde 5. Vielelezo vilivyokufa vinaondolewa, vilivyofufuka vinarudishwa moja kwa moja
 - **Usawazishaji usio na kufuli:** Atomic pointer swap kwenye orodha zisizobadilika. Wasomaji (maombi ya HTTP) hawazuii waandishi (usajili wa vielelezo vipya)
 - **Round-robin:** Maombi yanasambazwa kwa usawa kati ya vielelezo vyote vilivyo hai
-- **Uharibifu mzuri:** Ikiwa vielelezo vyote vimeanguka — inarudisha 503 na ujumbe wa hadithi `API Instances gone fishing (KBL v2.0 Rule)`
+- **Uharibifu mzuri:** Ikiwa vielelezo vyote vimeanguka — inarudisha 503 na ujumbe wa hadithi `API Instances gone fishing (KBL v4.0 Rule)`
 
 | Kipengele  | Teknolojia         | Kazi Yake                                                      |
 | ---------- | ------------------ | -------------------------------------------------------------- |
@@ -319,7 +319,7 @@ Tazama [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) kwa 
 > — Kwa sababu Go anaanza kutapakaa, na Swoole anaanguka na hitilafu ya "Faili nyingi zilizofunguliwa".
 > _(c) Kon-Vová_
 
-_Vicheshi vingine viko kwenye msimbo, committi, na KBL v3.0._
+_Vicheshi vingine viko kwenye msimbo, committi, na KBL v4.0._
 
 ---
 
@@ -331,29 +331,18 @@ Hatuna `feat:`, `fix:`, `chore:`. Tuna emoji. Kila committi inaanza na farasi �
 
 ## 🐎 Leseni
 
-**LESENI YA UDUGU WA FARASI (KBL) v2.0**
+**LESENI YA UDUGU WA FARASI (KBL) v4.0**
 
-- Unaweza: kuchukua msimbo, kucheka, kurekebisha farasi, kuwaacha wapenda ubinafsi, kuvua samaki wakati wa kazi
+- Unaweza: kuchukua msimbo, kucheka, kurekebisha farasi, kuvua samaki wakati wa kazi
 - Huwezi: kusahau kuwa farasi hawaachani
-
-**KBL v3.0 — Nyongeza (ilani ya undugu wa farasi)**
-
-Kwa kuongezea KBL v2, kila ndugu wa farasi ana haki ya:
-
-- Siku mbaya bila kueleza kwa nini
-- Lugha chafu katika jumbe za committi
-- Kuvua samaki wakati wa kazi kwa fimbo ya urefu wowote
-- Kukataa mahojiano ya kazi yenye sumu bila kupoteza kujiheshimu
-
-_Ukiukaji unaadhibiwa kwa wiki moja ya kudumisha PHP 5.6 na kusikiliza rekodi za mpenda ubinafsi akielezea kuwa "hii ndiyo njia sahihi"._
 
 [Maandishi kamili](LICENSE)
 
-📜 **Maandishi kamili ya kisheria:** [legal.af.l3373.xyz](https://legal.af.l3373.xyz) — _KBL v3.0, sera ya faragha, na sheria takatifu ya kundi._
+📜 **Maandishi kamili ya kisheria:** [legal.af.l3373.xyz](https://legal.af.l3373.xyz) — _KBL v4.0, sera ya faragha, na sheria takatifu ya kundi._
 
 ---
 
-## 🐎 Matumizi ya Kibiashara (KBL v3.0 — nyongeza)
+## 🐎 Matumizi ya Kibiashara
 
 Fast Atomic Flow ni msimbo wazi, lakini siyo mkoba wazi.
 

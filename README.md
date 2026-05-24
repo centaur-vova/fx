@@ -1,4 +1,4 @@
-# FAST ATOMIC FLOW · KBL v3.0
+# FAST ATOMIC FLOW · KBL v4.0
 
 <p align="center">
   <!-- Row 1: Technology Stack -->
@@ -24,7 +24,7 @@
   <br>
   <!-- Row 4: Brotherhood & License -->
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
-  <img src="https://img.shields.io/badge/license-KBL%20v3.0-10b981?style=flat" alt="License KBL 3.0">
+  <img src="https://img.shields.io/badge/license-KBL%20v4.0-10b981?style=flat" alt="License KBL 4.0">
   <br>
   <!-- Soon™ -->
   <hr>
@@ -105,7 +105,7 @@ A custom HTTP load balancer written in Go with automatic API instance registrati
 - **Health checks:** The balancer probes every instance every 5 seconds. Dead instances are excluded from rotation, revived ones are re-added automatically
 - **Lock-free balancing:** Atomic pointer swap on immutable lists. Readers (HTTP requests) never block writers (instance registration)
 - **Round-robin:** Requests are evenly distributed across all alive instances
-- **Graceful degradation:** If all instances are down — returns 503 with the legendary message `API Instances gone fishing (KBL v2.0 Rule)`
+- **Graceful degradation:** If all instances are down — returns 503 with the legendary message `API Instances gone fishing (KBL v4.0 Rule)`
 
 | Component    | Technology         | Purpose                                          |
 | ------------ | ------------------ | ------------------------------------------------ |
@@ -327,7 +327,7 @@ See the [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) for
 > — Because Go starts gorutining, and Swoole crashes with a "Too many open files" error.
 > _(c) Kon-Vová_
 
-_Other jokes are in the code, commits, and KBL v3.0._
+_Other jokes are in the code, commits, and KBL v4.0._
 
 ---
 
@@ -339,29 +339,18 @@ We don't use `feat:`, `fix:`, `chore:`. We use emojis. Every commit starts with 
 
 ## 🐎 License
 
-**KONEBRATSTVO LICENSE (KBL) v2.0**
+**KONEBRATSTVO LICENSE (KBL) v4.0**
 
-- You may: take the code, laugh, fix the horse, leave narcissists, fish during working hours
+- You may: take the code, laugh, fix the horse, fish during working hours
 - You may not: forget that horses don't abandon horses
-
-**KBL v3.0 — Addendum (horse brotherhood manifesto)**
-
-In addition to KBL v2, every horse brother has the right to:
-
-- A bad day without having to explain why
-- Profanity in commit messages
-- Fishing during working hours with a rod of any length
-- Refusing toxic job interviews without losing self-respect
-
-_Violation is punishable by a week of maintaining PHP 5.6 and listening to recordings of a narcissist explaining that "this is the right way"._
 
 [Full text](LICENSE)
 
-📜 **Full legal text:** [legal.af.l3373.xyz](https://legal.af.l3373.xyz/en/) — _KBL v3.0, privacy, and the sacred law of the herd._
+📜 **Full legal text:** [legal.af.l3373.xyz](https://legal.af.l3373.xyz/en/) — _KBL v4.0, privacy, and the sacred law of the herd._
 
 ---
 
-## 🐎 Commercial use (KBL v3.0 — addendum)
+## 🐎 Commercial use
 
 Fast Atomic Flow is open source, but not open wallet.
 
