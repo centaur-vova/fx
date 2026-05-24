@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Http\Request;
+namespace App\Server\Http\Request;
 
 use App\Contract\Task\SemaphoreDriver;
 use App\Contract\Task\TaskMode;

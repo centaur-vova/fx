@@ -1,4 +1,4 @@
-import { COLORS, LABEL_COLORS, LOD, TERMINAL_LOG } from './config';
+import { COLORS, LABEL_COLORS, LOD, TERMINAL_LOG, ROUTES, } from './config';
 import { clearTasks } from './task-store.js';
 import { resetThemeColors } from './theme-config.js';
 
@@ -212,7 +212,7 @@ export const state = {
         };
 
         const handleConfirm = () => {
-            fetch('/api/tasks/purge', { method: 'POST' })
+            fetch('/tasks/purge', { method: 'POST' })
                 .then(async res => {
                     if (res.ok) {
                         clearTasks();
@@ -274,7 +274,7 @@ export const state = {
         this.flashQueue();
 
         try {
-            const res = await fetch("/api/tasks/create", {
+            const res = await fetch(ROUTES.TASKS_CREATE, {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -298,11 +298,11 @@ export const state = {
     // === API HEALTH / METHODS ===
     async fetchBalancerHealth() {
         try {
-            const response = await fetch('/api/tasks/health');
-            const data = await response.json();
+            const response = await fetch(ROUTES.HEALTH);
+            const { data } = await response.json();
 
-            if (data.status === 'ok' && data.balancer) {
-                this.api.instances = data.balancer.instances || [];
+            if (data?.status === 'ok') {
+                this.api.instances = data.balancer?.instances || [];
                 this.api.stats = {
                     up: data.balancer.up || 0,
                     down: data.balancer.down || 0,
@@ -340,7 +340,7 @@ export const state = {
             const alive = inst.alive;
             const hash = inst.hash;
 
-            const response = await fetch(`/api/balancer/instance/toggle`, {
+            const response = await fetch(ROUTES.API.INSTANCE_TOGGLE, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

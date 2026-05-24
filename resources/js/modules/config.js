@@ -110,3 +110,12 @@ export const TERMINAL_LOG = {
         processing: 'var(--text-muted)',
     },
 };
+
+export const ROUTES = {
+    TASKS_CREATE: '/tasks/create',
+    HEALTH: '/health',
+
+    API: {
+        INSTANCE_TOGGLE: '/api/instance/toggle',
+    },
+};

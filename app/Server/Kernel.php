@@ -8,9 +8,9 @@ use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\WorkerStartAware;
 use App\Contract\Provider\WorkerStopAware;
-use App\Controller\TaskController;
 use App\DTO\Task\TaskExecutionPayload;
-use App\Router;
+use App\Server\Http\Controller\TaskController;
+use App\Server\Http\Router;
 use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
 use App\Service\Provider\App\AppServiceProvider;
@@ -346,7 +346,7 @@ class Kernel
             function (Request $req, Response $res): void {
                 /** @var Router $router */
                 $router = $this->container->get(Router::class);
-                $router->handle($req, $res, $this->server);
+                $router->dispatch($req, $res, $this->server);
             }
         );
 

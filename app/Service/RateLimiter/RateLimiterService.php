@@ -24,7 +24,7 @@ class RateLimiterService
      * This is a deliberate fallback to avoid blocking legitimate requests when the table is full.
      * The situation should be logged and resolved by increasing table size or reducing TTL.
      */
-    public function checkLimit(string $limiterName, string $key): bool
+    public function allowed(string $limiterName, string $key): bool
     {
         if (!$this->config->has($limiterName)) {
             $this->logger?->warning('Rate limiter config not found', ['limiter' => $limiterName]);

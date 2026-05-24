@@ -63,7 +63,7 @@ echo "[Commit-msg] Checking message for Emojinal Commits standard...\n";
  * (ci|feat|...)                                        - Enforces only standard allowed conventional types + shizo
  */
 $types = "ci|feat|fix|perf|ui|chore|docs|refactor|style|test|shizo";
-$pattern = '/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s(' . $types . ')(\(.+\))?!?: .{5,}/u';
+$pattern = '/^(?:[\p{Emoji_Presentation}\p{Extended_Pictographic}]\x{FE0F}?\x{200D}?)+\s(' . $types . ')(\(.+\))?!?: .{5,}/u';
 
 // Validate the very first real line of the commit message
 if (!preg_match($pattern, $userLines[0])) {

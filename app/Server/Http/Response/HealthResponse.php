@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\Http\Response;
+namespace App\Server\Http\Response;
 
 use App\DTO\Balancer\Health;
 use JsonSerializable;
