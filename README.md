@@ -103,7 +103,7 @@ A custom HTTP load balancer written in Go with automatic API instance registrati
 
 - **Dynamic upstream:** API instances self-register with the balancer via `/register` on startup. No static list, no `nginx -s reload`
 - **Health checks:** The balancer probes every instance every 5 seconds. Dead instances are excluded from rotation, revived ones are re-added automatically
-- **Lock-free balancing:** Atomic pointer swap on immutable lists. Readers (HTTP requests) never block writers (instance registration)
+- **Lock-free balancing:** ~~Atomic pointer swap on immutable lists. Readers (HTTP requests) never block writers (instance registration)~~ _(overengineering / cancelled — simple mutex is enough)_
 - **Round-robin:** Requests are evenly distributed across all alive instances
 - **Graceful degradation:** If all instances are down — returns 503 with the legendary message `API Instances gone fishing (KBL v4.0 Rule)`
 

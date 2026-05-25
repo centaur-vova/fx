@@ -103,7 +103,7 @@ Mizani maalum ya HTTP iliyoandikwa kwa Go yenye usajili wa moja kwa moja wa viel
 
 - **Mkondo wa juu wa nguvu:** Vielelezo vya API hujisajili wenyewe kwenye mizani kupitia `/register` vinapoanza. Hakuna orodha tuli, hakuna `nginx -s reload`
 - **Ukaguzi wa afya:** Mizani huchunguza kila kielelezo kila sekunde 5. Vielelezo vilivyokufa vinaondolewa, vilivyofufuka vinarudishwa moja kwa moja
-- **Usawazishaji usio na kufuli:** Atomic pointer swap kwenye orodha zisizobadilika. Wasomaji (maombi ya HTTP) hawazuii waandishi (usajili wa vielelezo vipya)
+- **Usawazishaji usio na kufuli:** ~~Atomic pointer swap kwenye orodha zisizobadilika. Wasomaji hawazuii waandishi~~ _(uzushi wa mbuzi — haikuhitajika)_
 - **Round-robin:** Maombi yanasambazwa kwa usawa kati ya vielelezo vyote vilivyo hai
 - **Uharibifu mzuri:** Ikiwa vielelezo vyote vimeanguka — inarudisha 503 na ujumbe wa hadithi `API Instances gone fishing (KBL v4.0 Rule)`
 
