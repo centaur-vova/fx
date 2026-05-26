@@ -50,7 +50,7 @@ final readonly class ApiResponse implements JsonSerializable
         ];
 
         if ($this->data !== null) {
-            $response['data'] = $this->data;
+            $response['data'] = $this->data->jsonSerialize();
         }
 
         return $response;

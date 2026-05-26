@@ -50,7 +50,14 @@ final readonly class Health implements FromArray, JsonSerializable
     }
 
     /**
-     * @return array{up: int, down: int, total_requests: int, total_errors: int, uptime_seconds: int, instances: ApiInstanceHealth[]}
+     * @return array{
+     *     up: int,
+     *     down: int,
+     *     total_requests: int,
+     *     total_errors: int,
+     *     uptime_seconds: int,
+     *     instances: list<array{hash: string, alive: bool, cb_state: string, requests: int, errors: int}>
+     * }
      */
     public function jsonSerialize(): array
     {
@@ -60,7 +67,10 @@ final readonly class Health implements FromArray, JsonSerializable
             'total_requests' => $this->totalRequests,
             'total_errors' => $this->totalErrors,
             'uptime_seconds' => $this->uptimeSeconds,
-            'instances' => $this->instances,
+            'instances' => array_values(array_map(
+                static fn (ApiInstanceHealth $instance): array => $instance->jsonSerialize(),
+                $this->instances
+            )),
         ];
     }
 }
