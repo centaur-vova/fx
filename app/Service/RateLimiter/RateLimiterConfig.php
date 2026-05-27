@@ -12,11 +12,14 @@ class RateLimiterConfig
     private array $configs;
 
     /**
-     * @param array<string, array{max_attempts: int, ttl: int}> $configs
+     * @param array<string, array{max_attempts?: int, ttl?: int}> $configs
      */
     public function __construct(array $configs)
     {
         foreach ($configs as $name => $config) {
+            if (!isset($config['max_attempts']) || !isset($config['ttl'])) {
+                throw new \InvalidArgumentException("Missing max_attempts or ttl for rate limiter '$name'");
+            }
             if ($config['max_attempts'] <= 0 || $config['ttl'] <= 0) {
                 throw new \InvalidArgumentException("Missing max_attempts or ttl for rate limiter '$name'");
             }
