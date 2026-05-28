@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use App\Contract\Cache\CacheDriver;
 use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\WorkerStartAware;
@@ -13,9 +14,9 @@ use App\Server\Http\Controller\TaskController;
 use App\Server\Http\Router;
 use App\Service\Messaging\MappedMessageSerializer;
 use App\Service\Provider\Api\ApiServiceProvider;
-use App\Service\Provider\App\AppServiceProvider;
 use App\Service\Provider\App\RateLimiterServiceProvider;
 use App\Service\Provider\App\RuntimeContextServiceProvider;
+use App\Service\Provider\Cache\SwooleTableCacheProvider;
 use App\Service\Provider\Messaging\BroadcasterServiceProvider;
 use App\Service\Provider\Messaging\MessagingServiceProvider;
 use App\Service\Provider\Task\SemaphoreServiceProvider;
@@ -49,18 +50,7 @@ class Kernel
     private readonly Server $server;
     private readonly Options $options;
     private readonly LoggerInterface $logger;
-
-    private const array PROVIDERS = [
-        AppServiceProvider::class,
-        ApiServiceProvider::class,
-        RuntimeContextServiceProvider::class,
-        BroadcasterServiceProvider::class,
-        MessagingServiceProvider::class,
-        SemaphoreServiceProvider::class,
-        TaskServiceProvider::class,
-        RateLimiterServiceProvider::class,
-        TelemetryServiceProvider::class,
-    ];
+    private readonly ServiceProviderRegistry $providerRegistry;
 
     public function __construct(private readonly string $basePath)
     {
@@ -105,7 +95,7 @@ class Kernel
             natsToken:            $loader->getString('NATS_TOKEN', ''),
             workerNum:            $workerNum,
             // Cache
-            cacheStorageDriver:   $loader->getString('CACHE_STORAGE_DRIVER', 'swoole_table'),
+            cacheDriver:          $loader->getEnum('CACHE_DRIVER', CacheDriver::class, CacheDriver::SWOOLE_TABLE),
             cacheDefaultTtlSec:   $loader->getInt('CACHE_DEFAULT_TTL_SEC', 60),
             cacheMaxSize:         $loader->getInt('CACHE_MAX_SIZE', 131072),
             cacheAutoCleanSec:    $loader->getFloat('CACHE_AUTO_CLEAN_SEC', 60),
@@ -141,6 +131,21 @@ class Kernel
 
         // Assign options to object state
         $this->options = $options;
+
+        // Init service provider registry
+        $this->providerRegistry = ServiceProviderRegistry::create($options)
+            ->addMatch(fn (Options $o) => match ($o->cacheDriver) {
+                CacheDriver::SWOOLE_TABLE => SwooleTableCacheProvider::class,
+                CacheDriver::REDIS => throw new \RuntimeException('Not implemented'),
+            })
+            ->add(ApiServiceProvider::class)
+            ->add(RuntimeContextServiceProvider::class)
+            ->add(BroadcasterServiceProvider::class)
+            ->add(MessagingServiceProvider::class)
+            ->add(SemaphoreServiceProvider::class)
+            ->add(TaskServiceProvider::class)
+            ->add(RateLimiterServiceProvider::class)
+            ->add(TelemetryServiceProvider::class);
 
         // Create Server instance
         $this->server = new Server($options->serverHost, $options->serverPort);
@@ -231,10 +236,8 @@ class Kernel
                 MessageSerializer::class => autowire(MappedMessageSerializer::class),
            ]);
 
-        // Custom providers
-        foreach (self::PROVIDERS as $providerClass) {
-            $builder->addDefinitions(new $providerClass()->register($builder));
-        }
+        // Register providers from registry
+        $this->registerProviders($builder);
 
         // Build DI container
         $container = $builder->build();
@@ -242,9 +245,22 @@ class Kernel
         return $container;
     }
 
+    /**
+     * @param ContainerBuilder<\DI\Container> $builder
+     */
+    private function registerProviders(ContainerBuilder $builder): void
+    {
+        foreach ($this->providerRegistry as $providerClass) {
+            /** @var \App\Contract\Provider\ServiceProvider $provider */
+            $provider = new $providerClass();
+            $definitions = $provider->register($builder);
+            $builder->addDefinitions($definitions);
+        }
+    }
+
     private function bootProviders(): void
     {
-        foreach (self::PROVIDERS as $providerClass) {
+        foreach ($this->providerRegistry as $providerClass) {
             $provider = $this->container->get($providerClass);
 
             if ($provider instanceof Bootable) {
@@ -305,7 +321,7 @@ class Kernel
             $this->container->set(Server::class, $server);
 
             // Iterate over providers list & execute :)
-            foreach (self::PROVIDERS as $providerClass) {
+            foreach ($this->providerRegistry as $providerClass) {
                 $provider = $this->container->get($providerClass);
 
                 if ($provider instanceof WorkerStartAware) {
@@ -331,7 +347,7 @@ class Kernel
         $this->server->on('WorkerStop', function ($server, int $workerId): void {
             $this->logger->info("[System] Worker #$workerId stopped.");
 
-            foreach (self::PROVIDERS as $providerClass) {
+            foreach ($this->providerRegistry as $providerClass) {
                 $provider = $this->container->get($providerClass);
 
                 if ($provider instanceof WorkerStopAware) {

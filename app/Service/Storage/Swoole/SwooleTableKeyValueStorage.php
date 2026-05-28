@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Service\Storage\Swoole;
 
+use App\Contract\Storage\ActiveEvictionStorage;
 use App\Contract\Storage\CacheStorage;
 use Psr\Log\LoggerInterface;
 use Swoole\Table;
 
-class SwooleTableKeyValueStorage implements CacheStorage
+class SwooleTableKeyValueStorage implements CacheStorage, ActiveEvictionStorage
 {
     private const int EXPIRES_COLUMN_SIZE = 8;
 

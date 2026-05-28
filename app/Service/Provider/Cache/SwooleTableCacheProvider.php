@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Provider\App;
+namespace App\Service\Provider\Cache;
 
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\ServiceProvider;
 use App\Contract\Provider\WorkerStartAware;
+use App\Contract\Storage\ActiveEvictionStorage;
 use App\Contract\Storage\CacheStorage;
 use App\Server\Options;
 use App\Server\RuntimeScheduler;
@@ -16,10 +17,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Server;
 
-class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
+class SwooleTableCacheProvider implements ServiceProvider, Bootable, WorkerStartAware
 {
-    private const string CACHE_DRIVER_SWOOLE_TABLE = 'swoole_table';
-
     public function register(ContainerBuilder $builder): array
     {
         return [
@@ -37,7 +36,9 @@ class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
             /** @var RuntimeScheduler $scheduler */
             $scheduler = $c->get(RuntimeScheduler::class);
 
-            $scheduler->tick($storage->cleanExpired(...), $options->cacheAutoCleanSec);
+            if ($storage instanceof ActiveEvictionStorage) {
+                $scheduler->tick($storage->cleanExpired(...), $options->cacheAutoCleanSec);
+            }
         }
     }
 
@@ -54,18 +55,12 @@ class AppServiceProvider implements ServiceProvider, Bootable, WorkerStartAware
         /** @var LoggerInterface $logger */
         $logger = $c->get(LoggerInterface::class);
 
-        // Storage driver
-        $driver = $options->cacheStorageDriver;
-
-        $storage = match ($driver) {
-            self::CACHE_DRIVER_SWOOLE_TABLE => new SwooleTableKeyValueStorage(
-                logger: $logger,
-                size: $options->cacheMaxSize,
-                ttl: $options->cacheDefaultTtlSec,
-                maxValueSize: $options->cacheValueMaxSize,
-            ),
-            default => throw new \RuntimeException("Unsupported storage driver: {$driver}"),
-        };
+        $storage = new SwooleTableKeyValueStorage(
+            logger: $logger,
+            size: $options->cacheMaxSize,
+            ttl: $options->cacheDefaultTtlSec,
+            maxValueSize: $options->cacheValueMaxSize,
+        );
 
         return $storage;
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use App\Contract\Cache\CacheDriver;
+
 /**
  * Atomic Flow Engine Options
  *
@@ -21,7 +23,7 @@ readonly class Options
         public int $workerNum,
 
         // ========== App Cache ==========
-        public string $cacheStorageDriver,
+        public CacheDriver $cacheDriver,
         public int $cacheDefaultTtlSec,
         public int $cacheMaxSize,
         public float $cacheAutoCleanSec,
