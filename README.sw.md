@@ -51,7 +51,7 @@
 
 - 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Onyesho
 - 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Vipimo
-- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — Ufuatiliaji
+- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — ~~Ufuatiliaji~~ _(imezimwa kwenye seva ya onyesho)_
 
 ---
 

@@ -51,7 +51,7 @@
 
 - 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Позѡ́ръ (де́мѡ)
 - 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Мѣ́ры (ме́трики)
-- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — Тре́йсы (слѣды̀)
+- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — ~~Тре́йсы (слѣды̀)~~ _(на дéмѣ ѿключéно)_
 
 ---
 

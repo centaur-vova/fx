@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./tmp/balancer ./cmd/balancer"
+  cmd = "go build -tags dev -o ./tmp/balancer ./cmd/balancer"
   entrypoint = "./tmp/balancer"
   full_bin = ""
   include_ext = ["go", "tpl", "tmpl", "html"]

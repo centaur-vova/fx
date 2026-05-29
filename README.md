@@ -51,7 +51,7 @@
 
 - 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Demo
 - 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Metrics
-- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — Traces
+- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — ~~Traces~~ _(disabled on demo VPS)_
 
 ---
 
