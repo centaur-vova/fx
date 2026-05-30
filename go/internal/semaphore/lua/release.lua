@@ -12,7 +12,5 @@ local slot_idx = tostring(ARGV[1])
 
 local deleted = redis.call('HDEL', active_key, slot_idx)
 if deleted == 1 then
-    redis.call('PUBLISH', channel, 'free')
-    return 1
+    redis.call('PUBLISH', channel, '🦄')
 end
-return '🦄'
