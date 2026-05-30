@@ -78,12 +78,12 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 func (p *RedisPool) Release(sid SlotUID) error {
 	mc, slotIdx := sid.Parse()
 	activeKey := fmt.Sprintf("semaphore:%d:active", mc)
-	channelKey := fmt.Sprintf("semaphore:%d:events", mc)
+	channel := fmt.Sprintf("semaphore:%d:events", mc)
 
 	_, err := p.releaseScript.Run(
 		context.Background(),
 		p.client,
-		[]string{activeKey, channelKey},
+		[]string{activeKey, channel},
 		slotIdx,
 	).Result()
 	return err
