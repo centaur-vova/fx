@@ -30,6 +30,7 @@ func NewRedisPool(client *redis.Client) *RedisPool {
 func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Duration) (SlotUID, error) {
 	// Build Redis keys for this semaphore
 	activeKey := fmt.Sprintf("semaphore:%d:active", mc)
+	channel := fmt.Sprintf("semaphore:%d:events", mc)
 
 	deadline := time.Now().Add(timeout)
 
@@ -48,37 +49,41 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 			mc,                 // ARGV[1] — max concurrent slots
 			int(ttl.Seconds()), // ARGV[2] — TTL in seconds
 		).Result()
-
-		// Handle Redis specific errors safely
-		if err != nil {
-			if errors.Is(err, redis.Nil) {
-				// No free slots, wait and retry
-				select {
-				case <-time.After(100 * time.Millisecond):
-					continue
-				case <-ctx.Done():
-					return "", ctx.Err()
-				}
-			}
+		if err != nil && !errors.Is(err, redis.Nil) {
 			return "", fmt.Errorf("acquire script error: %w", err)
 		}
 
+		// Success
 		if slotIdx, ok := result.(int64); ok {
 			return NewSlotUID(mc, int(slotIdx)), nil
 		}
 
-		// Something's weirdo. Invalid slotIdx and no error? Shouldn't happen, but retry
+		// Subscribe for the events channel & wait until a slot is freed
+		pubsub := p.client.Subscribe(ctx, channel)
+		defer pubsub.Close()
+
+		// No free slots, wait and retry
+		select {
+		case <-pubsub.Channel():
+			// There's a free slot, try again
+			continue
+		case <-time.After(time.Until(deadline)):
+			return "", fmt.Errorf("acquire timeout after %v", timeout)
+		case <-ctx.Done():
+			return "", ctx.Err()
+		}
 	}
 }
 
 func (p *RedisPool) Release(sid SlotUID) error {
 	mc, slotIdx := sid.Parse()
 	activeKey := fmt.Sprintf("semaphore:%d:active", mc)
+	channelKey := fmt.Sprintf("semaphore:%d:events", mc)
 
 	_, err := p.releaseScript.Run(
 		context.Background(),
 		p.client,
-		[]string{activeKey},
+		[]string{activeKey, channelKey},
 		slotIdx,
 	).Result()
 	return err
