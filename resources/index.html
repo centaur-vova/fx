@@ -441,6 +441,7 @@
                     id="max-concurrent-slider"
                     x-model="$store.app.mc"
                     class="block w-full cursor-pointer"
+                    :class="{ 'opacity-40': $store.app.hoverRand }"
                     :min="$store.app.flow.min"
                     :max="$store.app.flow.max"
                   />
@@ -457,6 +458,8 @@
                         `task-button-${btn.class}`,
                         btn.full_width ? 'w-full col-span-2' : ''
                       ]"
+                      @mouseenter="if (btn.tasks === 0) $store.app.hoverRand = true"
+                      @mouseleave="if (btn.tasks === 0) $store.app.hoverRand = false"
                       @click="$store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
                       x-text="btn.label"
                     ></button>

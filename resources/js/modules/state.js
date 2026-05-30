@@ -48,6 +48,8 @@ export const state = {
     scale: 1,
     renderEnabled: true,
     isLogPanelDisabled: false,
+    // When hovering over the "RAND" button
+    hoverRand: false,
 
     // Static Flow settings (Theme-based)
     flow: getFlowDefaults(),
