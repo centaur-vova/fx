@@ -84,7 +84,7 @@ final class TraceContext
             $scope->span->setStatus(StatusCode::STATUS_OK);
             return $result;
         } catch (\Throwable $e) {
-            $shouldReport = array_all($skipReportingFor, fn ($class) => !$e instanceof $class);
+            $shouldReport = array_all($skipReportingFor, fn ($class) => !($e instanceof $class));
             if ($shouldReport) {
                 $scope->span->recordException($e);
                 $scope->span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
