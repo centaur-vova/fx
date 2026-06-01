@@ -43,7 +43,7 @@ readonly class Options
 
         // ========== API ==========
         public string $apiUrl,
-        public string $apiToken,
+        public string $apiAuthKey,
 
         // ========== Semaphores ==========
         public int $semaphorePermitTtl, // for `api` semaphoreDriver only

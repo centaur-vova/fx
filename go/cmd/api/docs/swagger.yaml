@@ -95,19 +95,17 @@ paths:
           description: no available slots
           schema:
             type: string
+      security:
+      - ApiKeyAuth: []
       summary: Acquire semaphore slot
   /semaphore/health:
     get:
-      description: Returns 200 OK and the number of goroutines.
+      description: Returns 200 OK
       produces:
       - application/json
       responses:
         "200":
           description: OK
-          schema:
-            additionalProperties:
-              type: integer
-            type: object
       summary: Semaphore health check
   /semaphore/release:
     post:
@@ -135,6 +133,8 @@ paths:
           description: redis connection error
           schema:
             type: string
+      security:
+      - ApiKeyAuth: []
       summary: Release semaphore slot
   /task/status:
     post:
@@ -158,5 +158,12 @@ paths:
           description: failed to publish to NATS
           schema:
             type: string
+      security:
+      - ApiKeyAuth: []
       summary: SendStatus receives task status update and publishes to NATS.
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -6,9 +6,9 @@ import (
 )
 
 // AuthMiddleware wraps a handler to check for a valid Bearer token
-func AuthMiddleware(apiToken string, next http.HandlerFunc) http.HandlerFunc {
+func AuthMiddleware(token string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") != "Bearer "+apiToken {
+		if r.Header.Get("Authorization") != "Bearer "+token {
 			logger.Warn("⛔ Unauthorized access attempt",
 				"remote_addr", r.RemoteAddr,
 				"path", r.URL.Path,

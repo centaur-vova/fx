@@ -41,16 +41,16 @@ final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartA
                 $timeout = (int) ($options->taskLockTimeoutSec * 1.3);
 
                 // API Token
-                $apiToken = $options->apiToken;
+                $apiAuthKey = $options->apiAuthKey;
 
-                return new ConnectionPool(function () use ($host, $port, $ssl, $apiToken, $timeout): Client {
+                return new ConnectionPool(function () use ($host, $port, $ssl, $apiAuthKey, $timeout): Client {
                     $client = new Client($host, $port, $ssl);
                     $client->set([
                         'timeout' => $timeout,
                         'keep_alive' => true,
                     ]);
                     $client->setHeaders([
-                        'Authorization' => 'Bearer ' . $apiToken,
+                        'Authorization' => 'Bearer ' . $apiAuthKey,
                         'Accept' => 'application/json',
                     ]);
                     return $client;

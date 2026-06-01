@@ -22,13 +22,14 @@ func NewHandler(publisher Publisher, subject string) *Handler {
 	}
 }
 
-// @Summary SendStatus receives task status update and publishes to NATS.
-// @Accept  json
-// @Param   status body protocol.TaskStatusUpdate true "Task status"
-// @Success 202
-// @Failure 400 {string} string "invalid JSON body"
-// @Failure 500 {string} string "failed to publish to NATS"
-// @Router  /task/status [post]
+// @Summary  SendStatus receives task status update and publishes to NATS.
+// @Security ApiKeyAuth
+// @Accept   json
+// @Param    status body protocol.TaskStatusUpdate true "Task status"
+// @Success  202
+// @Failure  400 {string} string "invalid JSON body"
+// @Failure  500 {string} string "failed to publish to NATS"
+// @Router   /task/status [post]
 func (h *Handler) SendStatus(w http.ResponseWriter, r *http.Request) {
 	var req protocol.TaskStatusUpdate
 

@@ -79,8 +79,9 @@ services:
       # Log level
       - LOG_LEVEL=${LOG_LEVEL:-info}
       # Balancer & API
-      - API_TOKEN=${API_TOKEN}
+      - API_AUTH_KEY=${API_AUTH_KEY}
       - API_PORT=${API_PORT}
+      - BALANCER_API_KEY=${BALANCER_API_KEY}
       # Redis
       - REDIS_URL=${REDIS_URL}
     ports:
@@ -105,8 +106,9 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       # Balancer & API
       - API_PORT=8080 # Isolated runtime port for scaling instances within the network
-      - API_TOKEN=${API_TOKEN}
       - API_URL=${API_URL}
+      - API_AUTH_KEY=${API_AUTH_KEY}
+      - BALANCER_API_KEY=${BALANCER_API_KEY}
       # Nats
       - NATS_HOST=${NATS_HOST}
       - NATS_PORT=${NATS_PORT}

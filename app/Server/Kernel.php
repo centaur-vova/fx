@@ -102,7 +102,7 @@ class Kernel
             cacheValueMaxSize:    $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
             // API
             apiUrl:               $apiUrl,
-            apiToken:             $loader->getString('API_TOKEN'),
+            apiAuthKey:           $loader->getString('API_AUTH_KEY'),
             semaphorePermitTtl:   $loader->getInt('SEMAPHORE_PERMIT_TTL', 10),
             // Queue
             queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),

@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/semaphore/acquire": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Acquires a slot in the distributed semaphore. Returns a unique slot UID on success.",
                 "consumes": [
                     "application/json"
@@ -63,26 +68,25 @@ const docTemplate = `{
         },
         "/semaphore/health": {
             "get": {
-                "description": "Returns 200 OK and the number of goroutines.",
+                "description": "Returns 200 OK",
                 "produces": [
                     "application/json"
                 ],
                 "summary": "Semaphore health check",
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
-                        }
+                        "description": "OK"
                     }
                 }
             }
         },
         "/semaphore/release": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Releases a slot identified by its UID. Idempotent — releasing an already released slot is a no-op.",
                 "consumes": [
                     "application/json"
@@ -123,6 +127,11 @@ const docTemplate = `{
         },
         "/task/status": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -237,6 +246,13 @@ const docTemplate = `{
                     "example": "5:3"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

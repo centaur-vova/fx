@@ -5,7 +5,6 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fmt"
 	"net/http"
-	"runtime"
 	"time"
 )
 
@@ -36,6 +35,7 @@ func NewHandler(pool Pool) *Handler {
 // Acquire acquires a slot in the specified semaphore.
 // @Summary      Acquire semaphore slot
 // @Description  Acquires a slot in the distributed semaphore. Returns a unique slot UID on success.
+// @Security     ApiKeyAuth
 // @Accept       json
 // @Produce      json
 // @Param        request body AcquireRequest true "Semaphore acquire request"
@@ -88,6 +88,7 @@ func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
 // Release releases a previously acquired semaphore slot.
 // @Summary      Release semaphore slot
 // @Description  Releases a slot identified by its UID. Idempotent — releasing an already released slot is a no-op.
+// @Security     ApiKeyAuth
 // @Accept       json
 // @Produce      plain
 // @Param        request body ReleaseRequest true "Slot UID to release"
@@ -113,16 +114,12 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Health returns the health status of the semaphore service.
+// Health returns 200 if semaphore is up
 // @Summary      Semaphore health check
-// @Description  Returns 200 OK and the number of goroutines.
+// @Description  Returns 200 OK
 // @Produce      json
-// @Success      200 {object} map[string]int
+// @Success      200
 // @Router       /semaphore/health [get]
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-
-	numGoroutine := runtime.NumGoroutine()
-
-	json.NewEncoder(w).Encode(map[string]int{"numGoroutine": numGoroutine})
 }

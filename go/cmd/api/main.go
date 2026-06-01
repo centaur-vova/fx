@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fast-atomic-flow/go/internal/logger"
+	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
 	"fast-atomic-flow/go/internal/semaphore"
 	"fast-atomic-flow/go/internal/task"
@@ -64,7 +65,7 @@ func registerUpstream(ctx context.Context) {
 			// Error creating request - not a balancer issue, don't change isAlive
 			return false
 		}
-		req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
+		req.Header.Set("Authorization", "Bearer "+cfg.BalancerAPIKey)
 
 		resp, err := client.Do(req)
 		if resp != nil {
@@ -110,6 +111,9 @@ func registerUpstream(ctx context.Context) {
 // @version         1.0
 // @description     Task status receiver and semaphore API
 // @BasePath        /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	// Load .env file
 	godotenv.Load("../.env")
@@ -156,20 +160,18 @@ func main() {
 	semHandler := semaphore.NewHandler(semPool)
 	taskHandler := task.NewHandler(nc, cfg.BroadcastCh)
 
-	// API routes
+	// === PROTECTED ROUTES ===
+	// Semaphores
+	http.HandleFunc("/semaphore/acquire", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Acquire))
+	http.HandleFunc("/semaphore/release", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Release))
+	// Tasks
+	http.HandleFunc("/task/status", middleware.AuthMiddleware(cfg.APIAuthKey, taskHandler.SendStatus))
+
+	// === UNPROTECTED ROUTES ===
+	http.HandleFunc("/semaphore/health", semHandler.Health)
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-
-	// Semaphore routes
-	http.HandleFunc("/semaphore/acquire", semHandler.Acquire)
-	http.HandleFunc("/semaphore/release", semHandler.Release)
-	http.HandleFunc("/semaphore/health", semHandler.Health)
-
-	// Task statuses
-	http.HandleFunc("/task/status", taskHandler.SendStatus)
-
-	// Swagger
 	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	srv := &http.Server{

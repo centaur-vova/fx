@@ -94,8 +94,9 @@ func (c *WSConfig) Validate() {
 type BalancerConfig struct {
 	BaseConfig
 
-	APIToken     string
-	BalancerPort string
+	APIAuthKey     string
+	BalancerAPIKey string
+	BalancerPort   string
 }
 
 func LoadBalancerConfig() *BalancerConfig {
@@ -113,8 +114,9 @@ func LoadBalancerConfig() *BalancerConfig {
 			LogLevel: getEnv("LOG_LEVEL", "info"),
 		},
 
-		APIToken:     os.Getenv("API_TOKEN"),
-		BalancerPort: balancerPort,
+		BalancerAPIKey: os.Getenv("BALANCER_API_KEY"),
+		APIAuthKey:     os.Getenv("API_AUTH_KEY"),
+		BalancerPort:   balancerPort,
 	}
 }
 
@@ -122,10 +124,12 @@ func LoadBalancerConfig() *BalancerConfig {
 type APIConfig struct {
 	BaseConfig
 
-	APIToken    string
-	BalancerURL string
-	APIPort     string
-	RedisURL    string
+	APIPort        string
+	APIAuthKey     string
+	BalancerAPIKey string
+	BalancerURL    string
+
+	RedisURL string
 
 	NatsURL     string
 	NatsToken   string
@@ -146,10 +150,12 @@ func LoadAPIConfig() *APIConfig {
 			LogLevel: getEnv("LOG_LEVEL", "info"),
 		},
 
-		APIToken:    os.Getenv("API_TOKEN"),
-		BalancerURL: balancerURL,
-		APIPort:     port,
-		RedisURL:    redisURL,
+		APIPort:        port,
+		APIAuthKey:     os.Getenv("API_AUTH_KEY"),
+		BalancerAPIKey: os.Getenv("BALANCER_API_KEY"),
+		BalancerURL:    balancerURL,
+
+		RedisURL: redisURL,
 
 		NatsURL:     getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
 		NatsToken:   getEnv("NATS_TOKEN", ""),
