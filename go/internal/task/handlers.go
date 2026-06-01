@@ -28,6 +28,7 @@ func NewHandler(publisher Publisher, subject string) *Handler {
 // @Param    status body protocol.TaskStatusUpdate true "Task status"
 // @Success  202
 // @Failure  400 {string} string "invalid JSON body"
+// @Failure  401 {string} string "Unauthorized"
 // @Failure  500 {string} string "failed to publish to NATS"
 // @Router   /task/status [post]
 func (h *Handler) SendStatus(w http.ResponseWriter, r *http.Request) {

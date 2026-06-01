@@ -13,7 +13,7 @@ func AuthMiddleware(token string, next http.HandlerFunc) http.HandlerFunc {
 				"remote_addr", r.RemoteAddr,
 				"path", r.URL.Path,
 			)
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Error(w, "Forbidden", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)

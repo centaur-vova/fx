@@ -19,7 +19,7 @@ func TestAuthMiddleware_NoToken(t *testing.T) {
 
 	wrapped.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
 func TestAuthMiddleware_WrongToken(t *testing.T) {
@@ -34,7 +34,7 @@ func TestAuthMiddleware_WrongToken(t *testing.T) {
 
 	wrapped.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
 func TestAuthMiddleware_CorrectToken(t *testing.T) {
@@ -65,7 +65,7 @@ func TestAuthMiddleware_EmptyTokenConfig(t *testing.T) {
 	wrapped.ServeHTTP(rec, req)
 
 	// Empty token blocks everything
-	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
 func TestAuthMiddleware_MissingBearerPrefix(t *testing.T) {
@@ -80,5 +80,5 @@ func TestAuthMiddleware_MissingBearerPrefix(t *testing.T) {
 
 	wrapped.ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }

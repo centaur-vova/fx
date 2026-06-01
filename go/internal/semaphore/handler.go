@@ -41,6 +41,7 @@ func NewHandler(pool Pool) *Handler {
 // @Param        request body AcquireRequest true "Semaphore acquire request"
 // @Success      200 {object} map[string]SlotUID
 // @Failure      400 {string} string "invalid JSON body"
+// @Failure      401 {string} string "Unauthorized"
 // @Failure      409 {string} string "no available slots"
 // @Router       /semaphore/acquire [post]
 func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +95,7 @@ func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
 // @Param        request body ReleaseRequest true "Slot UID to release"
 // @Success      200 "Slot released (or was already free)"
 // @Failure      400 {string} string "invalid request"
+// @Failure      401 {string} string "Unauthorized"
 // @Failure      500 {string} string "redis connection error"
 // @Router       /semaphore/release [post]
 func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
