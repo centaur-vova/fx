@@ -17,6 +17,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "fast-atomic-flow/go/cmd/api/docs"
 )
 
 // ========== CONSTANTS ==========
@@ -103,7 +106,10 @@ func registerUpstream(ctx context.Context) {
 }
 
 // ========== MAIN ==========
-
+// @title           Fast Atomic Flow API
+// @version         1.0
+// @description     Task status receiver and semaphore API
+// @BasePath        /
 func main() {
 	// Load .env file
 	godotenv.Load("../.env")
@@ -162,6 +168,9 @@ func main() {
 
 	// Task statuses
 	http.HandleFunc("/task/status", taskHandler.SendStatus)
+
+	// Swagger
+	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.APIPort,

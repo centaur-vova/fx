@@ -9,6 +9,7 @@ APP_API_URL = http://localhost:8090
 # --- Methods ---
 .PHONY: install build app stop restart distclean watch test test-php test-go test-go-race check help nats-sub dev
 .PHONY: logs logs-ws logs-balancer logs-api
+.PHONY: swagger-api
 
 help:
 	@echo "Usage:"
@@ -29,6 +30,7 @@ help:
 	@echo "  make logs-ws       - 📋 Show WebSocket proxy logs"
 	@echo "  make logs-balancer - 📋 Show balancer logs"
 	@echo "  make logs-api      - 📋 Show API instance logs"
+	@echo "  make swagger-api   - 📋 Generate Swagger docs (API)"
 
 
 install:
@@ -83,3 +85,7 @@ logs-balancer:
 	docker compose -f docker-compose.dev.yaml logs balancer
 logs-api:
 	docker compose -f docker-compose.dev.yaml logs api
+
+# Swagger/OpenAPI
+swagger-api:
+	swag init -d ./go -g cmd/api/main.go -o go/cmd/api/docs

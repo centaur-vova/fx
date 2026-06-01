@@ -1,0 +1,49 @@
+basePath: /
+definitions:
+  protocol.TaskStatusUpdate:
+    properties:
+      id:
+        type: integer
+      mc:
+        type: integer
+      mode:
+        type: string
+      progress:
+        type: integer
+      sem:
+        type: string
+      status:
+        type: string
+      worker:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: Task status receiver and semaphore API
+  title: Fast Atomic Flow API
+  version: "1.0"
+paths:
+  /task/status:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Task status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/protocol.TaskStatusUpdate'
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: invalid JSON body
+          schema:
+            type: string
+        "500":
+          description: failed to publish to NATS
+          schema:
+            type: string
+      summary: SendStatus receives task status update and publishes to NATS.
+swagger: "2.0"
