@@ -63,12 +63,12 @@ type TaskBatchCreated struct {
 }
 type TaskStatusUpdate struct {
 	ID       uint32 `json:"id"`
-	Status   string `json:"status"`
-	MC       uint8  `json:"mc"`
-	Progress uint8  `json:"progress"`
-	Worker   uint8  `json:"worker"`
-	Sem      string `json:"sem"`
-	Mode     string `json:"mode"`
+	Status   string `json:"status" enums:"check_lock,progress,completed,lock_acquired,lock_failed,retries_failed,retry"`
+	MC       uint8  `json:"mc" minimum:"1" maximum:"255" default:"1"`
+	Progress uint8  `json:"progress" default:"0"`
+	Worker   uint8  `json:"worker" default:"0"`
+	Sem      string `json:"sem" enums:"shared,api"`
+	Mode     string `json:"mode" enums:"observation,stress"`
 }
 
 func (t *TaskStatusUpdate) Pack() []byte {

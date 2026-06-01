@@ -4,7 +4,6 @@
 export const THEME_DEFAULTS = {
     STATUS_LABELS: {
         queued: 'In queue',
-        processing: 'Started',
         check_lock: 'Checking semaphore',
         progress: 'In progress',
         completed: 'Done',

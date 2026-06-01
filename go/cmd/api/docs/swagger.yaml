@@ -5,16 +5,35 @@ definitions:
       id:
         type: integer
       mc:
+        default: 1
+        maximum: 255
+        minimum: 1
         type: integer
       mode:
+        enum:
+        - observation
+        - stress
         type: string
       progress:
+        default: 0
         type: integer
       sem:
+        enum:
+        - shared
+        - api
         type: string
       status:
+        enum:
+        - check_lock
+        - progress
+        - completed
+        - lock_acquired
+        - lock_failed
+        - retries_failed
+        - retry
         type: string
       worker:
+        default: 0
         type: integer
     type: object
 info:

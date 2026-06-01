@@ -84,14 +84,13 @@ export const HEALTH_CHECK = {
 export const TASK = {
     // Binary id mappings
     STATUS_MAP: {
-        0: 'processing',
-        1: 'check_lock',
-        2: 'progress',
-        3: 'completed',
-        4: 'lock_acquired',
-        5: 'lock_failed',
-        6: 'retries_failed',
-        7: 'retry'
+        0: 'check_lock',
+        1: 'progress',
+        2: 'completed',
+        3: 'lock_acquired',
+        4: 'lock_failed',
+        5: 'retries_failed',
+        6: 'retry'
     },
 };
 
@@ -107,7 +106,6 @@ export const TERMINAL_LOG = {
         check_lock: 'var(--color-info)',
         lock_acquired: 'var(--color-accent)',
         progress: 'var(--color-urgent)',
-        processing: 'var(--text-muted)',
     },
 };
 

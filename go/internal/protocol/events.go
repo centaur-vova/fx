@@ -3,14 +3,13 @@ package protocol
 const MagicByte byte = 0x02
 
 const (
-	StatusProcessing    byte = iota // 0 \
-	StatusCheckLock                 // 1  \
-	StatusProgress                  // 2   \
-	StatusCompleted                 // 3    3 bits
-	StatusLockAcquired              // 4   /
-	StatusLockFailed                // 5  /
-	StatusRetriesFailed             // 6 /
-	StatusRetry                     // 7
+	StatusCheckLock     byte = iota // 0  \
+	StatusProgress                  // 1   \
+	StatusCompleted                 // 2    3 bits
+	StatusLockAcquired              // 3   /
+	StatusLockFailed                // 4  /
+	StatusRetriesFailed             // 5 /
+	StatusRetry                     // 6
 )
 
 const (
@@ -29,7 +28,6 @@ const (
 )
 
 var StatusMap = map[string]byte{
-	"processing":     StatusProcessing,
 	"check_lock":     StatusCheckLock,
 	"progress":       StatusProgress,
 	"completed":      StatusCompleted,

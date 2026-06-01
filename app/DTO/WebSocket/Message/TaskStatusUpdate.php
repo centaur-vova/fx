@@ -28,7 +28,6 @@ use JsonSerializable;
  */
 final readonly class TaskStatusUpdate implements JsonSerializable
 {
-    public const string EVENT_PROCESSING = 'processing';
     public const string EVENT_CHECK_LOCK = 'check_lock';
     public const string EVENT_PROGRESS = 'progress';
     public const string EVENT_COMPLETED = 'completed';
@@ -73,11 +72,6 @@ final readonly class TaskStatusUpdate implements JsonSerializable
     public static function retry(TaskExecutionPayload $payload): self
     {
         return self::fromPayload($payload, self::EVENT_RETRY, 'Retrying');
-    }
-
-    public static function processing(TaskExecutionPayload $payload): self
-    {
-        return self::fromPayload($payload, self::EVENT_PROCESSING, 'Processing');
     }
 
     public static function checkLock(TaskExecutionPayload $payload): self

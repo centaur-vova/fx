@@ -57,14 +57,6 @@ class TaskStatusUpdateTest extends TestCase
         $this->assertNull($dto->progress);
     }
 
-    public function testProcessing(): void
-    {
-        $dto = TaskStatusUpdate::processing($this->payload);
-
-        $this->assertSame(TaskStatusUpdate::EVENT_PROCESSING, $dto->status);
-        $this->assertSame('Processing', $dto->message);
-    }
-
     public function testCheckLock(): void
     {
         $dto = TaskStatusUpdate::checkLock($this->payload);
@@ -140,11 +132,11 @@ class TaskStatusUpdateTest extends TestCase
     {
         $dto = new TaskStatusUpdate(
             id: 1,
-            status: 'processing',
+            status: 'check_lock',
             mc: 10,
             sem: SemaphoreDriver::API,
             mode: TaskMode::STRESS,
-            message: 'Processing',
+            message: 'Checking lock',
         );
 
         $json = $dto->jsonSerialize();

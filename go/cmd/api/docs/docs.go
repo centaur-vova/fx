@@ -60,22 +60,44 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "mc": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 1,
+                    "maximum": 255,
+                    "minimum": 1
                 },
                 "mode": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "observation",
+                        "stress"
+                    ]
                 },
                 "progress": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 0
                 },
                 "sem": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "shared",
+                        "api"
+                    ]
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "check_lock",
+                        "progress",
+                        "completed",
+                        "lock_acquired",
+                        "lock_failed",
+                        "retries_failed",
+                        "retry"
+                    ]
                 },
                 "worker": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 0
                 }
             }
         }
