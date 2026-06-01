@@ -8,6 +8,112 @@
     },
     "basePath": "/",
     "paths": {
+        "/semaphore/acquire": {
+            "post": {
+                "description": "Acquires a slot in the distributed semaphore. Returns a unique slot UID on success.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Acquire semaphore slot",
+                "parameters": [
+                    {
+                        "description": "Semaphore acquire request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/semaphore.AcquireRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid JSON body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "no available slots",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/semaphore/health": {
+            "get": {
+                "description": "Returns 200 OK and the number of goroutines.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Semaphore health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/semaphore/release": {
+            "post": {
+                "description": "Releases a slot identified by its UID. Idempotent — releasing an already released slot is a no-op.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "summary": "Release semaphore slot",
+                "parameters": [
+                    {
+                        "description": "Slot UID to release",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/semaphore.ReleaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Slot released (or was already free)"
+                    },
+                    "400": {
+                        "description": "invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "redis connection error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/task/status": {
             "post": {
                 "consumes": [
@@ -91,6 +197,37 @@
                 "worker": {
                     "type": "integer",
                     "default": 0
+                }
+            }
+        },
+        "semaphore.AcquireRequest": {
+            "type": "object",
+            "properties": {
+                "lock_wait_timeout": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
+                },
+                "max_concurrent": {
+                    "type": "integer",
+                    "maximum": 255,
+                    "minimum": 1,
+                    "example": 5
+                },
+                "permit_ttl": {
+                    "type": "integer",
+                    "maximum": 60,
+                    "minimum": 1,
+                    "example": 2
+                }
+            }
+        },
+        "semaphore.ReleaseRequest": {
+            "type": "object",
+            "properties": {
+                "uid": {
+                    "type": "string",
+                    "example": "5:3"
                 }
             }
         }

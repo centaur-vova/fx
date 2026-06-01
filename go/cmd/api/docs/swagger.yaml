@@ -36,12 +36,106 @@ definitions:
         default: 0
         type: integer
     type: object
+  semaphore.AcquireRequest:
+    properties:
+      lock_wait_timeout:
+        example: 1
+        minimum: 0
+        type: integer
+      max_concurrent:
+        example: 5
+        maximum: 255
+        minimum: 1
+        type: integer
+      permit_ttl:
+        example: 2
+        maximum: 60
+        minimum: 1
+        type: integer
+    type: object
+  semaphore.ReleaseRequest:
+    properties:
+      uid:
+        example: "5:3"
+        type: string
+    type: object
 info:
   contact: {}
   description: Task status receiver and semaphore API
   title: Fast Atomic Flow API
   version: "1.0"
 paths:
+  /semaphore/acquire:
+    post:
+      consumes:
+      - application/json
+      description: Acquires a slot in the distributed semaphore. Returns a unique
+        slot UID on success.
+      parameters:
+      - description: Semaphore acquire request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/semaphore.AcquireRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: invalid JSON body
+          schema:
+            type: string
+        "409":
+          description: no available slots
+          schema:
+            type: string
+      summary: Acquire semaphore slot
+  /semaphore/health:
+    get:
+      description: Returns 200 OK and the number of goroutines.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Semaphore health check
+  /semaphore/release:
+    post:
+      consumes:
+      - application/json
+      description: Releases a slot identified by its UID. Idempotent — releasing an
+        already released slot is a no-op.
+      parameters:
+      - description: Slot UID to release
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/semaphore.ReleaseRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Slot released (or was already free)
+        "400":
+          description: invalid request
+          schema:
+            type: string
+        "500":
+          description: redis connection error
+          schema:
+            type: string
+      summary: Release semaphore slot
   /task/status:
     post:
       consumes:

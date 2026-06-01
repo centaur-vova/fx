@@ -34,12 +34,9 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 
 	deadline := time.Now().Add(timeout)
 
-	for {
-		// Check timeout
-		if time.Now().After(deadline) {
-			return "", fmt.Errorf("acquire timeout after %v", timeout)
-		}
+	var pubsub *redis.PubSub
 
+	for {
 		result, err := p.acquireScript.Run(
 			ctx,
 			p.client,
@@ -59,8 +56,11 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 		}
 
 		// Subscribe for the events channel & wait until a slot is freed
-		pubsub := p.client.Subscribe(ctx, channel)
-		defer pubsub.Close()
+		// Use only when a very first attempt failed
+		if pubsub == nil {
+			pubsub = p.client.Subscribe(ctx, channel)
+			defer pubsub.Close()
+		}
 
 		// No free slots, wait and retry
 		select {

@@ -50,19 +50,6 @@ func TestHandler_Acquire_InvalidJSON(t *testing.T) {
 	}
 }
 
-func TestHandler_Acquire_DefaultValues(t *testing.T) {
-	h := newTestHandler(t)
-	body := []byte(`{"max_concurrent": -5, "lock_wait_timeout": 0, "permit_ttl": 999}`)
-	req := httptest.NewRequest("POST", "/acquire", bytes.NewReader(body))
-	rec := httptest.NewRecorder()
-
-	h.Acquire(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected 200 with defaults, got %d: %s", rec.Code, rec.Body.String())
-	}
-}
-
 func TestHandler_Release(t *testing.T) {
 	h := newTestHandler(t)
 
