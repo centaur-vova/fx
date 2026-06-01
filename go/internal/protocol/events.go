@@ -23,6 +23,11 @@ const (
 	TaskModeStress                  // 1 /
 )
 
+const (
+	MsgTypeBatchCreated = "task.batch.created"
+	MsgTypeStatusUpdate = "task.status.update"
+)
+
 var StatusMap = map[string]byte{
 	"processing":     StatusProcessing,
 	"check_lock":     StatusCheckLock,

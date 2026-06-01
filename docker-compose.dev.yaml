@@ -107,6 +107,11 @@ services:
       - API_PORT=8080 # Isolated runtime port for scaling instances within the network
       - API_TOKEN=${API_TOKEN}
       - API_URL=${API_URL}
+      # Nats
+      - NATS_HOST=${NATS_HOST}
+      - NATS_PORT=${NATS_PORT}
+      - NATS_TOKEN=${NATS_TOKEN}
+      - NATS_SUBJECT_BROADCAST=${NATS_SUBJECT_BROADCAST}
       # Redis
       - REDIS_URL=${REDIS_URL}
     volumes:

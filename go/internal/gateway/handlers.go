@@ -35,8 +35,8 @@ func NewMessageRouter(store MetricsStore, hub Broadcaster) *MessageRouter {
 		hub:   hub,
 	}
 	r.handlers = map[string]MessageHandler{
-		"task.batch.created": r.handleBatchCreated,
-		"task.status.update": r.handleTaskStatusUpdate,
+		protocol.MsgTypeBatchCreated: r.handleBatchCreated,
+		protocol.MsgTypeStatusUpdate: r.handleTaskStatusUpdate,
 	}
 	return r
 }

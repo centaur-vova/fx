@@ -119,6 +119,11 @@ services:
       - API_TOKEN=${API_TOKEN}
       - API_URL=${API_URL}
       - REDIS_URL=${REDIS_URL}
+      # Nats
+      - NATS_HOST=${NATS_HOST}
+      - NATS_PORT=${NATS_PORT}
+      - NATS_TOKEN=${NATS_TOKEN}
+      - NATS_SUBJECT_BROADCAST=${NATS_SUBJECT_BROADCAST}
     networks:
       - atomic-network
     depends_on:

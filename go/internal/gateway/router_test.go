@@ -118,7 +118,7 @@ func TestMessageRouter_Route_StatusUpdate_Completed(t *testing.T) {
 	r := NewMessageRouter(mockStore, mockHub)
 
 	payload := json.RawMessage(`{"id":42,"status":"completed","mc":10,"progress":100,"worker":3,"sem":"shared","mode":"observation"}`)
-	r.Route("task.status.update", payload)
+	r.Route(protocol.MsgTypeStatusUpdate, payload)
 
 	assert.Equal(t, 10, mockStore.completedMC)
 	assert.NotNil(t, mockHub.broadcasted)
@@ -135,7 +135,7 @@ func TestMessageRouter_Route_StatusUpdate_RetriesFailed(t *testing.T) {
 	r := NewMessageRouter(mockStore, mockHub)
 
 	payload := json.RawMessage(`{"id":1,"status":"retries_failed","mc":3}`)
-	r.Route("task.status.update", payload)
+	r.Route(protocol.MsgTypeStatusUpdate, payload)
 
 	assert.Equal(t, 3, mockStore.failedMC)
 }
@@ -146,7 +146,7 @@ func TestMessageRouter_Route_StatusUpdate_Retry(t *testing.T) {
 	r := NewMessageRouter(mockStore, mockHub)
 
 	payload := json.RawMessage(`{"id":2,"status":"retry","mc":7}`)
-	r.Route("task.status.update", payload)
+	r.Route(protocol.MsgTypeStatusUpdate, payload)
 
 	assert.Equal(t, 7, mockStore.retriedMC)
 }

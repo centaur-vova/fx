@@ -27,6 +27,12 @@ func (e WsEvent) Marshal() []byte {
 	return b
 }
 
+// Wrapper for incoming serialized messages from NATS
+type NatsEnvelope struct {
+	Type string          `json:"_t"`
+	Data json.RawMessage `json:"d"`
+}
+
 type NatsStats struct {
 	Messages  uint64 `json:"messages"`
 	Bytes     uint64 `json:"bytes"`

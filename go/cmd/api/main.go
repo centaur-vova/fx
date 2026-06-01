@@ -5,6 +5,7 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/protocol"
 	"fast-atomic-flow/go/internal/semaphore"
+	"fast-atomic-flow/go/internal/task"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -34,6 +36,7 @@ const (
 // ========== GLOBALS ==========
 var (
 	cfg *protocol.APIConfig
+	nc  *nats.Conn
 )
 
 // ========== REGISTRATION ==========
@@ -117,8 +120,35 @@ func main() {
 	})
 	semPool := semaphore.NewRedisPool(redisClient)
 
+	// NATS
+	var err error
+	nc, err = nats.Connect(
+		"nats://"+cfg.NatsURL,
+		nats.Token(cfg.NatsToken),
+		nats.MaxReconnects(-1),            // Retry forever
+		nats.ReconnectWait(2*time.Second), // Every 2 second
+		nats.DisconnectErrHandler(func(c *nats.Conn, err error) {
+			logger.Warn("⚠️ NATS DISCONNECTED", "error", err)
+		}),
+		nats.ReconnectHandler(func(c *nats.Conn) {
+			logger.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
+			// Need to resubscribe
+		}),
+		nats.ClosedHandler(func(c *nats.Conn) {
+			logger.Info("🔴 NATS connection CLOSED")
+		}),
+	)
+	if err != nil {
+		logger.Error("💥 NATS Connection failed", "error", err)
+		panic(err)
+	}
+	defer nc.Close()
+
+	logger.Info("✅ API connected to NATS", "url", cfg.NatsURL)
+
 	// HTTP handlers
 	semHandler := semaphore.NewHandler(semPool)
+	taskHandler := task.NewHandler(nc, cfg.BroadcastCh)
 
 	// API routes
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -129,6 +159,9 @@ func main() {
 	http.HandleFunc("/semaphore/acquire", semHandler.Acquire)
 	http.HandleFunc("/semaphore/release", semHandler.Release)
 	http.HandleFunc("/semaphore/health", semHandler.Health)
+
+	// Task statuses
+	http.HandleFunc("/task/status", taskHandler.SendStatus)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.APIPort,

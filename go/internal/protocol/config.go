@@ -126,6 +126,10 @@ type APIConfig struct {
 	BalancerURL string
 	APIPort     string
 	RedisURL    string
+
+	NatsURL     string
+	NatsToken   string
+	BroadcastCh string
 }
 
 func LoadAPIConfig() *APIConfig {
@@ -146,6 +150,10 @@ func LoadAPIConfig() *APIConfig {
 		BalancerURL: balancerURL,
 		APIPort:     port,
 		RedisURL:    redisURL,
+
+		NatsURL:     getEnv("NATS_HOST", "localhost") + ":" + getEnv("NATS_PORT", "4222"),
+		NatsToken:   getEnv("NATS_TOKEN", ""),
+		BroadcastCh: getEnv("NATS_SUBJECT_BROADCAST", "v1.ws.broadcast"),
 	}
 }
 

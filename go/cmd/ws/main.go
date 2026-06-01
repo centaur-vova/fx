@@ -27,12 +27,6 @@ var (
 	hub   *gateway.Hub
 )
 
-// Wrapper for incoming serialized messages from NATS
-type NatsEnvelope struct {
-	Type string          `json:"_t"`
-	Data json.RawMessage `json:"d"`
-}
-
 func main() {
 	// ==== LOAD .env ====
 	godotenv.Load("../.env")
@@ -158,10 +152,7 @@ func subscribeToNATS(mRouter *gateway.MessageRouter) {
 			}
 		}()
 
-		var env struct {
-			Type string          `json:"_t"`
-			Data json.RawMessage `json:"d"`
-		}
+		var env protocol.NatsEnvelope
 		json.Unmarshal(m.Data, &env)
 
 		logger.Trace("NATS -> WS", "subject", m.Subject, "type", env.Type, "data", string(m.Data))
