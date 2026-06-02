@@ -1,28 +1,32 @@
 package middleware
 
 import (
-	"fast-atomic-flow/go/internal/logger"
+	"context"
+	"fast-atomic-flow/go/internal/embed"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
+const ttlBufferSec = 60
+
 type RLConfig struct {
-	Requests  int
+	Limit     int
 	WindowSec int
 }
 
 type RateLimiter struct {
 	client *redis.Client
+	script *redis.Script
 }
 
 func NewRateLimiter(client *redis.Client) *RateLimiter {
 	return &RateLimiter{
 		client: client,
+		script: redis.NewScript(embed.LoadLua("rate_limiter.lua")),
 	}
 }
 
@@ -32,35 +36,32 @@ func (rl *RateLimiter) Middleware(cfg RLConfig, next http.HandlerFunc) http.Hand
 
 		key := "rate_limit:" + getClientIP(r)
 
-		now := time.Now().UnixMicro()
-
-		// Drop old items
-		threshold := now - int64(cfg.WindowSec*1_000_000)
-		_, err := rl.client.ZRemRangeByScore(ctx, key, "-inf", strconv.FormatInt(threshold, 10)).Result()
+		ok, err := rl.allow(ctx, cfg, key)
 		if err != nil {
-			logger.Debug("ZRemRangeByScore error",
-				"key", key,
-				"now", now,
-			)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-
-		count, err := rl.client.ZCard(ctx, key).Result()
-		if err != nil || count >= int64(cfg.Requests) {
+		if !ok {
 			http.Error(w, "Too many requests", http.StatusTooManyRequests)
 			return
 		}
 
-		rl.client.ZAdd(ctx, key, redis.Z{
-			Score:  float64(now),
-			Member: now,
-		})
-
-		rl.client.Expire(ctx, key, time.Duration(cfg.WindowSec+60)*time.Second)
-
 		next.ServeHTTP(w, r)
 	}
+}
+
+// allow checks if request is within rate limit using atomic Lua script.
+// Returns true if allowed, false if rate limit exceeded.
+func (rl *RateLimiter) allow(ctx context.Context, cfg RLConfig, key string) (bool, error) {
+	now := time.Now().UnixMicro()
+	threshold := now - int64(cfg.WindowSec*1_000_000)
+	ttl := cfg.WindowSec + ttlBufferSec
+
+	result, err := rl.script.Run(ctx, rl.client, []string{key}, now, threshold, cfg.Limit, ttl).Int()
+	if err != nil {
+		return false, err
+	}
+	return result == 1, nil
 }
 
 func getClientIP(r *http.Request) string {

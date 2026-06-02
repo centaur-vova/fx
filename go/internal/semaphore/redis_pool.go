@@ -3,6 +3,7 @@ package semaphore
 import (
 	"context"
 	"errors"
+	"fast-atomic-flow/go/internal/embed"
 	"fmt"
 	"time"
 
@@ -18,8 +19,8 @@ type RedisPool struct {
 func NewRedisPool(client *redis.Client) *RedisPool {
 	return &RedisPool{
 		client:        client,
-		acquireScript: redis.NewScript(loadLua("acquire.lua")),
-		releaseScript: redis.NewScript(loadLua("release.lua")),
+		acquireScript: redis.NewScript(embed.LoadLua("acquire.lua")),
+		releaseScript: redis.NewScript(embed.LoadLua("release.lua")),
 	}
 }
 

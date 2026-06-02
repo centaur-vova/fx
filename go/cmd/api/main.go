@@ -171,7 +171,7 @@ func main() {
 	http.HandleFunc("/semaphore/release", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Release))
 	// Tasks
 	http.HandleFunc("/task/status", rateLimiter.Middleware(
-		middleware.RLConfig{Requests: 60, WindowSec: 60},
+		middleware.RLConfig{Limit: 60, WindowSec: 60},
 		middleware.AuthMiddleware(cfg.APIAuthKey, taskHandler.SendStatus)))
 
 	// === UNPROTECTED ROUTES ===
