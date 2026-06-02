@@ -128,7 +128,12 @@ func main() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: cfg.RedisURL,
 	})
+
+	// Semaphore pool
 	semPool := semaphore.NewRedisPool(redisClient)
+
+	// Rate limiter
+	rateLimiter := middleware.NewRateLimiter(redisClient)
 
 	// NATS
 	var err error
@@ -165,7 +170,9 @@ func main() {
 	http.HandleFunc("/semaphore/acquire", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Acquire))
 	http.HandleFunc("/semaphore/release", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Release))
 	// Tasks
-	http.HandleFunc("/task/status", middleware.AuthMiddleware(cfg.APIAuthKey, taskHandler.SendStatus))
+	http.HandleFunc("/task/status", rateLimiter.Middleware(
+		middleware.RLConfig{Requests: 60, WindowSec: 60},
+		middleware.AuthMiddleware(cfg.APIAuthKey, taskHandler.SendStatus)))
 
 	// === UNPROTECTED ROUTES ===
 	http.HandleFunc("/semaphore/health", semHandler.Health)
