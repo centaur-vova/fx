@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  auth.TokenResponse:
+    properties:
+      expires_at:
+        type: integer
+      token:
+        type: string
+    type: object
   protocol.TaskStatusUpdate:
     properties:
       id:
@@ -65,6 +72,35 @@ info:
   title: Fast Atomic Flow API
   version: "1.0"
 paths:
+  /auth/token:
+    post:
+      consumes:
+      - application/json
+      description: Returns a signed JWT token valid for 24 hours
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.TokenResponse'
+        "400":
+          description: invalid request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Generate JWT token
+      tags:
+      - auth
   /semaphore/acquire:
     post:
       consumes:
@@ -89,6 +125,10 @@ paths:
             type: object
         "400":
           description: invalid JSON body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
           schema:
             type: string
         "409":
@@ -129,6 +169,10 @@ paths:
           description: invalid request
           schema:
             type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
         "500":
           description: redis connection error
           schema:
@@ -152,6 +196,10 @@ paths:
           description: Accepted
         "400":
           description: invalid JSON body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
           schema:
             type: string
         "500":

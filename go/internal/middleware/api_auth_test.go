@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAuthMiddleware_NoToken(t *testing.T) {
+func TestApiAuthMiddleware_NoToken(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	wrapped := AuthMiddleware("secret-token", next)
+	wrapped := ApiAuthMiddleware("secret-token", next)
 
 	req := httptest.NewRequest("GET", "/", nil)
 	rec := httptest.NewRecorder()
@@ -22,11 +22,11 @@ func TestAuthMiddleware_NoToken(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
-func TestAuthMiddleware_WrongToken(t *testing.T) {
+func TestApiAuthMiddleware_WrongToken(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	wrapped := AuthMiddleware("secret-token", next)
+	wrapped := ApiAuthMiddleware("secret-token", next)
 
 	req := httptest.NewRequest("GET", "/", nil)
 	req.Header.Set("Authorization", "Bearer wrong-token")
@@ -37,11 +37,11 @@ func TestAuthMiddleware_WrongToken(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
-func TestAuthMiddleware_CorrectToken(t *testing.T) {
+func TestApiAuthMiddleware_CorrectToken(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	wrapped := AuthMiddleware("secret-token", next)
+	wrapped := ApiAuthMiddleware("secret-token", next)
 
 	req := httptest.NewRequest("GET", "/", nil)
 	req.Header.Set("Authorization", "Bearer secret-token")
@@ -52,11 +52,11 @@ func TestAuthMiddleware_CorrectToken(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func TestAuthMiddleware_EmptyTokenConfig(t *testing.T) {
+func TestApiAuthMiddleware_EmptyTokenConfig(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	wrapped := AuthMiddleware("", next) // empty token
+	wrapped := ApiAuthMiddleware("", next) // empty token
 
 	req := httptest.NewRequest("GET", "/", nil)
 	req.Header.Set("Authorization", "Bearer anything")
@@ -68,11 +68,11 @@ func TestAuthMiddleware_EmptyTokenConfig(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
-func TestAuthMiddleware_MissingBearerPrefix(t *testing.T) {
+func TestApiAuthMiddleware_MissingBearerPrefix(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	wrapped := AuthMiddleware("secret-token", next)
+	wrapped := ApiAuthMiddleware("secret-token", next)
 
 	req := httptest.NewRequest("GET", "/", nil)
 	req.Header.Set("Authorization", "secret-token") // no "Bearer " prefix

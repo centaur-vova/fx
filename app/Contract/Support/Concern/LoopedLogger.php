@@ -33,7 +33,7 @@ trait LoopedLogger
         }
     }
 
-    protected function logMemoryUsage(int $intervalSec = 60): void
+    protected function logMemoryUsage(int $intervalSec = 600): void
     {
         /** @var int $lastMemLog */
         static $lastMemLog = 0;

@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"fast-atomic-flow/go/internal/api/auth"
+	"fast-atomic-flow/go/internal/api/semaphore"
+	"fast-atomic-flow/go/internal/api/task"
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
-	"fast-atomic-flow/go/internal/semaphore"
-	"fast-atomic-flow/go/internal/task"
 	"fmt"
 	"net/http"
 	"os"
@@ -164,15 +165,18 @@ func main() {
 	// HTTP handlers
 	semHandler := semaphore.NewHandler(semPool)
 	taskHandler := task.NewHandler(nc, cfg.BroadcastCh)
+	authHandler := auth.NewAuthHandler(cfg.JWTSecret)
 
 	// === PROTECTED ROUTES ===
 	// Semaphores
-	http.HandleFunc("/semaphore/acquire", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Acquire))
-	http.HandleFunc("/semaphore/release", middleware.AuthMiddleware(cfg.APIAuthKey, semHandler.Release))
+	http.HandleFunc("/semaphore/acquire", middleware.ApiAuthMiddleware(cfg.APIAuthKey, semHandler.Acquire))
+	http.HandleFunc("/semaphore/release", middleware.ApiAuthMiddleware(cfg.APIAuthKey, semHandler.Release))
+	// JWT
+	http.HandleFunc("/auth/token", middleware.ApiAuthMiddleware(cfg.APIAuthKey, authHandler.GenerateToken))
 	// Tasks
 	http.HandleFunc("/task/status", rateLimiter.Middleware(
 		middleware.RLConfig{Limit: 60, WindowSec: 60},
-		middleware.AuthMiddleware(cfg.APIAuthKey, taskHandler.SendStatus)))
+		middleware.JWTAuthMiddleware(cfg.JWTSecret, taskHandler.SendStatus)))
 
 	// === UNPROTECTED ROUTES ===
 	http.HandleFunc("/semaphore/health", semHandler.Health)

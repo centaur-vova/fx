@@ -129,6 +129,8 @@ type APIConfig struct {
 	BalancerAPIKey string
 	BalancerURL    string
 
+	JWTSecret string
+
 	RedisURL string
 
 	NatsURL     string
@@ -154,6 +156,8 @@ func LoadAPIConfig() *APIConfig {
 		APIAuthKey:     os.Getenv("API_AUTH_KEY"),
 		BalancerAPIKey: os.Getenv("BALANCER_API_KEY"),
 		BalancerURL:    balancerURL,
+
+		JWTSecret: os.Getenv("JWT_SECRET"),
 
 		RedisURL: redisURL,
 

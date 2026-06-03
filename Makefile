@@ -74,7 +74,7 @@ nats-sub:
 	nats sub "v1.ws.broadcast" --token="$$NATS_TOKEN" -s localhost:4222
 
 dev:
-	docker compose -f docker-compose.dev.yaml up --scale api=2
+	docker compose -f docker-compose.dev.yaml up
 
 # Logs
 logs:

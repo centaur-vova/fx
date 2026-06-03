@@ -83,11 +83,11 @@ func main() {
 	mux.HandleFunc("GET /health", balancer.HealthHandler(upstream))
 
 	// Force alive/unalive state on the API instance
-	mux.HandleFunc("POST /instance/unalive", middleware.AuthMiddleware(cfg.APIAuthKey, balancer.ForceUnaliveHandler(upstream)))
-	mux.HandleFunc("POST /instance/revive", middleware.AuthMiddleware(cfg.APIAuthKey, balancer.ReviveHandler(upstream)))
+	mux.HandleFunc("POST /instance/unalive", middleware.ApiAuthMiddleware(cfg.APIAuthKey, balancer.ForceUnaliveHandler(upstream)))
+	mux.HandleFunc("POST /instance/revive", middleware.ApiAuthMiddleware(cfg.APIAuthKey, balancer.ReviveHandler(upstream)))
 
 	// Register API instance (called by API service)
-	mux.HandleFunc("POST /instance/register", middleware.AuthMiddleware(cfg.BalancerAPIKey, balancer.RegisterHandler(upstream)))
+	mux.HandleFunc("POST /instance/register", middleware.ApiAuthMiddleware(cfg.BalancerAPIKey, balancer.RegisterHandler(upstream)))
 
 	// Proxy
 	mux.HandleFunc("/", balancer.ProxyHandler(upstream))

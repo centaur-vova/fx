@@ -6,18 +6,18 @@ namespace App\Service\Task\Semaphore;
 
 use App\Contract\Task\SemaphorePermit;
 use App\Contract\Task\TaskSemaphore;
-use App\Service\Api\BalancerApi;
+use App\Service\Api\CoreApi;
 
 /**
  * Distributed semaphore using a Go microservice via HTTP.
  * Synchronizes task limits across all worker processes, possibly across multiple servers.
  *
  * Acquires and releases slots by communicating with a remote Go semaphore service
- * (see: go/internal/semaphore) over HTTP, using non-blocking coroutine-aware calls.
+ * (see: go/internal/api/semaphore) over HTTP, using non-blocking coroutine-aware calls.
  */
 final readonly class DistributedSemaphore implements TaskSemaphore
 {
-    public function __construct(private BalancerApi $api, private int $semaphorePermitTtl)
+    public function __construct(private CoreApi $api, private int $semaphorePermitTtl)
     {
     }
 
@@ -30,7 +30,7 @@ final readonly class DistributedSemaphore implements TaskSemaphore
             private ?string $permitUid = null;
 
             public function __construct(
-                private readonly BalancerApi $api,
+                private readonly CoreApi $api,
                 private readonly int $limit,
                 private readonly int $semaphorePermitTtl,
             ) {

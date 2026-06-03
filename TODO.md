@@ -1,20 +1,6 @@
 # 📝 TODO
 
-### 🚀 Roadmap / Upcoming Features
-- [x] **Infrastructure**: Move `server.php` logic into dedicated Bootstrap and Service Provider classes for better testability
-- [ ] **Testing**: Implement a comprehensive PHPUnit suite covering DTO integrity, Semaphore logic, and Config validation
-- [x] **CI/CD**: Add GitHub Actions to automate testing and linting on every push
-- [ ] **Real-time Tuning**: Add UI controls to adjust `TASK_LOCK_TIMEOUT` and `GRACEFUL_SHUTDOWN` settings without restarting the server
-- [ ] **Control Flow**: Implement a Global Pause/Resume toggle for the worker pool using Shared Memory state
-- [ ] **Health Check**: Enhance the existing `/api/tasks/health` endpoint to report `Swoole\Table` saturation and worker liveness
-
 ### 🔴 High Priority
-- [ ] **Real-time Pipeline Monitoring**:
-  - [x] Implement a live counter for **Incomplete Tasks** (tasks currently being processed)
-  - [x] Migrate Timer::tick from onOpen to onWorkerStart to prevent timer leakage
-- [ ] **Fix Connection Limit Issues**:
-  - [ ] Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
-  - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`
 
 ### 🟡 Medium Priority
 - [ ] **Load & Stress Testing**:
@@ -36,6 +22,10 @@
   - [x] Connect backend timers to frontend header indicators
 
 ### 🟢 Low Priority
+- [ ] **Health Check**: Enhance the existing `/api/tasks/health` endpoint to report `Swoole\Table` saturation and worker liveness
+- [ ] **Fix Connection Limit Issues**:
+  - [ ] Resolve potential crashes/bottlenecks when exceeding 1000 concurrent WebSocket connections.
+  - [ ] Implement dynamic scaling or graceful rejection for `Swoole\Table` overflows in `ConnectionPool`
 - [x] **UI/UX Refinement**:
   - [x] **Task Overlapping Prevention**: Implement a horizontal jitter/offset algorithm
   - [x] **Visual Overhaul**: Enhance task shapes and color palettes

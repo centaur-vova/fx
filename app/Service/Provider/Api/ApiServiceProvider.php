@@ -62,8 +62,6 @@ final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartA
 
     private function registerApiClient(ContainerInterface $c): ApiClient
     {
-        /** @var Options $options */
-        $options = $c->get(Options::class);
         /** @var LoggerInterface $logger */
         $logger = $c->get(LoggerInterface::class);
         /** @var ConnectionPool $pool */
@@ -87,5 +85,10 @@ final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartA
         // Return the client to the pool. We pass null if we want the pool to manage
         // the object lifecycle or if the initial connection failed.
         $pool->put($client);
+
+        // Only in worker #0 - try fetching the JWT token
+        if ($workerId === 0) {
+
+        }
     }
 }
