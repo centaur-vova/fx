@@ -9,6 +9,7 @@ use App\Contract\Messaging\MessageSerializer;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\WorkerStartAware;
 use App\Contract\Provider\WorkerStopAware;
+use App\Contract\Support\AppEnv;
 use App\DTO\Task\TaskExecutionPayload;
 use App\Server\Http\Controller\TaskController;
 use App\Server\Http\Router;
@@ -81,6 +82,7 @@ class Kernel
 
         // Options
         $options = new Options(
+            appEnv:               $loader->getEnum('APP_ENV', AppEnv::class, AppEnv::DEV),
             serverHost:           $loader->getString('SERVER_HOST', '0.0.0.0'),
             logLevel:             $loader->getString('LOG_LEVEL', 'info'),
             serverPort:           $loader->getInt('SERVER_PORT', 9501),

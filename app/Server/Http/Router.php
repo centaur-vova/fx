@@ -10,9 +10,11 @@ use App\Exception\Http\RateLimitExceededException;
 use App\Server\Http\Attribute\RateLimit;
 use App\Server\Http\Attribute\Route;
 use App\Server\Http\Controller\ApiController;
+use App\Server\Http\Controller\BenchmarkController;
 use App\Server\Http\Controller\HealthController;
 use App\Server\Http\Controller\TaskController;
 use App\Server\Http\Response\ApiResponse;
+use App\Server\Options;
 use App\Service\RateLimiter\RateLimiterService;
 use App\Service\Telemetry\TraceContext;
 use DI\Container;
@@ -49,6 +51,12 @@ class Router
             $container->get(ApiController::class),
             $container->get(HealthController::class),
         ];
+
+        /** @var Options $options */
+        $options = $container->get(Options::class);
+        if (!$options->appEnv->isProd()) {
+            $this->controllers[] = $container->get(BenchmarkController::class);
+        }
 
         $this->scanRoutes();
     }
@@ -140,7 +148,7 @@ class Router
         } catch (\Throwable $e) {
             // Log all other errors
             $this->logger->error('Unhandled exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            $result = ApiResponse::fromException(throw new InternalServerErrorException()); // Empty message by intent
+            $result = ApiResponse::fromException(new InternalServerErrorException()); // Empty message by intent
 
         } finally {
             TraceContext::flush();

@@ -11,11 +11,11 @@ use App\Server\Http\Response\HealthResponse;
 use App\Service\Api\BalancerApi;
 use Swoole\Http\Server;
 
-class HealthController
+final readonly class HealthController
 {
     public function __construct(
-        private readonly CacheStorage $cache,
-        private readonly BalancerApi $balancerApi,
+        private CacheStorage $cache,
+        private BalancerApi $balancerApi,
     ) {
     }
 

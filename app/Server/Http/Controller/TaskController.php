@@ -12,14 +12,14 @@ use App\Server\Http\Request\CreateTasks;
 use App\Server\Http\Response\ApiResponse;
 use App\Service\Task\TaskService;
 
-class TaskController
+final readonly class TaskController
 {
     public function __construct(
-        private readonly TaskService $taskService,
-        private readonly TaskQueue $taskQueue,
-        private readonly CacheStorage $cache,
-        private readonly int $taskMaxBatchSize,
-        private readonly int $taskSemaphoreLimit,
+        private TaskService $taskService,
+        private TaskQueue $taskQueue,
+        private CacheStorage $cache,
+        private int $taskMaxBatchSize,
+        private int $taskSemaphoreLimit,
     ) {
     }
 

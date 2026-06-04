@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Server;
 
 use App\Contract\Cache\CacheDriver;
+use App\Contract\Support\AppEnv;
 
 /**
  * Atomic Flow Engine Options
@@ -17,6 +18,8 @@ readonly class Options
      * @param array<string, array{max_attempts: int, ttl: int}> $rateLimiters
      */
     public function __construct(
+        public AppEnv $appEnv,
+
         // ========== Server Infrastructure ==========
         public string $serverHost,
         public int $serverPort,
