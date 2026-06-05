@@ -1,6 +1,7 @@
 package cb
 
 import (
+	"fast-atomic-flow/go/internal/clock"
 	"sync/atomic"
 	"time"
 )
@@ -21,6 +22,13 @@ type CircuitBreaker struct {
 	state               atomic.Uint32
 	consecutiveFailures atomic.Uint64
 	lastStateChange     atomic.Int64
+	clock               clock.Clock
+}
+
+func NewCircuitBreaker() CircuitBreaker {
+	return CircuitBreaker{
+		clock: clock.RealClock{},
+	}
 }
 
 // RecordSuccess resets failures counter
@@ -47,7 +55,7 @@ func (cb *CircuitBreaker) RecordFailure() bool {
 
 	if failures >= maxConsecutiveFailures || currentState == StateHalfOpen {
 		cb.state.Store(StateOpen)
-		cb.lastStateChange.Store(time.Now().UnixNano())
+		cb.lastStateChange.Store(cb.clock.Now().UnixNano())
 		return true
 	}
 	return false
@@ -63,7 +71,7 @@ func (cb *CircuitBreaker) CanRequest() (bool, bool) {
 
 	if currentState == StateOpen {
 		lastChange := cb.lastStateChange.Load()
-		if time.Now().UnixNano() > lastChange+coolDownDuration.Nanoseconds() {
+		if cb.clock.Now().UnixNano() > lastChange+coolDownDuration.Nanoseconds() {
 			if cb.state.CompareAndSwap(StateOpen, StateHalfOpen) {
 				return true, true // Enable this request, switching to Half-Open
 			}
@@ -88,7 +96,7 @@ func (cb *CircuitBreaker) ForceOpen() {
 	cb.state.Store(StateOpen)
 	// But don't look down, just keep your head
 	// Or you'll be finished
-	cb.lastStateChange.Store(time.Now().UnixNano())
+	cb.lastStateChange.Store(cb.clock.Now().UnixNano())
 }
 
 // GetState returns current state (monitoring/handlers)

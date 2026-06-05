@@ -3,6 +3,7 @@ package semaphore
 import (
 	"context"
 	"errors"
+	"fast-atomic-flow/go/internal/clock"
 	"testing"
 	"time"
 
@@ -14,7 +15,7 @@ func newTestRedisPool(t *testing.T) *RedisPool {
 	t.Helper()
 	mr := miniredis.RunT(t)
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
-	return NewRedisPool(client)
+	return NewRedisPool(client, clock.RealClock{})
 }
 
 func TestRedisPool_Acquire_Success(t *testing.T) {

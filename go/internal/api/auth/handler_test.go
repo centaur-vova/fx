@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fast-atomic-flow/go/internal/clock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,7 +11,7 @@ import (
 )
 
 func TestGenerateToken_Success(t *testing.T) {
-	handler := NewHandler("test-jwt-secret")
+	handler := NewHandler("test-jwt-secret", clock.RealClock{})
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/token", nil)
 	req.Header.Set("Content-Type", "application/json")

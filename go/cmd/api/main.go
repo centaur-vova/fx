@@ -5,6 +5,7 @@ import (
 	"fast-atomic-flow/go/internal/api/auth"
 	"fast-atomic-flow/go/internal/api/semaphore"
 	"fast-atomic-flow/go/internal/api/task"
+	"fast-atomic-flow/go/internal/clock"
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
@@ -118,9 +119,7 @@ func registerUpstream(ctx context.Context) {
 // @name Authorization
 func main() {
 	// Load .env file
-	if err := godotenv.Load("../.env"); err != nil {
-		log.Fatalf("Failed to load .env: %v", err)
-	}
+	_ = godotenv.Load("../.env")
 
 	// Load configuration
 	cfg = protocol.LoadAPIConfig()
@@ -134,7 +133,7 @@ func main() {
 	})
 
 	// Semaphore pool
-	semPool := semaphore.NewRedisPool(redisClient)
+	semPool := semaphore.NewRedisPool(redisClient, clock.RealClock{})
 
 	// Rate limiter
 	rateLimiter := middleware.NewRateLimiter(redisClient)
@@ -167,7 +166,7 @@ func main() {
 	// HTTP handlers
 	semHandler := semaphore.NewHandler(semPool)
 	taskHandler := task.NewHandler(nc, cfg.BroadcastCh)
-	authHandler := auth.NewHandler(cfg.JWTSecret)
+	authHandler := auth.NewHandler(cfg.JWTSecret, clock.RealClock{})
 
 	// === PROTECTED ROUTES ===
 	// Semaphores
@@ -178,7 +177,7 @@ func main() {
 	// Tasks
 	http.HandleFunc("/task/status", rateLimiter.Middleware(
 		middleware.RLConfig{Limit: 60, WindowSec: 60},
-		middleware.JWTAuthMiddleware(cfg.JWTSecret, taskHandler.SendStatus)))
+		middleware.JWTAuthMiddleware(cfg.JWTSecret, clock.RealClock{}, taskHandler.SendStatus)))
 
 	// === UNPROTECTED ROUTES ===
 	http.HandleFunc("/semaphore/health", semHandler.Health)

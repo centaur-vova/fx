@@ -6,7 +6,6 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -47,9 +46,7 @@ var (
 
 func main() {
 	// Load .env file
-	if err := godotenv.Load("../.env"); err != nil {
-		log.Fatalf("Failed to load .env: %v", err)
-	}
+	_ = godotenv.Load("../.env")
 
 	// Load configuration (API tokens etc)
 	cfg = protocol.LoadBalancerConfig()

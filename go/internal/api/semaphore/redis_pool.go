@@ -3,6 +3,7 @@ package semaphore
 import (
 	"context"
 	"errors"
+	"fast-atomic-flow/go/internal/clock"
 	"fast-atomic-flow/go/internal/embed"
 	"fmt"
 	"time"
@@ -14,13 +15,15 @@ type RedisPool struct {
 	client        *redis.Client
 	acquireScript *redis.Script
 	releaseScript *redis.Script
+	clock         clock.Clock
 }
 
-func NewRedisPool(client *redis.Client) *RedisPool {
+func NewRedisPool(client *redis.Client, cl clock.Clock) *RedisPool {
 	return &RedisPool{
 		client:        client,
 		acquireScript: redis.NewScript(embed.LoadLua("acquire.lua")),
 		releaseScript: redis.NewScript(embed.LoadLua("release.lua")),
+		clock:         cl,
 	}
 }
 
@@ -33,7 +36,7 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 	activeKey := fmt.Sprintf("semaphore:%d:active", mc)
 	channel := fmt.Sprintf("semaphore:%d:events", mc)
 
-	deadline := time.Now().Add(timeout)
+	deadline := p.clock.Now().Add(timeout)
 
 	var pubsub *redis.PubSub
 

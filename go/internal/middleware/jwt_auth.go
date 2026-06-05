@@ -1,17 +1,17 @@
 package middleware
 
 import (
+	"fast-atomic-flow/go/internal/clock"
 	"fast-atomic-flow/go/internal/logger"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // JWTAuthMiddleware validates JWT token from Authorization header
-func JWTAuthMiddleware(secret string, next http.HandlerFunc) http.HandlerFunc {
+func JWTAuthMiddleware(secret string, clock clock.Clock, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -48,7 +48,7 @@ func JWTAuthMiddleware(secret string, next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			if exp.Before(time.Now()) {
+			if exp.Before(clock.Now()) {
 				http.Error(w, "Token expired", http.StatusUnauthorized)
 				return
 			}

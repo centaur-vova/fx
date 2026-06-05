@@ -30,9 +30,7 @@ var (
 
 func main() {
 	// ==== LOAD .env ====
-	if err := godotenv.Load("../.env"); err != nil {
-		log.Fatalf("Failed to load .env: %v", err)
-	}
+	_ = godotenv.Load("../.env")
 
 	// ==== LOAD CONFIG ====
 	cfg = protocol.LoadWSConfig()

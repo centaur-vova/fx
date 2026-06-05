@@ -3,6 +3,7 @@ package semaphore
 import (
 	"bytes"
 	"encoding/json"
+	"fast-atomic-flow/go/internal/clock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,7 +17,7 @@ func newTestHandler(t *testing.T) *Handler {
 	t.Helper()
 	mr := miniredis.RunT(t)
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
-	return NewHandler(NewRedisPool(client))
+	return NewHandler(NewRedisPool(client, clock.RealClock{}))
 }
 
 func TestHandler_Acquire_Success(t *testing.T) {

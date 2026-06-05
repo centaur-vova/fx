@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fast-atomic-flow/go/internal/api/response"
+	"fast-atomic-flow/go/internal/clock"
 	"net/http"
 	"time"
 
@@ -12,6 +13,7 @@ const DefaultTokenTTL = 24 * time.Hour
 
 type Handler struct {
 	jwtSecret string
+	clock     clock.Clock
 }
 
 type TokenResponse struct {
@@ -19,9 +21,10 @@ type TokenResponse struct {
 	ExpiresAt int64  `json:"expires_at"`
 }
 
-func NewHandler(jwtSecret string) *Handler {
+func NewHandler(jwtSecret string, cl clock.Clock) *Handler {
 	return &Handler{
 		jwtSecret: jwtSecret,
+		clock:     cl,
 	}
 }
 
@@ -38,12 +41,13 @@ func NewHandler(jwtSecret string) *Handler {
 // @Failure      500 {string} string "internal server error"
 // @Router       /auth/token [post]
 func (h *Handler) GenerateToken(w http.ResponseWriter, _ *http.Request) {
-	expiresAt := time.Now().Add(DefaultTokenTTL).Unix()
+	now := h.clock.Now()
+	expiresAt := now.Add(DefaultTokenTTL).Unix()
 
 	claims := jwt.MapClaims{
 		"sub": "api-client",
 		"exp": expiresAt,
-		"iat": time.Now().Unix(),
+		"iat": now.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

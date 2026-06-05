@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	"fast-atomic-flow/go/internal/clock"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -116,7 +117,7 @@ func TestUpstream_CheckInstance_Healthy(t *testing.T) {
 	u := NewUpstream(Config{
 		HealthCheck: HealthCheckConfig{Path: "/health"},
 	})
-	inst := &APIInstance{URL: parseURL(t, server.URL)}
+	inst := &APIInstance{URL: parseURL(t, server.URL), clock: clock.RealClock{}}
 	inst.SetAlive()
 
 	client := server.Client()
@@ -134,7 +135,7 @@ func TestUpstream_CheckInstance_Unhealthy(t *testing.T) {
 	u := NewUpstream(Config{
 		HealthCheck: HealthCheckConfig{Path: "/health"},
 	})
-	inst := &APIInstance{URL: parseURL(t, server.URL)}
+	inst := &APIInstance{URL: parseURL(t, server.URL), clock: clock.RealClock{}}
 	inst.SetAlive()
 
 	client := server.Client()

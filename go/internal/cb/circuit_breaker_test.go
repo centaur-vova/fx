@@ -8,21 +8,21 @@ import (
 )
 
 func TestCircuitBreaker_InitialState(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	assert.Equal(t, StateClosed, cb.GetState())
 }
 
 // ========== CanRequest ==========
 
 func TestCircuitBreaker_CanRequest_Closed(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	allowed, halfOpen := cb.CanRequest()
 	assert.True(t, allowed)
 	assert.False(t, halfOpen)
 }
 
 func TestCircuitBreaker_CanRequest_Open(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	// Force open
 	for range maxConsecutiveFailures {
 		cb.RecordFailure()
@@ -35,7 +35,7 @@ func TestCircuitBreaker_CanRequest_Open(t *testing.T) {
 }
 
 func TestCircuitBreaker_CanRequest_HalfOpen(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	// Force open
 	for range maxConsecutiveFailures {
 		cb.RecordFailure()
@@ -52,7 +52,7 @@ func TestCircuitBreaker_CanRequest_HalfOpen(t *testing.T) {
 // ========== RecordSuccess ==========
 
 func TestCircuitBreaker_RecordSuccess_HalfOpenToClosed(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	// Force open then half-open
 	for range maxConsecutiveFailures {
 		cb.RecordFailure()
@@ -66,7 +66,7 @@ func TestCircuitBreaker_RecordSuccess_HalfOpenToClosed(t *testing.T) {
 }
 
 func TestCircuitBreaker_RecordSuccess_Closed(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	closed := cb.RecordSuccess()
 	assert.False(t, closed) // already closed, no transition
 }
@@ -74,7 +74,7 @@ func TestCircuitBreaker_RecordSuccess_Closed(t *testing.T) {
 // ========== RecordFailure ==========
 
 func TestCircuitBreaker_RecordFailure_OpensAfterMax(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 
 	// Below threshold — should not open
 	for range maxConsecutiveFailures - 1 {
@@ -90,7 +90,7 @@ func TestCircuitBreaker_RecordFailure_OpensAfterMax(t *testing.T) {
 }
 
 func TestCircuitBreaker_RecordFailure_HalfOpenOpensImmediately(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	// Force half-open
 	for range maxConsecutiveFailures {
 		cb.RecordFailure()
@@ -106,7 +106,7 @@ func TestCircuitBreaker_RecordFailure_HalfOpenOpensImmediately(t *testing.T) {
 }
 
 func TestCircuitBreaker_RecordFailure_AlreadyOpen(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	for range maxConsecutiveFailures {
 		cb.RecordFailure()
 	}
@@ -120,7 +120,7 @@ func TestCircuitBreaker_RecordFailure_AlreadyOpen(t *testing.T) {
 // ========== ForceClose ==========
 
 func TestCircuitBreaker_ForceClose(t *testing.T) {
-	cb := &CircuitBreaker{}
+	cb := NewCircuitBreaker()
 	for range maxConsecutiveFailures {
 		cb.RecordFailure()
 	}

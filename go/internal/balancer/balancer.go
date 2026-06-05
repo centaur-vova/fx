@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fast-atomic-flow/go/internal/cb"
+	"fast-atomic-flow/go/internal/clock"
 	"fast-atomic-flow/go/internal/logger"
 	"hash/fnv"
 	"net"
@@ -29,6 +30,7 @@ type APIInstance struct {
 	Hash          string
 	Requests      atomic.Uint64
 	Errors        atomic.Uint64
+	clock         clock.Clock
 
 	instanceTTL time.Duration
 }
@@ -88,10 +90,16 @@ func (h *APIInstance) IsAlive() bool {
 	return h.Alive.Load()
 }
 
+// IsAlive returns whether the instance is considered "expired"
+func (h *APIInstance) IsExpired() bool {
+	now := h.clock.Now().UnixNano()
+	return h.ExpiresAt.Load() <= now
+}
+
 // Touch updates the expiration timestamp of the instance
 // Extends the instance's life by instanceTTL
 func (h *APIInstance) Touch() {
-	h.ExpiresAt.Store(time.Now().Add(h.instanceTTL).UnixNano())
+	h.ExpiresAt.Store(h.clock.Now().Add(h.instanceTTL).UnixNano())
 }
 
 // ========== UPSTREAM METHODS ==========
@@ -160,6 +168,8 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 		Proxy:       proxy,
 		Hash:        shortHash(targetURL),
 		instanceTTL: u.cfg.InstanceTTL,
+		clock:       clock.RealClock{},
+		CB:          cb.NewCircuitBreaker(),
 	}
 	instance.SetAlive()
 	instance.Touch()
@@ -274,10 +284,9 @@ func (u *Upstream) CleanupDeadInstances(ctx context.Context) {
 func (u *Upstream) removeDeadInstances() {
 	instances := u.getInstancesCopy()
 
-	now := time.Now().UnixNano()
 	alive := make([]*APIInstance, 0, len(instances))
 	for _, inst := range instances {
-		if inst.ExpiresAt.Load() > now || inst.IsForcedUnalived() {
+		if !inst.IsExpired() || inst.IsForcedUnalived() {
 			alive = append(alive, inst)
 		} else {
 			logger.Warn("🗑️ Removing expired instance", "instance", inst.URL.Host)

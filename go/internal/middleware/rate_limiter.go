@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"context"
+	"fast-atomic-flow/go/internal/clock"
 	"fast-atomic-flow/go/internal/embed"
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -21,12 +21,14 @@ type RLConfig struct {
 type RateLimiter struct {
 	client *redis.Client
 	script *redis.Script
+	clock  clock.Clock
 }
 
 func NewRateLimiter(client *redis.Client) *RateLimiter {
 	return &RateLimiter{
 		client: client,
 		script: redis.NewScript(embed.LoadLua("rate_limiter.lua")),
+		clock:  clock.RealClock{},
 	}
 }
 
@@ -53,7 +55,7 @@ func (rl *RateLimiter) Middleware(cfg RLConfig, next http.HandlerFunc) http.Hand
 // allow checks if request is within rate limit using atomic Lua script.
 // Returns true if allowed, false if rate limit exceeded.
 func (rl *RateLimiter) allow(ctx context.Context, cfg RLConfig, key string) (bool, error) {
-	now := time.Now().UnixMicro()
+	now := rl.clock.Now().UnixMicro()
 	threshold := now - int64(cfg.WindowSec*1_000_000)
 	ttl := cfg.WindowSec + ttlBufferSec
 
