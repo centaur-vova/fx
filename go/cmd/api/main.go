@@ -205,7 +205,7 @@ func main() {
 		logger.Info("🐎 API server started", "port", cfg.APIPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("💥 Server crashed", "error", err)
-			os.Exit(1)
+			cancel()
 		}
 	}()
 

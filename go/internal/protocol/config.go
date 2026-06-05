@@ -1,8 +1,8 @@
 package protocol
 
 import (
-	"fast-atomic-flow/go/internal/logger"
 	"flag"
+	"log"
 	"net/url"
 	"os"
 	"regexp"
@@ -81,12 +81,10 @@ func LoadWSConfig() *WSConfig {
 
 func (c *WSConfig) Validate() {
 	if !natsChannelRegex.MatchString(c.BroadcastCh) {
-		logger.Emergency("💥 Invalid NATS channel name", "channel", c.BroadcastCh)
-		os.Exit(1)
+		log.Fatalf("Invalid NATS broadcast channel: %s", c.BroadcastCh)
 	}
 	if !natsChannelRegex.MatchString(c.StreamCh) {
-		logger.Emergency("💥 Invalid NATS channel name", "channel", c.StreamCh)
-		os.Exit(1)
+		log.Fatalf("Invalid NATS stream channel: %s", c.StreamCh)
 	}
 }
 

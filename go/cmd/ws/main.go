@@ -105,20 +105,32 @@ func main() {
 		ReadHeaderTimeout: 10 * time.Second, // Slowloris protection
 	}
 
+	// signals
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// errors
+	errChan := make(chan error, 1)
+
 	// ==== RUN WS SERVER IN GOROUTINE ====
 	go func() {
 		logger.Info("🚀 WebSocket Gateway ready", "port", cfg.WSPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("💥 Server crashed", "error", err)
-			os.Exit(1)
+			errChan <- err
 		}
 	}()
 
 	// ==== WAIT FOR QUIT SIGNAL ====
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	select {
+	case <-quit:
+		gracefulShutdown(srv, nc)
+	case err := <-errChan:
+		logger.Error("💥 Server crashed", "error", err)
+		os.Exit(1)
+	}
+}
 
+func gracefulShutdown(srv *http.Server, nc *nats.Conn) {
 	logger.Info("🛑 Shutting down...")
 
 	// === GRACEFUL SHUTDOWN ===
@@ -131,8 +143,7 @@ func main() {
 	}
 
 	// === PUT NATS INTO A DRAIN STATE ===
-	err = nc.Drain()
-	if err != nil {
+	if err := nc.Drain(); err != nil {
 		logger.Warn("⚠️ NATS DRAIN error", "error", err)
 	}
 

@@ -108,7 +108,7 @@ func main() {
 		logger.Info("🐎 Balancer service started", "addr", ":"+port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Emergency("💥 Balancer crashed", "error", err)
-			os.Exit(1)
+			cancel()
 		}
 	}()
 
