@@ -7,13 +7,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-type MetricsStore interface {
-	IncTasksCreated(count int, maxConcurrent int, mode string)
-	IncTasksCompleted(maxConcurrent int)
-	IncTasksFailed(maxConcurrent int)
-	IncTasksRetried(maxConcurrent int)
-}
-
 type Store struct {
 	tasksCreated   *prometheus.CounterVec
 	tasksCompleted *prometheus.CounterVec
