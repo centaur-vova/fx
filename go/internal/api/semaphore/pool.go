@@ -2,6 +2,7 @@ package semaphore
 
 import (
 	"context"
+	"fast-atomic-flow/go/internal/logger"
 	"fmt"
 	"time"
 )
@@ -22,9 +23,13 @@ func NewSlotUID(mc, slotIdx int) SlotUID {
 }
 
 // Parse extracts mc and slotIdx from the string.
-func (s SlotUID) Parse() (mc, slotIdx int) {
-	fmt.Sscanf(string(s), "%d:%d", &mc, &slotIdx)
-	return
+func (s SlotUID) Parse() (mc, slotIdx int, err error) {
+	n, err := fmt.Sscanf(string(s), "%d:%d", &mc, &slotIdx)
+	if err != nil || n != 2 {
+		logger.Error("Failed to parse SlotUID", "uid", string(s), "error", err)
+		return 0, 0, fmt.Errorf("invalid SlotUID format: %s", s)
+	}
+	return mc, slotIdx, nil
 }
 
 func (s SlotUID) String() string {

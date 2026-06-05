@@ -8,6 +8,7 @@ APP_API_URL = http://localhost:8090
 
 # --- Methods ---
 .PHONY: install build app stop restart distclean watch test test-php test-go test-go-race check help nats-sub dev
+.PHONE: lint-go
 .PHONY: logs logs-ws logs-balancer logs-api
 .PHONY: swagger-api
 
@@ -68,6 +69,7 @@ test-go-race:
 
 check:
 	composer check-all
+	lint-go
 
 nats-sub:
 	@NATS_TOKEN=$$(sed -n 's/^NATS_TOKEN=//p' .env | tr -d '\r'); \
@@ -89,3 +91,7 @@ logs-api:
 # Swagger/OpenAPI
 swagger-api:
 	swag init -d ./go -g cmd/api/main.go -o go/cmd/api/docs
+
+# Go linter
+lint-go:
+	cd go && golangci-lint run --timeout=5m

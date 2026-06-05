@@ -10,7 +10,7 @@ import (
 )
 
 func TestGenerateToken_Success(t *testing.T) {
-	handler := NewAuthHandler("test-jwt-secret")
+	handler := NewHandler("test-jwt-secret")
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/token", nil)
 	req.Header.Set("Content-Type", "application/json")

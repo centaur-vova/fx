@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-// ApiAuthMiddleware wraps a handler to check for a valid Bearer token
-func ApiAuthMiddleware(token string, next http.HandlerFunc) http.HandlerFunc {
+// APIAuthMiddleware wraps a handler to check for a valid Bearer token
+func APIAuthMiddleware(token string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {
 			logger.Warn("⛔ Unauthorized access attempt",

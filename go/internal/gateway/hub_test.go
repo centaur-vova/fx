@@ -177,7 +177,7 @@ func TestHub_Broadcast_BufferOverflow(t *testing.T) {
 	assert.True(t, c.closed.Load())
 }
 
-func TestHub_Broadcast_NoClients(t *testing.T) {
+func TestHub_Broadcast_NoClients(_ *testing.T) {
 	h := &Hub{clients: make(map[*Client]bool)}
 
 	// Should not panic
@@ -203,7 +203,7 @@ func TestHub_SendToClient(t *testing.T) {
 func TestHub_SendToClient_Overflow(t *testing.T) {
 	h := &Hub{clients: make(map[*Client]bool)}
 	c := &Client{
-		Send: make(chan ClientMessage, 0), // unbuffered, will always overflow
+		Send: make(chan ClientMessage), // unbuffered, will always overflow
 	}
 	h.clientsMu.Lock()
 	h.clients[c] = true

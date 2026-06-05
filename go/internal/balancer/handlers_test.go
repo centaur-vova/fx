@@ -23,8 +23,8 @@ func TestRegisterHandler_Success(t *testing.T) {
 	handler.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, 1, len(u.ApiInstances))
-	assert.Equal(t, "http://a:8081", u.ApiInstances[0].URL.String())
+	assert.Equal(t, 1, len(u.APIInstances))
+	assert.Equal(t, "http://a:8081", u.APIInstances[0].URL.String())
 }
 
 func TestRegisterHandler_EmptyBody(t *testing.T) {
@@ -37,7 +37,7 @@ func TestRegisterHandler_EmptyBody(t *testing.T) {
 	handler.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, 0, len(u.ApiInstances))
+	assert.Equal(t, 0, len(u.APIInstances))
 }
 
 // ========== HealthHandler ==========
@@ -46,7 +46,7 @@ func TestHealthHandler(t *testing.T) {
 	u := NewUpstream(Config{})
 	u.RegisterInstance("http://a:8081")
 	u.RegisterInstance("http://b:8082")
-	u.ApiInstances[1].SetUnalive(false)
+	u.APIInstances[1].SetUnalive(false)
 
 	handler := HealthHandler(u)
 
@@ -88,7 +88,7 @@ func TestForceUnaliveHandler_Success(t *testing.T) {
 	// Find the instance hash
 	var hash string
 	u.mu.RLock()
-	for _, inst := range u.ApiInstances {
+	for _, inst := range u.APIInstances {
 		hash = inst.Hash
 		break
 	}
@@ -162,16 +162,16 @@ func TestReviveHandler_Success(t *testing.T) {
 	// Get hash
 	var hash string
 	u.mu.RLock()
-	for _, inst := range u.ApiInstances {
+	for _, inst := range u.APIInstances {
 		hash = inst.Hash
 		break
 	}
 	u.mu.RUnlock()
 
 	// First force unalive
-	var target *ApiInstance
+	var target *APIInstance
 	u.mu.Lock()
-	for _, inst := range u.ApiInstances {
+	for _, inst := range u.APIInstances {
 		if inst.Hash == hash {
 			target = inst
 			break

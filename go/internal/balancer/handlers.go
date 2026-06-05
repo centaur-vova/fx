@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"encoding/json"
+	"fast-atomic-flow/go/internal/api/response"
 	"fast-atomic-flow/go/internal/cb"
 	"fast-atomic-flow/go/internal/logger"
 	"io"
@@ -70,27 +71,27 @@ func ReviveHandler(u *Upstream) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "invalid request body"})
+			response.WriteJSON(w, map[string]string{"error": "invalid request body"})
 			return
 		}
 
 		if req.Hash == "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "hash parameter required"})
+			response.WriteJSON(w, map[string]string{"error": "hash parameter required"})
 			return
 		}
 
 		if !u.ReviveInstance(req.Hash) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "instance not found"})
+			response.WriteJSON(w, map[string]string{"error": "instance not found"})
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{
+		response.WriteJSON(w, map[string]string{
 			"status":  "ok",
 			"message": "instance revived for hash " + req.Hash,
 		})
@@ -114,21 +115,21 @@ func ForceUnaliveHandler(u *Upstream) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "invalid request body"})
+			response.WriteJSON(w, map[string]string{"error": "invalid request body"})
 			return
 		}
 
 		if req.Hash == "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "hash parameter required"})
+			response.WriteJSON(w, map[string]string{"error": "hash parameter required"})
 			return
 		}
 
 		// Find instance by hash
-		var peer *ApiInstance
+		var peer *APIInstance
 		u.mu.RLock()
-		for _, inst := range u.ApiInstances {
+		for _, inst := range u.APIInstances {
 			if inst.Hash == req.Hash {
 				peer = inst
 				break
@@ -139,7 +140,7 @@ func ForceUnaliveHandler(u *Upstream) http.HandlerFunc {
 		if peer == nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(map[string]string{"error": "instance not found"})
+			response.WriteJSON(w, map[string]string{"error": "instance not found"})
 			return
 		}
 
@@ -147,7 +148,7 @@ func ForceUnaliveHandler(u *Upstream) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{
+		response.WriteJSON(w, map[string]string{
 			"status":  "ok",
 			"message": "instance marked as dead for hash " + req.Hash,
 		})
@@ -156,7 +157,7 @@ func ForceUnaliveHandler(u *Upstream) http.HandlerFunc {
 
 // Returns the current health status of all instances
 func HealthHandler(u *Upstream) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", contentTypeJSON)
 		w.WriteHeader(http.StatusOK)
 
@@ -184,7 +185,7 @@ func HealthHandler(u *Upstream) http.HandlerFunc {
 			Instances:     instances,
 		}
 
-		json.NewEncoder(w).Encode(resp)
+		response.WriteJSON(w, resp)
 	}
 }
 
@@ -216,7 +217,7 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 		}
 
 		// Catch network errors during proxying
-		peer.Proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
+		peer.Proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, err error) {
 			logger.Error("💥 Proxy error inside handler", "host", peer.URL.Host, "error", err)
 
 			// Unalive the peer if CB just became opened

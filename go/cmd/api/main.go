@@ -9,6 +9,7 @@ import (
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -117,7 +118,9 @@ func registerUpstream(ctx context.Context) {
 // @name Authorization
 func main() {
 	// Load .env file
-	godotenv.Load("../.env")
+	if err := godotenv.Load("../.env"); err != nil {
+		log.Fatalf("Failed to load .env: %v", err)
+	}
 
 	// Load configuration
 	cfg = protocol.LoadAPIConfig()
@@ -143,20 +146,19 @@ func main() {
 		nats.Token(cfg.NatsToken),
 		nats.MaxReconnects(-1),            // Retry forever
 		nats.ReconnectWait(2*time.Second), // Every 2 second
-		nats.DisconnectErrHandler(func(c *nats.Conn, err error) {
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
 			logger.Warn("⚠️ NATS DISCONNECTED", "error", err)
 		}),
 		nats.ReconnectHandler(func(c *nats.Conn) {
 			logger.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
 			// Need to resubscribe
 		}),
-		nats.ClosedHandler(func(c *nats.Conn) {
+		nats.ClosedHandler(func(_ *nats.Conn) {
 			logger.Info("🔴 NATS connection CLOSED")
 		}),
 	)
 	if err != nil {
-		logger.Error("💥 NATS Connection failed", "error", err)
-		panic(err)
+		log.Fatalf("NATS Connection failed: %v", err)
 	}
 	defer nc.Close()
 
@@ -165,14 +167,14 @@ func main() {
 	// HTTP handlers
 	semHandler := semaphore.NewHandler(semPool)
 	taskHandler := task.NewHandler(nc, cfg.BroadcastCh)
-	authHandler := auth.NewAuthHandler(cfg.JWTSecret)
+	authHandler := auth.NewHandler(cfg.JWTSecret)
 
 	// === PROTECTED ROUTES ===
 	// Semaphores
-	http.HandleFunc("/semaphore/acquire", middleware.ApiAuthMiddleware(cfg.APIAuthKey, semHandler.Acquire))
-	http.HandleFunc("/semaphore/release", middleware.ApiAuthMiddleware(cfg.APIAuthKey, semHandler.Release))
+	http.HandleFunc("/semaphore/acquire", middleware.APIAuthMiddleware(cfg.APIAuthKey, semHandler.Acquire))
+	http.HandleFunc("/semaphore/release", middleware.APIAuthMiddleware(cfg.APIAuthKey, semHandler.Release))
 	// JWT
-	http.HandleFunc("/auth/token", middleware.ApiAuthMiddleware(cfg.APIAuthKey, authHandler.GenerateToken))
+	http.HandleFunc("/auth/token", middleware.APIAuthMiddleware(cfg.APIAuthKey, authHandler.GenerateToken))
 	// Tasks
 	http.HandleFunc("/task/status", rateLimiter.Middleware(
 		middleware.RLConfig{Limit: 60, WindowSec: 60},
@@ -180,7 +182,7 @@ func main() {
 
 	// === UNPROTECTED ROUTES ===
 	http.HandleFunc("/semaphore/health", semHandler.Health)
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 	http.HandleFunc("/swagger/", httpSwagger.WrapHandler)

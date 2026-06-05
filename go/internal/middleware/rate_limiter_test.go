@@ -37,7 +37,7 @@ func TestRateLimiter_Middleware(t *testing.T) {
 	cfg := RLConfig{Limit: 3, WindowSec: 1}
 
 	var counter int
-	handler := rl.Middleware(cfg, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := rl.Middleware(cfg, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		counter++
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -76,7 +76,7 @@ func TestRateLimiter_DifferentIPs(t *testing.T) {
 	rl := NewRateLimiter(redisClient)
 	cfg := RLConfig{Limit: 2, WindowSec: 10}
 
-	handler := rl.Middleware(cfg, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := rl.Middleware(cfg, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 

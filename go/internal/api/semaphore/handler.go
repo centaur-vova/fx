@@ -2,13 +2,13 @@ package semaphore
 
 import (
 	"encoding/json"
+	"fast-atomic-flow/go/internal/api/response"
 	"fast-atomic-flow/go/internal/logger"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-const defaultMC = 1
 const maxPermitTTLSec = 60
 const maxMC = 255
 
@@ -83,7 +83,7 @@ func (h *Handler) Acquire(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Semaphore acquired", "uid", uid)
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]SlotUID{"uid": uid})
+	response.WriteJSON(w, map[string]SlotUID{"uid": uid})
 }
 
 // Release releases a previously acquired semaphore slot.
@@ -122,6 +122,6 @@ func (h *Handler) Release(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Success      200
 // @Router       /semaphore/health [get]
-func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Health(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

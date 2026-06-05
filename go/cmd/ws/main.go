@@ -7,6 +7,7 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/metrics"
 	"fast-atomic-flow/go/internal/protocol"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,7 +30,9 @@ var (
 
 func main() {
 	// ==== LOAD .env ====
-	godotenv.Load("../.env")
+	if err := godotenv.Load("../.env"); err != nil {
+		log.Fatalf("Failed to load .env: %v", err)
+	}
 
 	// ==== LOAD CONFIG ====
 	cfg = protocol.LoadWSConfig()
@@ -48,20 +51,19 @@ func main() {
 		nats.Token(cfg.NatsToken),
 		nats.MaxReconnects(-1),            // Retry forever
 		nats.ReconnectWait(2*time.Second), // Every 2 second
-		nats.DisconnectErrHandler(func(c *nats.Conn, err error) {
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
 			logger.Warn("⚠️ NATS DISCONNECTED", "error", err)
 		}),
 		nats.ReconnectHandler(func(c *nats.Conn) {
 			logger.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
 			// Need to resubscribe
 		}),
-		nats.ClosedHandler(func(c *nats.Conn) {
+		nats.ClosedHandler(func(_ *nats.Conn) {
 			logger.Info("🔴 NATS connection CLOSED")
 		}),
 	)
 	if err != nil {
-		logger.Error("💥 NATS Connection failed", "error", err)
-		panic(err)
+		log.Fatalf("NATS Connection failed: %v", err)
 	}
 	defer nc.Close()
 
@@ -99,9 +101,10 @@ func main() {
 
 	// ==== INIT WEBSOCKET SERVER ====
 	srv := &http.Server{
-		Addr:        ":" + cfg.WSPort,
-		Handler:     nil,
-		IdleTimeout: 60 * time.Second, // keep idle connections alive long enough for Swoole heartbeat
+		Addr:              ":" + cfg.WSPort,
+		Handler:           nil,
+		IdleTimeout:       60 * time.Second, // keep idle connections alive long enough for Swoole heartbeat
+		ReadHeaderTimeout: 10 * time.Second, // Slowloris protection
 	}
 
 	// ==== RUN WS SERVER IN GOROUTINE ====
@@ -130,7 +133,10 @@ func main() {
 	}
 
 	// === PUT NATS INTO A DRAIN STATE ===
-	nc.Drain()
+	err = nc.Drain()
+	if err != nil {
+		logger.Warn("⚠️ NATS DRAIN error", "error", err)
+	}
 
 	logger.Info("🛑 Stopped")
 }
@@ -139,12 +145,15 @@ func subscribeToNATS(mRouter *gateway.MessageRouter) {
 	subMu.Lock()
 	defer subMu.Unlock()
 
+	var err error
+
 	// Unsubscribe if subscribed
 	if sub != nil {
-		sub.Unsubscribe()
+		if err = sub.Unsubscribe(); err != nil {
+			logger.Error("Failed to unsubscribe", "error", err)
+		}
 	}
 
-	var err error
 	sub, err = nc.Subscribe(cfg.BroadcastCh, func(m *nats.Msg) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -153,7 +162,9 @@ func subscribeToNATS(mRouter *gateway.MessageRouter) {
 		}()
 
 		var env protocol.NatsEnvelope
-		json.Unmarshal(m.Data, &env)
+		if err := json.Unmarshal(m.Data, &env); err != nil {
+			logger.Error("🧩 Failed to unmarshal NatsEnvelope", "error", err)
+		}
 
 		logger.Trace("NATS -> WS", "subject", m.Subject, "type", env.Type, "data", string(m.Data))
 

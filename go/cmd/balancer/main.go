@@ -6,6 +6,7 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 	"fast-atomic-flow/go/internal/middleware"
 	"fast-atomic-flow/go/internal/protocol"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -46,7 +47,9 @@ var (
 
 func main() {
 	// Load .env file
-	godotenv.Load("../.env")
+	if err := godotenv.Load("../.env"); err != nil {
+		log.Fatalf("Failed to load .env: %v", err)
+	}
 
 	// Load configuration (API tokens etc)
 	cfg = protocol.LoadBalancerConfig()
@@ -83,11 +86,11 @@ func main() {
 	mux.HandleFunc("GET /health", balancer.HealthHandler(upstream))
 
 	// Force alive/unalive state on the API instance
-	mux.HandleFunc("POST /instance/unalive", middleware.ApiAuthMiddleware(cfg.APIAuthKey, balancer.ForceUnaliveHandler(upstream)))
-	mux.HandleFunc("POST /instance/revive", middleware.ApiAuthMiddleware(cfg.APIAuthKey, balancer.ReviveHandler(upstream)))
+	mux.HandleFunc("POST /instance/unalive", middleware.APIAuthMiddleware(cfg.APIAuthKey, balancer.ForceUnaliveHandler(upstream)))
+	mux.HandleFunc("POST /instance/revive", middleware.APIAuthMiddleware(cfg.APIAuthKey, balancer.ReviveHandler(upstream)))
 
 	// Register API instance (called by API service)
-	mux.HandleFunc("POST /instance/register", middleware.ApiAuthMiddleware(cfg.BalancerAPIKey, balancer.RegisterHandler(upstream)))
+	mux.HandleFunc("POST /instance/register", middleware.APIAuthMiddleware(cfg.BalancerAPIKey, balancer.RegisterHandler(upstream)))
 
 	// Proxy
 	mux.HandleFunc("/", balancer.ProxyHandler(upstream))
@@ -98,8 +101,9 @@ func main() {
 		port = defaultPort
 	}
 	server := http.Server{
-		Addr:    ":" + port,
-		Handler: mux,
+		Addr:              ":" + port,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second, // Slowloris protection
 	}
 
 	// Start server in goroutine

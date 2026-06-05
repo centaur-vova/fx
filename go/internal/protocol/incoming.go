@@ -1,6 +1,9 @@
 package protocol
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fast-atomic-flow/go/internal/logger"
+)
 
 // Interface for all incoming messages
 type IncomingHandler interface {
@@ -13,7 +16,10 @@ func (p *PingMessage) Handle(data json.RawMessage) ([]byte, error) {
 	var payload struct {
 		TS float64 `json:"ts"`
 	}
-	json.Unmarshal(data, &payload)
+	if err := json.Unmarshal(data, &payload); err != nil {
+		logger.Error("🧩 Failed to unmarshal ping message", "error", err)
+		return nil, err
+	}
 
 	// Return pong
 	return json.Marshal(map[string]any{

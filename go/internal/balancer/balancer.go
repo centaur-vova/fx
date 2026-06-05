@@ -18,8 +18,8 @@ import (
 
 // ========== TYPES ==========
 
-// ApiInstance represents a single upstream API instance
-type ApiInstance struct {
+// APIInstance represents a single upstream API instance
+type APIInstance struct {
 	URL           *url.URL
 	Alive         atomic.Bool
 	forceUnalived atomic.Bool // set manually
@@ -31,13 +31,12 @@ type ApiInstance struct {
 	Errors        atomic.Uint64
 
 	instanceTTL time.Duration
-	mu          sync.RWMutex
 }
 
 // Upstream manages a pool of API instances with round-robin load balancing
 type Upstream struct {
 	mu           sync.RWMutex
-	ApiInstances []*ApiInstance
+	APIInstances []*APIInstance
 	current      atomic.Uint64
 	checkWg      sync.WaitGroup
 	cfg          Config
@@ -61,7 +60,7 @@ type HealthCheckConfig struct {
 // ========== API INSTANCE METHODS ==========
 
 // SetAlive makes the instance as alive
-func (h *ApiInstance) SetAlive() {
+func (h *APIInstance) SetAlive() {
 	h.Alive.Store(true)
 	h.forceUnalived.Store(false)
 }
@@ -71,7 +70,7 @@ func (h *ApiInstance) SetAlive() {
 //
 // If force is true, the instance won't be automatically revived by health checks
 // or successful proxy responses. Only explicit Revive() or re-registration will bring it back.
-func (h *ApiInstance) SetUnalive(force bool) {
+func (h *APIInstance) SetUnalive(force bool) {
 	h.Alive.Store(false)
 	if force {
 		h.forceUnalived.Store(force)
@@ -80,18 +79,18 @@ func (h *ApiInstance) SetUnalive(force bool) {
 
 // IsForcedUnalived returns true if the instance was forcefully marked as dead
 // and should not be automatically revived by health checks or proxy handlers.
-func (h *ApiInstance) IsForcedUnalived() bool {
+func (h *APIInstance) IsForcedUnalived() bool {
 	return h.forceUnalived.Load()
 }
 
 // IsAlive returns whether the instance is considered alive
-func (h *ApiInstance) IsAlive() bool {
+func (h *APIInstance) IsAlive() bool {
 	return h.Alive.Load()
 }
 
 // Touch updates the expiration timestamp of the instance
 // Extends the instance's life by instanceTTL
-func (h *ApiInstance) Touch() {
+func (h *APIInstance) Touch() {
 	h.ExpiresAt.Store(time.Now().Add(h.instanceTTL).UnixNano())
 }
 
@@ -107,7 +106,7 @@ func (u *Upstream) Counts() (up, down uint64) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
-	for _, i := range u.ApiInstances {
+	for _, i := range u.APIInstances {
 		if i.Alive.Load() {
 			up++
 		} else {
@@ -135,7 +134,7 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 	defer u.mu.Unlock()
 
 	// Check if instance already exists (case insensitive)
-	for _, inst := range u.ApiInstances {
+	for _, inst := range u.APIInstances {
 		if strings.EqualFold(inst.URL.String(), targetURL) {
 			// Update existing instance
 			inst.Touch()
@@ -151,12 +150,12 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 
 	// New instance - create and add
 	proxy := httputil.NewSingleHostReverseProxy(origin)
-	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, e error) {
+	proxy.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, e error) {
 		logger.Error("💥 Proxy error", "host", origin.Host, "error", e)
 		w.WriteHeader(http.StatusBadGateway)
 	}
 
-	instance := &ApiInstance{
+	instance := &APIInstance{
 		URL:         origin,
 		Proxy:       proxy,
 		Hash:        shortHash(targetURL),
@@ -165,16 +164,16 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 	instance.SetAlive()
 	instance.Touch()
 
-	u.ApiInstances = append(u.ApiInstances, instance)
+	u.APIInstances = append(u.APIInstances, instance)
 	logger.Info("➕ New API instance registered", "instance", targetURL)
 }
 
 // NextInstance returns the next alive instance using round-robin selection
-func (u *Upstream) NextInstance() *ApiInstance {
+func (u *Upstream) NextInstance() *APIInstance {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
-	n := len(u.ApiInstances)
+	n := len(u.APIInstances)
 	if n == 0 {
 		return nil
 	}
@@ -182,8 +181,8 @@ func (u *Upstream) NextInstance() *ApiInstance {
 	// Find first alive instance
 	for range n {
 		idx := u.current.Add(1) % uint64(n)
-		if u.ApiInstances[idx].IsAlive() {
-			return u.ApiInstances[idx]
+		if u.APIInstances[idx].IsAlive() {
+			return u.APIInstances[idx]
 		}
 	}
 	return nil
@@ -228,7 +227,7 @@ func (u *Upstream) checkAllInstances(client *http.Client) {
 
 	for _, i := range instances {
 		u.checkWg.Add(1)
-		go func(inst *ApiInstance) {
+		go func(inst *APIInstance) {
 			defer u.checkWg.Done()
 			u.checkInstance(client, inst)
 		}(i)
@@ -236,7 +235,7 @@ func (u *Upstream) checkAllInstances(client *http.Client) {
 }
 
 // checkInstance performs a single health check on an instance
-func (u *Upstream) checkInstance(client *http.Client, inst *ApiInstance) {
+func (u *Upstream) checkInstance(client *http.Client, inst *APIInstance) {
 	resp, err := client.Get(inst.URL.String() + u.cfg.HealthCheck.Path)
 	if resp != nil {
 		defer resp.Body.Close()
@@ -276,7 +275,7 @@ func (u *Upstream) removeDeadInstances() {
 	instances := u.getInstancesCopy()
 
 	now := time.Now().UnixNano()
-	alive := make([]*ApiInstance, 0, len(instances))
+	alive := make([]*APIInstance, 0, len(instances))
 	for _, inst := range instances {
 		if inst.ExpiresAt.Load() > now || inst.IsForcedUnalived() {
 			alive = append(alive, inst)
@@ -286,7 +285,7 @@ func (u *Upstream) removeDeadInstances() {
 	}
 
 	u.mu.Lock()
-	u.ApiInstances = alive
+	u.APIInstances = alive
 	u.mu.Unlock()
 }
 
@@ -296,7 +295,7 @@ func (u *Upstream) ReviveInstance(hash string) bool {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	for _, inst := range u.ApiInstances {
+	for _, inst := range u.APIInstances {
 		if inst.Hash == hash {
 			inst.SetAlive()
 			logger.Info("🐎 Instance revived", "instance", inst.URL.Host, "hash", hash)
@@ -307,12 +306,12 @@ func (u *Upstream) ReviveInstance(hash string) bool {
 }
 
 // getInstancesCopy returns a thread-safe copy of the instances slice
-func (u *Upstream) getInstancesCopy() []*ApiInstance {
+func (u *Upstream) getInstancesCopy() []*APIInstance {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
 
-	instances := make([]*ApiInstance, len(u.ApiInstances))
-	copy(instances, u.ApiInstances)
+	instances := make([]*APIInstance, len(u.APIInstances))
+	copy(instances, u.APIInstances)
 	return instances
 }
 

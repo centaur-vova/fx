@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetVmRSS() (float64, error) {
+func GetVMRSS() (float64, error) {
 	data, err := os.ReadFile("/proc/self/status")
 	if err != nil {
 		return 0, err

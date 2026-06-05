@@ -41,7 +41,7 @@ func NewHub(cfg *protocol.WSConfig, nc *nats.Conn) *Hub {
 		clients: make(map[*Client]bool),
 		config:  cfg,
 		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool { return true },
+			CheckOrigin: func(_ *http.Request) bool { return true },
 		},
 		nc:          nc,
 		psyDetector: psychotype.NewDetector(),
@@ -215,7 +215,7 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 
 	for range ticker.C {
 		// RAM
-		memoryMb, err := GetVmRSS()
+		memoryMb, err := GetVMRSS()
 		if err != nil {
 			memoryMb = 0
 		}
