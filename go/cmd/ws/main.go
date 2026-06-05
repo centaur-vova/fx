@@ -1,3 +1,6 @@
+// Package main implements WebSocket proxy gateway.
+// It handles real-time client connections, broadcasts task status updates,
+// and forwards metrics to connected clients.
 package main
 
 import (
@@ -50,14 +53,14 @@ func main() {
 		nats.MaxReconnects(-1),            // Retry forever
 		nats.ReconnectWait(2*time.Second), // Every 2 second
 		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			logger.Warn("⚠️ NATS DISCONNECTED", "error", err)
+			logger.Warn("NATS DISCONNECTED", "error", err)
 		}),
 		nats.ReconnectHandler(func(c *nats.Conn) {
-			logger.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
+			logger.Info("NATS RECONNECTED", "url", c.ConnectedUrl())
 			// Need to resubscribe
 		}),
 		nats.ClosedHandler(func(_ *nats.Conn) {
-			logger.Info("🔴 NATS connection CLOSED")
+			logger.Info("NATS connection CLOSED")
 		}),
 	)
 	if err != nil {
@@ -65,7 +68,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	logger.Info("✅ Go Proxy connected to NATS", "url", cfg.NatsURL)
+	logger.Info("Go Proxy connected to NATS", "url", cfg.NatsURL)
 
 	// ==== STORE ====
 	store := metrics.NewStore()
@@ -86,7 +89,7 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("💥 Panic in WebSocket endpoint", "panic", r)
+				logger.Error("Panic in WebSocket endpoint", "panic", r)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
@@ -114,7 +117,7 @@ func main() {
 
 	// ==== RUN WS SERVER IN GOROUTINE ====
 	go func() {
-		logger.Info("🚀 WebSocket Gateway ready", "port", cfg.WSPort)
+		logger.Info("WebSocket Gateway ready", "port", cfg.WSPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 		}
@@ -125,13 +128,13 @@ func main() {
 	case <-quit:
 		gracefulShutdown(srv, nc)
 	case err := <-errChan:
-		logger.Error("💥 Server crashed", "error", err)
+		logger.Error("Server crashed", "error", err)
 		os.Exit(1)
 	}
 }
 
 func gracefulShutdown(srv *http.Server, nc *nats.Conn) {
-	logger.Info("🛑 Shutting down...")
+	logger.Info("Shutting down...")
 
 	// === GRACEFUL SHUTDOWN ===
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -139,15 +142,15 @@ func gracefulShutdown(srv *http.Server, nc *nats.Conn) {
 
 	// === STOP SERVER ===
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("💥 Shutdown error", "error", err)
+		logger.Error("Shutdown error", "error", err)
 	}
 
 	// === PUT NATS INTO A DRAIN STATE ===
 	if err := nc.Drain(); err != nil {
-		logger.Warn("⚠️ NATS DRAIN error", "error", err)
+		logger.Warn("NATS DRAIN error", "error", err)
 	}
 
-	logger.Info("🛑 Stopped")
+	logger.Info("Stopped")
 }
 
 func subscribeToNATS(mRouter *gateway.MessageRouter) {
@@ -166,13 +169,13 @@ func subscribeToNATS(mRouter *gateway.MessageRouter) {
 	sub, err = nc.Subscribe(cfg.BroadcastCh, func(m *nats.Msg) {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.Error("💥 Panic in NATS handler", "recover", r)
+				logger.Error("Panic in NATS handler", "recover", r)
 			}
 		}()
 
 		var env protocol.NatsEnvelope
 		if err := json.Unmarshal(m.Data, &env); err != nil {
-			logger.Error("🧩 Failed to unmarshal NatsEnvelope", "error", err)
+			logger.Error("Failed to unmarshal NatsEnvelope", "error", err)
 		}
 
 		logger.Trace("NATS -> WS", "subject", m.Subject, "type", env.Type, "data", string(m.Data))
@@ -180,8 +183,8 @@ func subscribeToNATS(mRouter *gateway.MessageRouter) {
 		mRouter.Route(env.Type, env.Data)
 	})
 	if err != nil {
-		logger.Error("💥 Subscribe error", "error", err, "channel", cfg.BroadcastCh)
+		logger.Error("Subscribe error", "error", err, "channel", cfg.BroadcastCh)
 	} else {
-		logger.Info("📡 Subscribed to channel", "channel", cfg.BroadcastCh)
+		logger.Info("Subscribed to channel", "channel", cfg.BroadcastCh)
 	}
 }

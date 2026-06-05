@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 )
 
+// BinaryPacker defines interface for types that can pack themselves into binary format.
 type BinaryPacker interface {
 	Pack() []byte
 }
 
+// WsEvent represents a WebSocket event with a type and payload.
 type WsEvent struct {
 	Event string `json:"event"`
 	Data  any    `json:"data"`
 }
 
+// NewEvent creates a new WsEvent with the given name and data.
 func NewEvent(name string, data any) WsEvent {
 	return WsEvent{
 		Event: name,
@@ -21,23 +24,26 @@ func NewEvent(name string, data any) WsEvent {
 	}
 }
 
-// In-place json marshalling
+// Marshal serializes WsEvent to JSON, ignoring marshalling errors.
 func (e WsEvent) Marshal() []byte {
 	b, _ := json.Marshal(e)
 	return b
 }
 
-// Wrapper for incoming serialized messages from NATS
+// NatsEnvelope wraps incoming NATS messages with type discrimination.
 type NatsEnvelope struct {
 	Type string          `json:"_t"`
 	Data json.RawMessage `json:"d"`
 }
 
+// NatsStats contains NATS JetStream statistics.
 type NatsStats struct {
 	Messages  uint64 `json:"messages"`
 	Bytes     uint64 `json:"bytes"`
 	Consumers int    `json:"consumers"`
 }
+
+// SystemMetrics holds real-time system performance data.
 type SystemMetrics struct {
 	Connections int     `json:"connections"`
 	MemoryMb    float64 `json:"memory_mb"`
@@ -46,6 +52,7 @@ type SystemMetrics struct {
 	NatsStats   `json:"nats_stats"`
 }
 
+// WelcomeData is sent to new WebSocket clients upon connection.
 type WelcomeData struct {
 	WorkerNum       int    `json:"worker_num"`
 	CPUCores        int    `json:"cpu_cores"`
@@ -56,11 +63,14 @@ type WelcomeData struct {
 	WorkerLabel     string `json:"worker_label"`
 }
 
+// TaskBatchCreated indicates a batch of tasks has been created.
 type TaskBatchCreated struct {
 	Count uint16 `json:"count"`
 	MC    uint8  `json:"mc"`
 	Mode  string `json:"mode"`
 }
+
+// TaskStatusUpdate carries task state change information.
 type TaskStatusUpdate struct {
 	ID       uint32 `json:"id"`
 	Status   string `json:"status" enums:"check_lock,progress,completed,lock_acquired,lock_failed,retries_failed,retry"`
@@ -71,6 +81,7 @@ type TaskStatusUpdate struct {
 	Mode     string `json:"mode" enums:"observation,stress"`
 }
 
+// Pack serializes TaskStatusUpdate into a 9-byte binary frame.
 func (t *TaskStatusUpdate) Pack() []byte {
 	buf := make([]byte, 9)
 	buf[0] = MagicByte

@@ -1,3 +1,4 @@
+// Package semaphore provides HTTP handlers for distributed semaphore operations.
 package semaphore
 
 import (
@@ -9,25 +10,30 @@ import (
 	"time"
 )
 
-const maxPermitTTLSec = 60
-const maxMC = 255
+// Constants for semaphore limits.
+const (
+	maxPermitTTLSec = 60
+	maxMC           = 255
+)
 
-// Requests
+// AcquireRequest represents a request to acquire a semaphore slot.
 type AcquireRequest struct {
 	MaxConcurrent   int `json:"max_concurrent" minimum:"1" maximum:"255" example:"5"`
 	LockWaitTimeout int `json:"lock_wait_timeout" minimum:"0" example:"1"`
 	PermitTTL       int `json:"permit_ttl" minimum:"1" maximum:"60" example:"2"`
 }
 
+// ReleaseRequest represents a request to release a semaphore slot.
 type ReleaseRequest struct {
 	UID SlotUID `json:"uid" example:"5:3"`
 }
 
-// Handler
+// Handler handles semaphore HTTP endpoints.
 type Handler struct {
 	pool Pool
 }
 
+// NewHandler creates a semaphore handler with the given pool.
 func NewHandler(pool Pool) *Handler {
 	return &Handler{pool: pool}
 }

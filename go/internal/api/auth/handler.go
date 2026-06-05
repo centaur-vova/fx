@@ -1,3 +1,4 @@
+// Package auth provides JWT token generation and authentication handlers.
 package auth
 
 import (
@@ -9,18 +10,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// DefaultTokenTTL is the default lifetime of a JWT token (24 hours).
 const DefaultTokenTTL = 24 * time.Hour
 
+// Handler handles JWT token generation.
 type Handler struct {
 	jwtSecret string
 	clock     clock.Clock
 }
 
+// TokenResponse contains the generated JWT token and its expiration time.
 type TokenResponse struct {
 	Token     string `json:"token"`
 	ExpiresAt int64  `json:"expires_at"`
 }
 
+// NewHandler creates an auth handler with the given JWT secret and clock.
 func NewHandler(jwtSecret string, cl clock.Clock) *Handler {
 	return &Handler{
 		jwtSecret: jwtSecret,

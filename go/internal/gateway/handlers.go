@@ -1,3 +1,4 @@
+// Package gateway provides NATS message routing to WebSocket clients.
 package gateway
 
 import (
@@ -17,6 +18,7 @@ type MessageRouter struct {
 	handlers map[string]MessageHandler
 }
 
+// MetricsStore defines the interface for task metrics collection.
 type MetricsStore interface {
 	IncTasksCreated(count int, maxConcurrent int, mode string)
 	IncTasksCompleted(maxConcurrent int)
@@ -24,6 +26,7 @@ type MetricsStore interface {
 	IncTasksRetried(maxConcurrent int)
 }
 
+// Broadcaster defines the interface for sending messages to all clients.
 type Broadcaster interface {
 	Broadcast(data any)
 }
@@ -51,10 +54,11 @@ func (r *MessageRouter) Route(envType string, data json.RawMessage) {
 	handler(data)
 }
 
+// handleBatchCreated processes task.batch.created messages.
 func (r *MessageRouter) handleBatchCreated(data json.RawMessage) {
 	var msg protocol.TaskBatchCreated
 	if err := json.Unmarshal(data, &msg); err != nil {
-		logger.Error("🧩 Failed to unmarshal task.batch.created", "error", err)
+		logger.Error("Failed to unmarshal task.batch.created", "error", err)
 		return
 	}
 
@@ -66,10 +70,11 @@ func (r *MessageRouter) handleBatchCreated(data json.RawMessage) {
 	)
 }
 
+// handleTaskStatusUpdate processes task.status.update messages and updates metrics.
 func (r *MessageRouter) handleTaskStatusUpdate(data json.RawMessage) {
 	var msg protocol.TaskStatusUpdate
 	if err := json.Unmarshal(data, &msg); err != nil {
-		logger.Error("🧩 Failed to unmarshal task.status.update", "error", err)
+		logger.Error("Failed to unmarshal task.status.update", "error", err)
 		return
 	}
 

@@ -1,3 +1,4 @@
+// Package metrics provides Prometheus metrics for task processing.
 package metrics
 
 import (
@@ -7,13 +8,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+// Store holds Prometheus metrics for task processing.
 type Store struct {
-	tasksCreated   *prometheus.CounterVec
-	tasksCompleted *prometheus.CounterVec
-	tasksFailed    *prometheus.CounterVec
-	tasksRetried   *prometheus.CounterVec
+	tasksCreated   *prometheus.CounterVec // total created tasks partitioned by max_concurrent and mode
+	tasksCompleted *prometheus.CounterVec // total completed tasks partitioned by max_concurrent
+	tasksFailed    *prometheus.CounterVec // total failed tasks partitioned by max_concurrent
+	tasksRetried   *prometheus.CounterVec // total retried tasks partitioned by max_concurrent
 }
 
+// NewStore creates and registers Prometheus metrics for Fast AF.
 func NewStore() *Store {
 	s := &Store{
 		tasksCreated: promauto.NewCounterVec(
@@ -48,6 +51,7 @@ func NewStore() *Store {
 	return s
 }
 
+// IncTasksCreated increments the counter for created tasks.
 func (s *Store) IncTasksCreated(count int, maxConcurrent int, mode string) {
 	s.tasksCreated.With(prometheus.Labels{
 		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
@@ -55,18 +59,21 @@ func (s *Store) IncTasksCreated(count int, maxConcurrent int, mode string) {
 	}).Add(float64(count))
 }
 
+// IncTasksCompleted increments the counter for completed tasks.
 func (s *Store) IncTasksCompleted(maxConcurrent int) {
 	s.tasksCompleted.With(prometheus.Labels{
 		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
 	}).Inc()
 }
 
+// IncTasksFailed increments the counter for failed tasks.
 func (s *Store) IncTasksFailed(maxConcurrent int) {
 	s.tasksFailed.With(prometheus.Labels{
 		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
 	}).Inc()
 }
 
+// IncTasksRetried increments the counter for retried tasks.
 func (s *Store) IncTasksRetried(maxConcurrent int) {
 	s.tasksRetried.With(prometheus.Labels{
 		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),

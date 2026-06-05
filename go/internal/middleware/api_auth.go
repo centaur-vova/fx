@@ -1,3 +1,4 @@
+// Package middleware provides HTTP middleware for auth, rate limiting, and JWT validation.
 package middleware
 
 import (
@@ -9,7 +10,7 @@ import (
 func APIAuthMiddleware(token string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+token {
-			logger.Warn("⛔ Unauthorized access attempt",
+			logger.Warn("Unauthorized access attempt",
 				"remote_addr", r.RemoteAddr,
 				"path", r.URL.Path,
 			)

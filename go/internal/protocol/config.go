@@ -1,3 +1,5 @@
+// Package protocol provides configuration loading and data structures
+// for WebSocket, NATS, Balancer, and API services.
 package protocol
 
 import (
@@ -11,10 +13,12 @@ import (
 	"strings"
 )
 
+// BaseConfig contains common configuration fields for all services.
 type BaseConfig struct {
 	LogLevel string
 }
 
+// WSConfig holds configuration for the WebSocket gateway service.
 type WSConfig struct {
 	BaseConfig
 
@@ -38,8 +42,10 @@ type WSConfig struct {
 	MetricsUpdateIntervalMs int
 }
 
+// natsChannelRegex validates NATS channel names.
 var natsChannelRegex = regexp.MustCompile(`^[a-zA-Z0-9\._]+$`)
 
+// getVersion reads version info from /version.txt file.
 func getVersion() (string, string) {
 	data, err := os.ReadFile("/version.txt")
 	if err != nil {
@@ -54,6 +60,7 @@ func getVersion() (string, string) {
 	return strings.TrimSpace(versionInfo[0]), strings.TrimSpace(versionInfo[1])
 }
 
+// LoadWSConfig loads WebSocket gateway configuration from environment variables.
 func LoadWSConfig() *WSConfig {
 	queueCap, _ := strconv.Atoi(os.Getenv("QUEUE_CAPACITY"))
 	workerNum, _ := strconv.Atoi(os.Getenv("SERVER_WORKER_NUM"))
@@ -79,6 +86,7 @@ func LoadWSConfig() *WSConfig {
 	}
 }
 
+// Validate checks that NATS channel names are valid.
 func (c *WSConfig) Validate() {
 	if !natsChannelRegex.MatchString(c.BroadcastCh) {
 		log.Fatalf("Invalid NATS broadcast channel: %s", c.BroadcastCh)
@@ -89,6 +97,8 @@ func (c *WSConfig) Validate() {
 }
 
 // === BALANCER CONFIG ===
+
+// BalancerConfig holds configuration for the load balancer service.
 type BalancerConfig struct {
 	BaseConfig
 
@@ -97,6 +107,7 @@ type BalancerConfig struct {
 	BalancerPort   string
 }
 
+// LoadBalancerConfig loads balancer configuration from environment.
 func LoadBalancerConfig() *BalancerConfig {
 	apiURL := getEnv("API_URL", "http://localhost:8090")
 
@@ -119,6 +130,8 @@ func LoadBalancerConfig() *BalancerConfig {
 }
 
 // === API INSTANCE CONFIG ===
+
+// APIConfig holds configuration for the API service.
 type APIConfig struct {
 	BaseConfig
 
@@ -136,6 +149,7 @@ type APIConfig struct {
 	BroadcastCh string
 }
 
+// LoadAPIConfig loads API service configuration from environment and CLI flags.
 func LoadAPIConfig() *APIConfig {
 	apiPortFlag := flag.String("port", getEnv("API_PORT", "8081"), "API service port")
 	flag.Parse()
@@ -165,6 +179,7 @@ func LoadAPIConfig() *APIConfig {
 	}
 }
 
+// getEnv returns environment variable value or default if not set.
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value

@@ -1,3 +1,4 @@
+// Package semaphore provides Redis-based distributed semaphore implementation.
 package semaphore
 
 import (
@@ -5,12 +6,14 @@ import (
 	"errors"
 	"fast-atomic-flow/go/internal/clock"
 	"fast-atomic-flow/go/internal/embed"
+	"fast-atomic-flow/go/internal/logger"
 	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
+// RedisPool implements a distributed semaphore using Redis and Lua scripts.
 type RedisPool struct {
 	client        *redis.Client
 	acquireScript *redis.Script
@@ -18,6 +21,7 @@ type RedisPool struct {
 	clock         clock.Clock
 }
 
+// NewRedisPool creates a RedisPool with the given Redis client and clock.
 func NewRedisPool(client *redis.Client, cl clock.Clock) *RedisPool {
 	return &RedisPool{
 		client:        client,
@@ -63,7 +67,11 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 		// Use only when a very first attempt failed
 		if pubsub == nil {
 			pubsub = p.client.Subscribe(ctx, channel)
-			defer pubsub.Close()
+			defer func() {
+				if err := pubsub.Close(); err != nil {
+					logger.Warn("Error closing pubsub", "pkg", "semaphore", "func", "Acquire", "error", err)
+				}
+			}()
 		}
 
 		// No free slots, wait and retry
@@ -79,6 +87,7 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 	}
 }
 
+// Release releases a previously acquired semaphore slot by its UID.
 func (p *RedisPool) Release(sid SlotUID) error {
 	mc, slotIdx, err := sid.Parse()
 	if err != nil {

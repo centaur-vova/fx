@@ -11,19 +11,23 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// ttlBufferSec adds extra TTL to prevent premature expiration.
 const ttlBufferSec = 60
 
+// RLConfig holds rate limiter parameters.
 type RLConfig struct {
 	Limit     int
 	WindowSec int
 }
 
+// RateLimiter implements a sliding window rate limiter using Redis Lua script.
 type RateLimiter struct {
 	client *redis.Client
 	script *redis.Script
 	clock  clock.Clock
 }
 
+// NewRateLimiter creates a RateLimiter with embedded Lua script.
 func NewRateLimiter(client *redis.Client) *RateLimiter {
 	return &RateLimiter{
 		client: client,
@@ -32,6 +36,7 @@ func NewRateLimiter(client *redis.Client) *RateLimiter {
 	}
 }
 
+// Middleware wraps an HTTP handler with rate limiting.
 func (rl *RateLimiter) Middleware(cfg RLConfig, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

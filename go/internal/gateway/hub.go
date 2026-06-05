@@ -1,3 +1,4 @@
+// Package gateway implements WebSocket hub for real-time client communication.
 package gateway
 
 import (
@@ -16,17 +17,23 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 )
 
+// clientSendBufferSize is the size of the send channel buffer per client.
 const clientSendBufferSize = 1024
 
+// ClientMessage wraps a WebSocket message with its type.
 type ClientMessage struct {
 	Kind    int // websocket.BinaryMessage или websocket.TextMessage
 	Payload []byte
 }
+
+// Client represents a connected WebSocket client.
 type Client struct {
 	Conn   *websocket.Conn
 	Send   chan ClientMessage
 	closed atomic.Bool
 }
+
+// Hub manages WebSocket clients and broadcasts messages.
 type Hub struct {
 	clients     map[*Client]bool
 	clientsMu   sync.RWMutex
@@ -36,6 +43,7 @@ type Hub struct {
 	psyDetector *psychotype.Detector
 }
 
+// NewHub creates a new WebSocket hub.
 func NewHub(cfg *protocol.WSConfig, nc *nats.Conn) *Hub {
 	h := &Hub{
 		clients: make(map[*Client]bool),
@@ -50,22 +58,26 @@ func NewHub(cfg *protocol.WSConfig, nc *nats.Conn) *Hub {
 	return h
 }
 
+// GetClientsCount returns the current number of connected clients.
 func (h *Hub) GetClientsCount() int {
 	h.clientsMu.RLock()
 	defer h.clientsMu.RUnlock()
 	return len(h.clients)
 }
 
+// writePump sends messages from the client's send channel to the WebSocket connection.
 func (h *Hub) writePump(client *Client) {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("💥 Panic in writePump", "error", r)
+			logger.Error("Panic in writePump", "error", r)
 		}
 	}()
 
 	defer func() {
 		h.Remove(client)
-		client.Conn.Close()
+		if err := client.Conn.Close(); err != nil {
+			logger.Warn("Error closing WebSocket client connection", "error", err)
+		}
 	}()
 	for msg := range client.Send {
 		err := client.Conn.WriteMessage(msg.Kind, msg.Payload)
@@ -75,6 +87,7 @@ func (h *Hub) writePump(client *Client) {
 	}
 }
 
+// Remove removes a client from the hub and closes its channels.
 func (h *Hub) Remove(client *Client) {
 	if !client.closed.CompareAndSwap(false, true) {
 		// Already closed
@@ -88,6 +101,7 @@ func (h *Hub) Remove(client *Client) {
 	close(client.Send)
 }
 
+// Broadcast sends a message to all connected clients.
 func (h *Hub) Broadcast(data any) {
 	var msg ClientMessage
 	if packer, ok := data.(protocol.BinaryPacker); ok {
@@ -111,12 +125,14 @@ func (h *Hub) Broadcast(data any) {
 	}
 }
 
+// Count returns the number of connected clients.
 func (h *Hub) Count() int {
 	h.clientsMu.RLock()
 	defer h.clientsMu.RUnlock()
 	return len(h.clients)
 }
 
+// SendToClient sends a message to a specific client.
 func (h *Hub) SendToClient(client *Client, data any) {
 	var msg ClientMessage
 	switch v := data.(type) {
@@ -138,10 +154,11 @@ func (h *Hub) SendToClient(client *Client, data any) {
 	}
 }
 
+// HandleWS upgrades HTTP to WebSocket and manages the client connection.
 func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		logger.Error("💥 WebSocket upgrade error", "error", err)
+		logger.Error("WebSocket upgrade error", "error", err)
 		return
 	}
 
@@ -152,7 +169,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("💥 Panic in HandleWS", "error", r)
+			logger.Error("Panic in HandleWS", "error", r)
 			h.Remove(client)
 		}
 	}()
@@ -162,7 +179,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 	h.clientsMu.Unlock()
 	go h.writePump(client)
 
-	logger.Info("👤 New client connected", "total", h.Count())
+	logger.Info("New client connected", "total", h.Count())
 
 	// Gather details about JetStream
 	// TODO: Cache StreamInfo with short TTL (e.g., 10s) to reduce NATS requests on high load.
@@ -197,7 +214,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 
 		response, err := router.Route(p)
 		if err != nil {
-			logger.Error("💥 Router error", "error", err)
+			logger.Error("Router error", "error", err)
 			continue
 		}
 
@@ -209,6 +226,7 @@ func (h *Hub) HandleWS(w http.ResponseWriter, r *http.Request, router *Router) {
 	h.Remove(client)
 }
 
+// RunMetricsBroadcaster periodically broadcasts system metrics to all clients.
 func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -238,7 +256,7 @@ func (h *Hub) RunMetricsBroadcaster(interval time.Duration) {
 		// NATS stats
 		js, err := h.nc.JetStream()
 		if err != nil {
-			logger.Error("🌊 Failed to get JetStream context", "error", err)
+			logger.Error("Failed to get JetStream context", "error", err)
 		}
 		streamInfo, _ := js.StreamInfo(h.config.StreamCh)
 		var natsStats protocol.NatsStats

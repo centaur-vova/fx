@@ -1,3 +1,4 @@
+// Package balancer provides HTTP handlers for load balancer management.
 package balancer
 
 import (
@@ -11,10 +12,12 @@ import (
 	"time"
 )
 
+// content type constants.
 const (
 	contentTypeJSON = "application/json"
 )
 
+// Global statistics counters.
 var (
 	totalRequests atomic.Uint64
 	totalErrors   atomic.Uint64
@@ -23,6 +26,7 @@ var (
 
 // ========== TYPES ==========
 
+// InstanceHealth represents health status of a single API instance.
 type InstanceHealth struct {
 	Hash     string `json:"hash"`
 	Requests uint64 `json:"requests"`
@@ -43,7 +47,7 @@ type HealthResponse struct {
 
 // ========== HTTP HANDLERS ==========
 
-// Handles POST requests to register a new API instance
+// RegisterHandler handles POST /instance/register requests.
 func RegisterHandler(u *Upstream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
@@ -51,7 +55,12 @@ func RegisterHandler(u *Upstream) http.HandlerFunc {
 			http.Error(w, "Failed to read body", http.StatusBadRequest)
 			return
 		}
-		defer r.Body.Close()
+
+		defer func() {
+			if err := r.Body.Close(); err != nil {
+				logger.Warn("Error closing request body", "handler", "RegisterHandler", "error", err)
+			}
+		}()
 
 		targetURL := string(body)
 		u.RegisterInstance(targetURL)
@@ -155,7 +164,7 @@ func ForceUnaliveHandler(u *Upstream) http.HandlerFunc {
 	}
 }
 
-// Returns the current health status of all instances
+// HealthHandler handles GET /health requests.
 func HealthHandler(u *Upstream) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", contentTypeJSON)
@@ -189,7 +198,7 @@ func HealthHandler(u *Upstream) http.HandlerFunc {
 	}
 }
 
-// Proxy all other requests
+// ProxyHandler forwards requests to upstream API instances.
 func ProxyHandler(u *Upstream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Stats
@@ -213,17 +222,17 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 			return
 		}
 		if isHalfOpen {
-			logger.Info("🟡 Circuit Breaker HALF-OPEN - probing instance", "instance", peer.URL.Host)
+			logger.Info("Circuit Breaker HALF-OPEN - probing instance", "instance", peer.URL.Host)
 		}
 
 		// Catch network errors during proxying
 		peer.Proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, err error) {
-			logger.Error("💥 Proxy error inside handler", "host", peer.URL.Host, "error", err)
+			logger.Error("Proxy error inside handler", "host", peer.URL.Host, "error", err)
 
 			// Unalive the peer if CB just became opened
 			if peer.CB.RecordFailure() {
 				peer.SetUnalive(false)
-				logger.Warn("🔴 Circuit Breaker OPENED - instance isolated", "instance", peer.URL.Host)
+				logger.Warn("Circuit Breaker OPENED - instance isolated", "instance", peer.URL.Host)
 			}
 			rw.WriteHeader(http.StatusBadGateway)
 		}
@@ -233,7 +242,7 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 
 		// Check if the peer instance has just recovered
 		if peer.CB.RecordSuccess() {
-			logger.Info("🟢 Circuit Breaker CLOSED - instance fully recovered", "instance", peer.URL.Host)
+			logger.Info("Circuit Breaker CLOSED - instance fully recovered", "instance", peer.URL.Host)
 		}
 
 		// Mark the peer as alive
@@ -243,6 +252,7 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 	}
 }
 
+// cbStateString converts circuit breaker state to string.
 func cbStateString(state uint32) string {
 	switch state {
 	case cb.StateClosed:

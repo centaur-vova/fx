@@ -33,7 +33,9 @@ func TestHandler_Acquire_Success(t *testing.T) {
 	}
 
 	var resp map[string]string
-	json.NewDecoder(rec.Body).Decode(&resp)
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
 	if resp["uid"] == "" {
 		t.Error("expected non-empty uid")
 	}
@@ -60,7 +62,9 @@ func TestHandler_Release(t *testing.T) {
 	h.Acquire(rec1, req1)
 
 	var resp map[string]string
-	json.NewDecoder(rec1.Body).Decode(&resp)
+	if err := json.NewDecoder(rec1.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
 	uid := resp["uid"]
 
 	// Release

@@ -1,3 +1,6 @@
+// Package main implements the Fast AF API service.
+// It provides semaphore management, task status forwarding, JWT authentication,
+// and integrates with Redis, NATS, and the load balancer.
 package main
 
 import (
@@ -72,16 +75,16 @@ func registerUpstream(ctx context.Context) {
 
 		resp, err := client.Do(req)
 		if resp != nil {
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 		}
 
 		ok := err == nil && resp.StatusCode == http.StatusOK
 
 		// Log only on state change
 		if ok && !isAlive {
-			logger.Info("🚀 Reconnected to balancer", "instance", targetURL)
+			logger.Info("Reconnected to balancer", "instance", targetURL)
 		} else if !ok && isAlive {
-			logger.Warn("⚠️ Lost connection to balancer", "instance", targetURL)
+			logger.Warn("Lost connection to balancer", "instance", targetURL)
 		}
 		isAlive = ok
 		return ok
@@ -89,7 +92,7 @@ func registerUpstream(ctx context.Context) {
 
 	// First registration (must succeed, retry until it does)
 	for !doRegister() {
-		logger.Warn("⏳ Balancer unavailable. Retrying registration...", "retry_interval", registrationRetryInterval)
+		logger.Warn("Balancer unavailable. Retrying registration...", "retry_interval", registrationRetryInterval)
 		select {
 		case <-ctx.Done():
 			return
@@ -101,7 +104,7 @@ func registerUpstream(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("🛑 Registration stopped")
+			logger.Info("Registration stopped")
 			return
 		case <-ticker.C:
 			doRegister()
@@ -146,14 +149,14 @@ func main() {
 		nats.MaxReconnects(-1),            // Retry forever
 		nats.ReconnectWait(2*time.Second), // Every 2 second
 		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			logger.Warn("⚠️ NATS DISCONNECTED", "error", err)
+			logger.Warn("NATS DISCONNECTED", "error", err)
 		}),
 		nats.ReconnectHandler(func(c *nats.Conn) {
-			logger.Info("✅ NATS RECONNECTED", "url", c.ConnectedUrl())
+			logger.Info("NATS RECONNECTED", "url", c.ConnectedUrl())
 			// Need to resubscribe
 		}),
 		nats.ClosedHandler(func(_ *nats.Conn) {
-			logger.Info("🔴 NATS connection CLOSED")
+			logger.Info("NATS connection CLOSED")
 		}),
 	)
 	if err != nil {
@@ -161,7 +164,7 @@ func main() {
 	}
 	defer nc.Close()
 
-	logger.Info("✅ API connected to NATS", "url", cfg.NatsURL)
+	logger.Info("API connected to NATS", "url", cfg.NatsURL)
 
 	// HTTP handlers
 	semHandler := semaphore.NewHandler(semPool)
@@ -202,9 +205,9 @@ func main() {
 
 	// Start API server
 	go func() {
-		logger.Info("🐎 API server started", "port", cfg.APIPort)
+		logger.Info("API server started", "port", cfg.APIPort)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("💥 Server crashed", "error", err)
+			logger.Error("Server crashed", "error", err)
 			cancel()
 		}
 	}()
@@ -214,7 +217,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Info("🛑 Shutting down...")
+	logger.Info("Shutting down...")
 
 	// Cancel context to stop registration heartbeat
 	cancel()
@@ -225,8 +228,8 @@ func main() {
 
 	// Stop server
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("⚠️ Shutdown error", "error", err)
+		logger.Error("Shutdown error", "error", err)
 	}
 
-	logger.Info("🛑 Stopped")
+	logger.Info("Stopped")
 }

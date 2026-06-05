@@ -1,3 +1,4 @@
+// Package task provides HTTP handlers for task status forwarding to NATS.
 package task
 
 import (
@@ -6,15 +7,18 @@ import (
 	"net/http"
 )
 
+// Publisher defines the interface for publishing messages to NATS.
 type Publisher interface {
 	Publish(subj string, data []byte) error
 }
 
+// Handler forwards task status updates to NATS.
 type Handler struct {
 	publisher Publisher // nats conn for now
 	subject   string    // nats subject for now
 }
 
+// NewHandler creates a task handler with the given publisher and subject.
 func NewHandler(publisher Publisher, subject string) *Handler {
 	return &Handler{
 		publisher: publisher,
@@ -22,6 +26,8 @@ func NewHandler(publisher Publisher, subject string) *Handler {
 	}
 }
 
+// SendStatus forwards task status from PHP to NATS.
+//
 // @Summary  SendStatus receives task status update and publishes to NATS.
 // @Security ApiKeyAuth
 // @Accept   json

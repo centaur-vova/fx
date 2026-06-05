@@ -233,7 +233,9 @@ func TestHub_Broadcast_EventMessage(t *testing.T) {
 			Event string            `json:"event"`
 			Data  map[string]string `json:"data"`
 		}
-		json.Unmarshal(msg.Payload, &decoded)
+		if err := json.Unmarshal(msg.Payload, &decoded); err != nil {
+			t.Fatalf("failed to unmarshal message: %v", err)
+		}
 		assert.Equal(t, "test.event", decoded.Event)
 		assert.Equal(t, "value", decoded.Data["key"])
 	case <-time.After(100 * time.Millisecond):

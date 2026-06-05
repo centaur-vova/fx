@@ -1,3 +1,4 @@
+// Package cb provides circuit breaker implementation for failure isolation.
 package cb
 
 import (
@@ -6,18 +7,20 @@ import (
 	"time"
 )
 
-// CB states
+// Circuit breaker states.
 const (
 	StateClosed uint32 = iota
 	StateOpen
 	StateHalfOpen
 )
 
+// Circuit breaker configuration constants.
 const (
 	maxConsecutiveFailures = 5
 	coolDownDuration       = 10 * time.Second
 )
 
+// CircuitBreaker implements a trip switch for API instance failures.
 type CircuitBreaker struct {
 	state               atomic.Uint32
 	consecutiveFailures atomic.Uint64
@@ -25,6 +28,7 @@ type CircuitBreaker struct {
 	clock               clock.Clock
 }
 
+// NewCircuitBreaker creates a CircuitBreaker with a real clock.
 func NewCircuitBreaker() CircuitBreaker {
 	return CircuitBreaker{
 		clock: clock.RealClock{},
@@ -82,13 +86,13 @@ func (cb *CircuitBreaker) CanRequest() (bool, bool) {
 	return false, false
 }
 
-// CB ForceClose
+// ForceClose forces the circuit breaker into closed state.
 func (cb *CircuitBreaker) ForceClose() {
 	cb.consecutiveFailures.Store(0)
 	cb.state.Store(StateClosed)
 }
 
-// CB ForceOpen
+// ForceOpen forces the circuit breaker into open state.
 func (cb *CircuitBreaker) ForceOpen() {
 	// Push it to the limits, oh yeah
 	cb.consecutiveFailures.Store(maxConsecutiveFailures)

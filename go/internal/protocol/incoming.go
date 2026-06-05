@@ -1,3 +1,4 @@
+// Package protocol defines message structures and handlers for WebSocket communication.
 package protocol
 
 import (
@@ -5,19 +6,21 @@ import (
 	"fast-atomic-flow/go/internal/logger"
 )
 
-// Interface for all incoming messages
+// IncomingHandler defines the interface for processing incoming WebSocket messages.
 type IncomingHandler interface {
 	Handle(data json.RawMessage) ([]byte, error)
 }
 
+// PingMessage handles ping events and returns pong responses.
 type PingMessage struct{}
 
+// Handle processes a ping message and returns a pong with the original timestamp.
 func (p *PingMessage) Handle(data json.RawMessage) ([]byte, error) {
 	var payload struct {
 		TS float64 `json:"ts"`
 	}
 	if err := json.Unmarshal(data, &payload); err != nil {
-		logger.Error("🧩 Failed to unmarshal ping message", "error", err)
+		logger.Error("Failed to unmarshal ping message", "error", err)
 		return nil, err
 	}
 

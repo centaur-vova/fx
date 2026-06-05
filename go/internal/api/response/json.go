@@ -1,3 +1,4 @@
+// Package response provides helper functions for writing JSON HTTP responses.
 package response
 
 import (

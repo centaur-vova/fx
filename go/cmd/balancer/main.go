@@ -1,3 +1,6 @@
+// Package main implements the Fast AF load balancer service.
+// It provides dynamic upstream registration, health checks, circuit breaker,
+// round-robin load balancing, and graceful shutdown.
 package main
 
 import (
@@ -105,9 +108,9 @@ func main() {
 
 	// Start server in goroutine
 	go func() {
-		logger.Info("🐎 Balancer service started", "addr", ":"+port)
+		logger.Info("Balancer service started", "addr", ":"+port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Emergency("💥 Balancer crashed", "error", err)
+			logger.Emergency("Balancer crashed", "error", err)
 			cancel()
 		}
 	}()
@@ -117,7 +120,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Info("🛑 Shutting down...")
+	logger.Info("Shutting down...")
 
 	// Cancel the context for background goroutines
 	cancel()
@@ -127,8 +130,8 @@ func main() {
 	defer shutdownCancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Error("💥 Shutdown error", "error", err)
+		logger.Error("Shutdown error", "error", err)
 	}
 
-	logger.Info("🛑 Stopped")
+	logger.Info("Stopped")
 }

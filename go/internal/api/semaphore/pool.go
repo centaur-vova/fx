@@ -1,3 +1,4 @@
+// Package semaphore provides distributed semaphore pool interface.
 package semaphore
 
 import (
@@ -7,6 +8,7 @@ import (
 	"time"
 )
 
+// Pool defines the interface for semaphore acquire/release operations.
 type Pool interface {
 	Acquire(ctx context.Context, mc int, timeout, ttl time.Duration) (SlotUID, error)
 	Release(sid SlotUID) error
@@ -32,6 +34,7 @@ func (s SlotUID) Parse() (mc, slotIdx int, err error) {
 	return mc, slotIdx, nil
 }
 
+// String returns the string representation of SlotUID.
 func (s SlotUID) String() string {
 	return string(s)
 }

@@ -1,3 +1,4 @@
+// Package logger provides structured logging with slog and custom severity levels.
 package logger
 
 import (
@@ -7,6 +8,7 @@ import (
 	"strings"
 )
 
+// Log levels with severity: LevelTrace, LevelNotice, LevelCritical, LevelAlert, LevelEmergency.
 const (
 	LevelTrace     = slog.LevelDebug - 2 // -6
 	LevelNotice    = slog.LevelInfo + 2  // 2
@@ -15,6 +17,7 @@ const (
 	LevelEmergency = slog.LevelError + 8 // 16
 )
 
+// LevelMap maps log level names to slog.Level values.
 var LevelMap = map[string]slog.Level{
 	"trace":     LevelTrace,
 	"debug":     slog.LevelDebug,
@@ -27,6 +30,7 @@ var LevelMap = map[string]slog.Level{
 	"emergency": LevelEmergency,
 }
 
+// Init initializes the global slog logger with the specified level.
 func Init(levelName string) {
 	level, ok := LevelMap[strings.ToLower(levelName)]
 	if !ok {
@@ -65,39 +69,49 @@ func Init(levelName string) {
 	slog.SetDefault(slog.New(handler))
 }
 
+// Debug logs a message at debug level.
 func Debug(msg string, args ...any) {
 	slog.Debug(msg, args...)
 }
 
+// Info logs a message at info level.
 func Info(msg string, args ...any) {
 	slog.Info(msg, args...)
 }
 
+// Warn logs a message at warn level.
 func Warn(msg string, args ...any) {
 	slog.Warn(msg, args...)
 }
 
+// Error logs a message at error level.
 func Error(msg string, args ...any) {
 	slog.Error(msg, args...)
 }
 
 // === CUSTOM LEVELS HELPERS ===
+
+// Trace logs a message at trace level (below debug).
 func Trace(msg string, args ...any) {
 	slog.Log(context.Background(), LevelTrace, msg, args...)
 }
 
+// Notice logs a message at notice level (between info and warn).
 func Notice(msg string, args ...any) {
 	slog.Log(context.Background(), LevelNotice, msg, args...)
 }
 
+// Critical logs a message at critical level (between error and alert).
 func Critical(msg string, args ...any) {
 	slog.Log(context.Background(), LevelCritical, msg, args...)
 }
 
+// Alert logs a message at alert level (above error, below emergency).
 func Alert(msg string, args ...any) {
 	slog.Log(context.Background(), LevelAlert, msg, args...)
 }
 
+// Emergency logs a message at emergency level (highest severity).
 func Emergency(msg string, args ...any) {
 	slog.Log(context.Background(), LevelEmergency, msg, args...)
 }

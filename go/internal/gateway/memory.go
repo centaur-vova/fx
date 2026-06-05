@@ -1,3 +1,4 @@
+// Package gateway provides WebSocket hub and memory utilities.
 package gateway
 
 import (
@@ -7,6 +8,7 @@ import (
 	"strings"
 )
 
+// GetVMRSS returns the current RSS memory usage of the process in MB.
 func GetVMRSS() (float64, error) {
 	data, err := os.ReadFile("/proc/self/status")
 	if err != nil {
@@ -29,6 +31,7 @@ func GetVMRSS() (float64, error) {
 	return 0, fmt.Errorf("VmRSS not found")
 }
 
+// GetFreeMemory returns the available system memory in MB.
 func GetFreeMemory() (float64, error) {
 	data, err := os.ReadFile("/proc/meminfo")
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package balancer provides a dynamic HTTP load balancer with health checks.
 package balancer
 
 import (
@@ -19,7 +20,7 @@ import (
 
 // ========== TYPES ==========
 
-// APIInstance represents a single upstream API instance
+// APIInstance represents a single upstream API instance.
 type APIInstance struct {
 	URL           *url.URL
 	Alive         atomic.Bool
@@ -44,12 +45,14 @@ type Upstream struct {
 	cfg          Config
 }
 
+// Config holds balancer configuration.
 type Config struct {
 	InstanceTTL     time.Duration
 	CleanupInterval time.Duration
 	HealthCheck     HealthCheckConfig
 }
 
+// HealthCheckConfig holds health check parameters.
 type HealthCheckConfig struct {
 	Timeout         time.Duration
 	Interval        time.Duration
@@ -61,7 +64,7 @@ type HealthCheckConfig struct {
 
 // ========== API INSTANCE METHODS ==========
 
-// SetAlive makes the instance as alive
+// SetAlive makes the instance as alive.
 func (h *APIInstance) SetAlive() {
 	h.Alive.Store(true)
 	h.forceUnalived.Store(false)
@@ -90,7 +93,7 @@ func (h *APIInstance) IsAlive() bool {
 	return h.Alive.Load()
 }
 
-// IsAlive returns whether the instance is considered "expired"
+// IsExpired returns whether the instance has exceeded its TTL.
 func (h *APIInstance) IsExpired() bool {
 	now := h.clock.Now().UnixNano()
 	return h.ExpiresAt.Load() <= now
@@ -104,12 +107,14 @@ func (h *APIInstance) Touch() {
 
 // ========== UPSTREAM METHODS ==========
 
+// NewUpstream creates a new Upstream with the given configuration.
 func NewUpstream(cfg Config) *Upstream {
 	return &Upstream{
 		cfg: cfg,
 	}
 }
 
+// Counts returns the number of alive and dead instances.
 func (u *Upstream) Counts() (up, down uint64) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
@@ -134,7 +139,7 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 
 	origin, err := url.Parse(targetURL)
 	if err != nil {
-		logger.Error("💥 Invalid URL", "url", targetURL, "error", err)
+		logger.Error("Invalid URL", "url", targetURL, "error", err)
 		return
 	}
 
@@ -148,9 +153,9 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 			inst.Touch()
 			if !inst.IsAlive() && !inst.IsForcedUnalived() {
 				inst.SetAlive()
-				logger.Info("🐎 Instance re-registered and revived", "instance", targetURL)
+				logger.Info("Instance re-registered and revived", "instance", targetURL)
 			} else {
-				logger.Debug("💓 Heartbeat received", "instance", targetURL)
+				logger.Debug("Heartbeat received", "instance", targetURL)
 			}
 			return
 		}
@@ -159,7 +164,7 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 	// New instance - create and add
 	proxy := httputil.NewSingleHostReverseProxy(origin)
 	proxy.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, e error) {
-		logger.Error("💥 Proxy error", "host", origin.Host, "error", e)
+		logger.Error("Proxy error", "host", origin.Host, "error", e)
 		w.WriteHeader(http.StatusBadGateway)
 	}
 
@@ -175,7 +180,7 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 	instance.Touch()
 
 	u.APIInstances = append(u.APIInstances, instance)
-	logger.Info("➕ New API instance registered", "instance", targetURL)
+	logger.Info("New API instance registered", "instance", targetURL)
 }
 
 // NextInstance returns the next alive instance using round-robin selection
@@ -221,9 +226,9 @@ func (u *Upstream) HealthCheck(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("🛑 Health Check stopped, waiting for active checks...")
+			logger.Info("Health Check stopped, waiting for active checks...")
 			u.checkWg.Wait()
-			logger.Info("🛑 All Health Check completed")
+			logger.Info("All Health Check completed")
 			return
 		case <-ticker.C:
 			u.checkAllInstances(client)
@@ -248,7 +253,11 @@ func (u *Upstream) checkAllInstances(client *http.Client) {
 func (u *Upstream) checkInstance(client *http.Client, inst *APIInstance) {
 	resp, err := client.Get(inst.URL.String() + u.cfg.HealthCheck.Path)
 	if resp != nil {
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				logger.Warn("Error closing request body", "handler", "checkInstance", "error", err)
+			}
+		}()
 	}
 
 	isHealthy := err == nil && resp != nil && resp.StatusCode == http.StatusOK
@@ -257,11 +266,11 @@ func (u *Upstream) checkInstance(client *http.Client, inst *APIInstance) {
 		inst.CB.ForceClose()
 		if !inst.IsAlive() && !inst.IsForcedUnalived() {
 			inst.SetAlive()
-			logger.Info("🐎 Reanimated", "instance", inst.URL.Host)
+			logger.Info("Reanimated", "instance", inst.URL.Host)
 		}
 	} else if inst.IsAlive() {
 		inst.SetUnalive(false)
-		logger.Warn("🛑 Expired", "instance", inst.URL.Host)
+		logger.Warn("Expired", "instance", inst.URL.Host)
 	}
 }
 
@@ -289,7 +298,7 @@ func (u *Upstream) removeDeadInstances() {
 		if !inst.IsExpired() || inst.IsForcedUnalived() {
 			alive = append(alive, inst)
 		} else {
-			logger.Warn("🗑️ Removing expired instance", "instance", inst.URL.Host)
+			logger.Warn("Removing expired instance", "instance", inst.URL.Host)
 		}
 	}
 
@@ -298,7 +307,7 @@ func (u *Upstream) removeDeadInstances() {
 	u.mu.Unlock()
 }
 
-// Revive clears the forced unalived flag and marks the instance as alive.
+// ReviveInstance clears the forced unalived flag and marks the instance as alive.
 // This allows the instance to be used again for routing requests.
 func (u *Upstream) ReviveInstance(hash string) bool {
 	u.mu.Lock()
@@ -307,7 +316,7 @@ func (u *Upstream) ReviveInstance(hash string) bool {
 	for _, inst := range u.APIInstances {
 		if inst.Hash == hash {
 			inst.SetAlive()
-			logger.Info("🐎 Instance revived", "instance", inst.URL.Host, "hash", hash)
+			logger.Info("Instance revived", "instance", inst.URL.Host, "hash", hash)
 			return true
 		}
 	}
@@ -324,8 +333,11 @@ func (u *Upstream) getInstancesCopy() []*APIInstance {
 	return instances
 }
 
+// shortHash generates a short 8-character hash from a string.
 func shortHash(s string) string {
 	h := fnv.New64a()
-	h.Write([]byte(s))
+	if _, err := h.Write([]byte(s)); err != nil {
+		logger.Warn("Failed to write to hash", "pkg", "balancer", "func", "shortHash", "error", err)
+	}
 	return hex.EncodeToString(h.Sum(nil)[:4]) // 8 characters
 }
