@@ -1,9 +1,10 @@
+version: 2
+
 run:
   timeout: 5m
   tests: true
 
 linters:
-  # Включаем самых важных
   enable:
     - govet
     - staticcheck
