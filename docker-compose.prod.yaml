@@ -121,6 +121,7 @@ services:
       - API_AUTH_KEY=${API_AUTH_KEY}
       - BALANCER_API_KEY=${BALANCER_API_KEY}
       - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
       # Nats
       - NATS_HOST=${NATS_HOST}
       - NATS_PORT=${NATS_PORT}

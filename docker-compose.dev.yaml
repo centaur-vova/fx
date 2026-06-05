@@ -109,6 +109,7 @@ services:
       - API_URL=${API_URL}
       - API_AUTH_KEY=${API_AUTH_KEY}
       - BALANCER_API_KEY=${BALANCER_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
       # Nats
       - NATS_HOST=${NATS_HOST}
       - NATS_PORT=${NATS_PORT}
