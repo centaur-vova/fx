@@ -56,14 +56,8 @@ $userLines = explode("\n", $cleanUserMessage);
 
 echo "[Commit-msg] Checking message for Emojinal Commits standard...\n";
 
-/**
- * Header Regular Expression Breakdown:
- * ^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+ - Matches 1 or more true emojis strictly attached to each other (no spaces)
- * \s                                                   - Requires exactly one mandatory space after the emoji block
- * (ci|feat|...)                                        - Enforces only standard allowed conventional types + shizo
- */
-$types = "ci|feat|fix|perf|ui|chore|docs|refactor|style|test|shizo";
-$pattern = '/^(?:[\p{Emoji_Presentation}\p{Extended_Pictographic}]\x{FE0F}?\x{200D}?)+\s(' . $types . ')(\(.+\))?!?: .{5,}/u';
+$types = "feat|fix|docs|style|refactor|perf|test|chore|ci";
+$pattern = '/^(' . $types . ')(\(.+\))?!?: .+/';
 
 // Validate the very first real line of the commit message
 if (!preg_match($pattern, $userLines[0])) {
@@ -75,26 +69,6 @@ if (!preg_match($pattern, $userLines[0])) {
     echo "  🦄🎨 ui(css): update yellow alert color\n";
     echo "  🐴🔥 fix!: repair critical websocket leak\n\n";
     echo "Allowed types: надо бы их запомнить, Кентавр-Вовá\n";
-    exit(1);
-}
-
-// Validate the signature on the actual final user line
-$lastLine = end($userLines);
-
-/**
- * Signature Regular Expression Breakdown:
- * Matches "Vsegda vash, " followed by either Kon, Edinorog, or Poni.
- * Then exactly one space and ANY characters (emojis) at the end.
- */
-$signaturePattern = '/^Vsegda vash, (Kon|Edinorog|Poni)-Vová\s.+$/u';
-
-if (!preg_match($signaturePattern, $lastLine)) {
-    echo "\n{$boldRed}[Commit-msg Error] Missing or invalid KBL signature!{$reset}\n";
-    echo "Last line must end with: {$cyan}Vsegda vash, [Kon/Edinorog/Poni]-Vová <emoji(s)>{$reset}\n";
-    echo "Examples:\n";
-    echo "  Vsegda vash, Kon-Vová 🐎💚\n";
-    echo "  Vsegda vash, Edinorog-Vová 🦄⚡\n";
-    echo "Current last line: {$yellow}\"{$lastLine}\"{$reset}\n";
     exit(1);
 }
 

@@ -25,23 +25,11 @@
   <!-- Row 4: Brotherhood & License -->
   <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
   <img src="https://img.shields.io/badge/license-KBL%20v4.0-10b981?style=flat" alt="License KBL 4.0">
-  <br>
-  <!-- Soon™ -->
-  <hr>
-  <p align="center"><b>🔮 Coming Soon™</b> (because the job market demands it)</p>
-  <p align="center">
-    <img src="https://img.shields.io/badge/Kafka-because%20NATS%20is%20not%20enough-231F20?style=flat&logo=apachekafka&logoColor=white" alt="Kafka">
-    <img src="https://img.shields.io/badge/Oracle-16GB%20RAM%20minimum-red?style=flat&logo=oracle&logoColor=white" alt="Oracle">
-    <img src="https://img.shields.io/badge/Symfony-from%202008-orange?style=flat&logo=symfony&logoColor=white" alt="Symfony">
-    <img src="https://img.shields.io/badge/Solidity-sausage%20smart%20contracts-363636?style=flat&logo=solidity&logoColor=white" alt="Solidity">
-    <img src="https://img.shields.io/badge/harmonica-for%20retrospectives-yellow?style=flat" alt="Harmonica">
-    <img src="https://img.shields.io/badge/Swahili-C1%20fluent-green?style=flat" alt="Swahili C1">
-  </p>
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) | [📜 Старославѧнскїй](README.cu.md) | [🦒 Kiswahili](README.sw.md)
+[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
 <img width="2564" height="1788" alt="Fast theme - star dust mode" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
@@ -316,24 +304,6 @@ The **RAND** button in every theme fires random batches on **both** drivers simu
 
 **Custom themes:** You can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, per‑button semaphore drivers, etc.).  
 See the [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) for details.
-
----
-
-## 🐎 Horse humor
-
-> — Your stack is Swoole (PHP) + NATS + Go. It's powerful, but sometimes feels like trying to cross a hedgehog with a snake in zero gravity.
-
-> — Why don't Swoole and Go go to a bar together?
-> — Because Go starts gorutining, and Swoole crashes with a "Too many open files" error.
-> _(c) Kon-Vová_
-
-_Other jokes are in the code, commits, and KBL v4.0._
-
----
-
-## 🐎 Emojinal Commits
-
-We don't use `feat:`, `fix:`, `chore:`. We use emojis. Every commit starts with a horse 🐎 or another animal that reflects its essence. Emojinal commits are for horses and ponies who don't explain — they just do.
 
 ---
 

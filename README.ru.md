@@ -25,23 +25,11 @@
   <!-- Row 4: Brotherhood & License -->
   <img src="https://img.shields.io/badge/🐎-конебратство-FF69B4?style=flat" alt="Конебратство">
   <img src="https://img.shields.io/badge/лицензия-KBL%20v4.0-10b981?style=flat" alt="Лицензия KBL 4.0">
-  <br>
-  <!-- Soon™ -->
-  <hr>
-  <p align="center"><b>🔮 Coming Soon™</b> (because the job market demands it)</p>
-  <p align="center">
-    <img src="https://img.shields.io/badge/Kafka-потому%20что%20NATS%20мало-231F20?style=flat&logo=apachekafka&logoColor=white" alt="Kafka">
-    <img src="https://img.shields.io/badge/Oracle-16GB%20RAM%20минимум-red?style=flat&logo=oracle&logoColor=white" alt="Oracle">
-    <img src="https://img.shields.io/badge/Symfony-из%202008-orange?style=flat&logo=symfony&logoColor=white" alt="Symfony">
-    <img src="https://img.shields.io/badge/Solidity-колбасные%20контракты-363636?style=flat&logo=solidity&logoColor=white" alt="Solidity">
-    <img src="https://img.shields.io/badge/губная_гармошка-для%20ретроспектив-yellow?style=flat" alt="Губная гармошка">
-    <img src="https://img.shields.io/badge/суахили-C1%20беглый-green?style=flat" alt="Суахили C1">
-  </p>
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
 
-[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md) | [📜 Старославѧнскїй](README.cu.md) | [🦒 Kiswahili](README.sw.md)
+[🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
 <img width="2564" height="1788" alt="Скриншот Fast темы: множество мелких точек (star dust) в зонах Pipeline, демонстрация LOD при большом количестве задач" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
 
@@ -319,24 +307,6 @@ _Тема Sin City: нуарная эстетика, активна кнопка
 Подробности в [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes).
 
 --
-
-## 🐎 Конский юмор
-
-> — Твой стек — Swoole (PHP) + Nats + Go. Это мощно, но местами похоже на попытку скрестить ужа с ежом в невесомости.
-
-> — Почему Swoole с Go не ходят в бар вместе?
-> — Потому что Go начинает горутинить, а Swoole падает с ошибкой «Too many open files».
-> *(c) Конь-Вовá*
-
-*Остальные шутки — в коде, коммитах и KBL v4.0.*
-
----
-
-## 🐎 Коммиты по-конски
-
-У нас нет `feat:`, `fix:`, `chore:`. У нас есть эмодзи. Каждый коммит начинается с коня 🐎 или другого зверя, который отражает суть. Emojinal commits — для коней и пони, которые не объясняют, а делают.
-
----
 
 ## 🐎 Лицензия
 
