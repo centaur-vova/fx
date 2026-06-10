@@ -53,7 +53,7 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
         ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(mc, x, y);
+        ctx.fillText(task.getLabel(), x, y);
     }
 
     // Show task progress bar only if zoomed in enough to avoid visual noise

@@ -2,7 +2,7 @@ import Alpine from 'alpinejs';
 import { state } from './modules/state';
 import { decodeMessage } from './modules/decoder.js';
 import { drawShape } from './modules/ui.js';
-import { tasks, clearTasks } from './modules/task-store.js';
+import { tasks, Task, addTask, clearTasks } from './modules/task-store.js';
 import { updateMessagesChart } from './modules/chart.js';
 import terminalLog from './modules/terminal-log.js';
 import {
@@ -128,10 +128,17 @@ const handleUpdateTasks = (data) => {
 
     const { taskId, worker, mc, status, sem, message, progress = null } = data;
 
-    if (!tasks.has(taskId)) {
+    let task;
+
+    if (tasks.has(taskId)) {
+        task = tasks.get(taskId);
+    } else {
         const jitterX = (Math.random() - 0.5) * 0.22;
-        tasks.set(taskId, {
+
+        task = new Task({
+            taskId,
             mc: mc || store.mc,
+            title: data.title,
             y: 0.15 + Math.random() * 0.7,
             jitterX: jitterX,
             currentX: COORDS.queued + jitterX,
@@ -140,9 +147,10 @@ const handleUpdateTasks = (data) => {
             sem: sem,
             pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
+
+        tasks.set(taskId, task);
     }
 
-    const task = tasks.get(taskId);
     task.progress = progress;
     task.status = status;
     if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
