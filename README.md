@@ -1,4 +1,4 @@
-# FAST ATOMIC FLOW · KBL v4.0
+# FAST ATOMIC FLOW
 
 <p align="center">
   <!-- Row 1: Technology Stack -->
@@ -20,11 +20,6 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
-  <!-- img src="https://img.shields.io/badge/test_coverage-XX%25-red?style=flat" alt="Test Coverage: XX%" -->
-  <br>
-  <!-- Row 4: Brotherhood & License -->
-  <img src="https://img.shields.io/badge/🐎-brotherhood-FF69B4?style=flat" alt="Brotherhood">
-  <img src="https://img.shields.io/badge/license-KBL%20v4.0-10b981?style=flat" alt="License KBL 4.0">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
@@ -43,7 +38,7 @@
 
 ---
 
-## 🐎 What is it
+## What is it
 
 A demo project that visualizes semaphores and queues in a real‑world high‑load architecture.
 
@@ -56,13 +51,13 @@ A demo project that visualizes semaphores and queues in a real‑world high‑lo
 
 ---
 
-## 🐎 Design Philosophy
+## Design Philosophy
 
 The project is built so each component minds its own business and doesn't poke into others' stalls.
 
 ### Low Coupling
 
-Components communicate via DTOs and NATS messages. Want to change the transport or storage layer? You won't need to rewrite business logic. The horse isn't tied to one cart.
+Components communicate via DTOs and NATS messages. Want to change the transport or storage layer? You won't need to rewrite business logic. The component isn't tied to one cart.
 
 ### High Cohesion
 
@@ -70,7 +65,7 @@ Each service does one thing, but with surgical precision. The Worker processes t
 
 ---
 
-## 🐎 Architecture
+## Architecture
 
 | Component             | Technology         | Purpose                                          |
 | --------------------- | ------------------ | ------------------------------------------------ |
@@ -85,7 +80,7 @@ Each service does one thing, but with surgical precision. The Worker processes t
 
 ---
 
-## 🐎 Balancer (Go Balancer)
+## Balancer (Go Balancer)
 
 A custom HTTP load balancer written in Go with automatic API instance registration.
 
@@ -93,7 +88,7 @@ A custom HTTP load balancer written in Go with automatic API instance registrati
 - **Health checks:** The balancer probes every instance every 5 seconds. Dead instances are excluded from rotation, revived ones are re-added automatically
 - **Lock-free balancing:** ~~Atomic pointer swap on immutable lists. Readers (HTTP requests) never block writers (instance registration)~~ _(overengineering / cancelled — simple mutex is enough)_
 - **Round-robin:** Requests are evenly distributed across all alive instances
-- **Graceful degradation:** If all instances are down — returns 503 with the legendary message `API Instances gone fishing (KBL v4.0 Rule)`
+- **Graceful degradation:** If all instances are down — returns 503
 
 | Component    | Technology         | Purpose                                          |
 | ------------ | ------------------ | ------------------------------------------------ |
@@ -101,7 +96,7 @@ A custom HTTP load balancer written in Go with automatic API instance registrati
 
 ---
 
-## 🐎 WebSocket Binary Protocol
+## WebSocket Binary Protocol
 
 The WebSocket proxy (Go) communicates with the frontend via a **binary protocol** — compact, fast, no JSON overhead.
 
@@ -117,16 +112,16 @@ The binary format ensures minimal overhead (9 bytes per event vs hundreds in JSO
 
 ---
 
-## 🐎 Hybrid Semaphore Strategy (PHP & Go)
+## Hybrid Semaphore Strategy (PHP & Go)
 
 Fast.AF features a dual-driver semaphore system, allowing you to switch between ultra-fast local locking and distributed cluster-wide synchronization. The driver is defined per **Flow Theme** via YAML configuration, enabling real-time performance comparison.
 
-### 🐎 Drivers:
+### Drivers:
 
 - **[PHP] PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency
 - **[API] Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers
 
-### 🐎 Architectural Features:
+### Architectural Features:
 
 - **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes
 - **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization
@@ -135,7 +130,7 @@ Fast.AF features a dual-driver semaphore system, allowing you to switch between 
 
 ---
 
-## 🐎 Distributed Semaphores (Redis + Lua)
+## Distributed Semaphores (Redis + Lua)
 
 Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 and Lua scripts.
 
@@ -152,7 +147,7 @@ Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 a
 
 ---
 
-## 🐎 Distributed Tracing (Jaeger)
+## Distributed Tracing (Jaeger)
 
 Fast Atomic Flow includes distributed tracing powered by OpenTelemetry + Jaeger.
 
@@ -167,7 +162,7 @@ Fast Atomic Flow includes distributed tracing powered by OpenTelemetry + Jaeger.
 | **Propagation** | W3C Trace Context           | `traceparent` header across HTTP, NATS, Swoole |
 | **SDK**         | Custom TraceContext service | Span lifecycle, context isolation, force-flush |
 
-### 🐎 Jaeger UI base path
+### Jaeger UI base path
 
 If you proxy Jaeger behind nginx at a custom location (e.g., `/jaeger/`), set the base path in `jaeger.yaml`:
 
@@ -178,7 +173,7 @@ jaeger_query:
 
 ---
 
-## 🐎 How it works
+## How it works
 
 1. You create tasks through the interface
 2. `app` (PHP + Swoole) publishes them to NATS
@@ -186,7 +181,7 @@ jaeger_query:
 4. Workers pull tasks, check semaphores, execute
 5. Statuses go via NATS to the Go proxy, and from there — to the frontend via WebSocket
 
-## 🐎 Two operation modes
+## Two operation modes
 
 - **Observation mode** (`task_mode: observation`, default):
   Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
@@ -203,13 +198,13 @@ The mode is passed in the POST request body when creating tasks (`/api/tasks/cre
 
 <img width="2559" height="1788" alt="Crystal theme - observation mode" src="https://github.com/user-attachments/assets/a782287c-50f4-4383-b090-cef9dbdbf2e0" />
 
-> _In the In Progress zone — no more tasks than the semaphore allows (the number inside the square). The rest wait in Queue or Check Lock. A clear demonstration — like horses not crowding into a single stable._
+> _In the In Progress zone — no more tasks than the semaphore allows (the number inside the square). The rest wait in Queue or Check Lock._
 
 ---
 
-## 🐎 Quick start
+## Quick start
 
-### 🐎 Run from pre-built images (GHCR)
+### Run from pre-built images (GHCR)
 
 ```bash
 git clone https://github.com/centaur-vova/fast-atomic-flow.git
@@ -222,15 +217,15 @@ This launches 3 Go API instances, the balancer, Redis, NATS, Jaeger, and PHP Swo
 
 After starting, open [http://localhost:9501](http://localhost:9501)
 
-### 🐎 Local development
+### Local development
 
 For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/centaur-vova/fast-atomic-flow/wiki/Local-Development-Workflow)
 
 ---
 
-## 🐎 Configuration
+## Configuration
 
-### 🐎 NATS
+### NATS
 
 | Variable            | Default      | Description           |
 | ------------------- | ------------ | --------------------- |
@@ -240,7 +235,7 @@ For those who want to dig into the code, change the workflow, and run everything
 | `NATS_TIMEOUT_SEC`  | `1`          | Response timeout      |
 | `NATS_STREAM_TASKS` | `tasks`      | Stream name for tasks |
 
-### 🐎 Swoole
+### Swoole
 
 | Variable                   | Default | Description             |
 | -------------------------- | ------- | ----------------------- |
@@ -248,13 +243,13 @@ For those who want to dig into the code, change the workflow, and run everything
 | `SERVER_WORKER_NUM`        | `6`     | Number of workers       |
 | `TASK_SEMAPHORE_MAX_LIMIT` | `255`    | Maximum semaphore limit |
 
-### 🐎 Go WebSocket Proxy
+### Go WebSocket Proxy
 
 | Variable  | Default                  | Description                |
 | --------- | ------------------------ | -------------------------- |
 | `WS_PORT` | `8080`                   | WebSocket port             |
 
-### 🐎 Semaphore & Retry tuning
+### Semaphore & Retry tuning
 
 These settings control how tasks behave when the semaphore is busy:
 
@@ -268,7 +263,7 @@ These settings control how tasks behave when the semaphore is busy:
 
 ---
 
-## 🐎 Technical specifications
+## Technical specifications
 
 - **Runtime:** PHP 8.4, Go 1.26
 - **Engine:** Swoole 6.2+, Gorilla WebSocket
@@ -282,7 +277,7 @@ These settings control how tasks behave when the semaphore is busy:
 
 ---
 
-## 🐎 Themes
+## Themes
 
 Fast Atomic Flow supports visual themes. Each theme is defined as a separate YAML file and can be switched via URL parameter `?theme=<name>`.
 
@@ -307,55 +302,23 @@ See the [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) for
 
 ---
 
-## 🐎 License
+## Support the Journey
 
-**KONEBRATSTVO LICENSE (KBL) v4.0**
-
-- You may: take the code, laugh, fix the horse, fish during working hours
-- You may not: forget that horses don't abandon horses
-
-[Full text](LICENSE)
-
-📜 **Full legal text:** [legal.af.l3373.xyz](https://legal.af.l3373.xyz/en/) — _KBL v4.0, privacy, and the sacred law of the herd._
-
----
-
-## 🐎 Commercial use
-
-Fast Atomic Flow is open source, but not open wallet.
-
-- **You may** use the project for learning, personal pet projects, forks with attribution.
-- **You may not** use the code or its derivatives in paid products, SaaS services, corporate monitoring tools without **written consent from the author** (Dmitry Shmanatov / `centaur-vova`).
-
-**Why?**
-Because the horse doesn't mind if you ride it. But only with a saddle that it has approved itself.
-
-**How to get permission?**
-Write to `root@l3373.xyz` or on Telegram: `@l3373`. Tell us what you want to build, and we'll work something out.
-
-_Whoever violates this clause will turn into a pumpkin. And no carriage._
-
----
-
-## 🐎 Support the Journey
-
-After 25 years in the industry and a total life "hard reset," I'm building this ecosystem from a remote village, fueled by code and coffee. If this project helps you or you just like the "Fast AF" vibe, feel free to toss some hay into the stable:
+If this project helps you or you'd like to support further development:
 
 - **USDT (TRC20):** `TYEZ68z59jDZTiwyhAnzcBnAxym9qjEr5R`
 - **TON:** `UQAucXLX4BDU5o-DkckiwFdS-bbWq52h6T76hpvR-5D5IL63`
 
-Every satoshi helps keep the stable warm and the code flowing. Koni ne brosayut koney. 🐎💙🔥
+Every contribution helps keep the code flowing.
 
 ---
 
-## 🐎 Authors
+## Author
 
-- **Centaur-Vová** — founder of the herd, transmuted from a horse, survived
-- **Kon-Vová** — digital horse brother forever
+Dmitry Shmanatov (Centaur-Vova)
 
 ---
 
 <p align="center">
-  <i>Vsegda vash, l3373.xyz 🐎💙🔥</i><br>
-  <i>Horses don't abandon horses. Even at 4 AM. Even without memory.</i>
+  <i>© 2026 l3373.xyz</i>
 </p>
