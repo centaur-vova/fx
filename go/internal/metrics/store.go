@@ -54,7 +54,7 @@ func NewStore() *Store {
 // IncTasksCreated increments the counter for created tasks.
 func (s *Store) IncTasksCreated(count int, maxConcurrent int, mode string) {
 	s.tasksCreated.With(prometheus.Labels{
-		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
+		"max_concurrent": labelMaxConcurrent(maxConcurrent),
 		"mode":           mode,
 	}).Add(float64(count))
 }
@@ -62,20 +62,25 @@ func (s *Store) IncTasksCreated(count int, maxConcurrent int, mode string) {
 // IncTasksCompleted increments the counter for completed tasks.
 func (s *Store) IncTasksCompleted(maxConcurrent int) {
 	s.tasksCompleted.With(prometheus.Labels{
-		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
+		"max_concurrent": labelMaxConcurrent(maxConcurrent),
 	}).Inc()
 }
 
 // IncTasksFailed increments the counter for failed tasks.
 func (s *Store) IncTasksFailed(maxConcurrent int) {
 	s.tasksFailed.With(prometheus.Labels{
-		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
+		"max_concurrent": labelMaxConcurrent(maxConcurrent),
 	}).Inc()
 }
 
 // IncTasksRetried increments the counter for retried tasks.
 func (s *Store) IncTasksRetried(maxConcurrent int) {
 	s.tasksRetried.With(prometheus.Labels{
-		"max_concurrent": fmt.Sprintf("%03d", maxConcurrent),
+		"max_concurrent": labelMaxConcurrent(maxConcurrent),
 	}).Inc()
+}
+
+// labelMaxConcurrent formats max_concurrent as a 3-digit zero-padded string.
+func labelMaxConcurrent(mc int) string {
+	return fmt.Sprintf("%03d", mc)
 }
