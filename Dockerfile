@@ -65,8 +65,6 @@ COPY --from=builder /app/app ./app
 COPY --from=builder /app/server.php ./server.php
 COPY --from=builder /app/composer.json ./composer.json
 
-RUN echo "<?php return '$APP_VERSION';" > ./version.php
-
 # Only set permissions for public assets, no .env file generation here
 RUN chmod -R 755 public/
 

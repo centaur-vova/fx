@@ -12,7 +12,6 @@ $finder = Finder::create()
         'storage',
         'bootstrap/cache',
     ])
-    ->notPath('version.php')
     ->name('*.php')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
