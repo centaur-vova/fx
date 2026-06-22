@@ -20,19 +20,20 @@ readonly class Options
     public function __construct(
         public AppEnv $appEnv,
 
-        // ========== Server Infrastructure ==========
+        // === Server ===
         public string $serverHost,
         public int $serverPort,
         public int $workerNum,
+        public int $shutdownTimeoutSec,
 
-        // ========== App Cache ==========
+        // === Cache ===
         public CacheDriver $cacheDriver,
         public int $cacheDefaultTtlSec,
         public int $cacheMaxSize,
         public float $cacheAutoCleanSec,
         public int $cacheValueMaxSize,
 
-        // ========== Nats ==========
+        // === NATS ===
         public string $natsHost,
         public int $natsPort,
         public string $natsToken,
@@ -40,47 +41,36 @@ readonly class Options
         public int $natsPingIntervalSec,
         public int $natsWorkerPingIntervalSec,
         public int $natsAckWaitMs,
+        public string $taskQueueConsumer,
+        public string $taskQueueSubject,
+        public string $taskQueueStream,
+        public string $broadcastSubject,
 
-        // ========== Logging ==========
+        // === Logging ===
         public string $logLevel,
 
-        // ========== API ==========
+        // === API ===
         public string $apiUrl,
         public string $apiAuthKey,
 
-        // ========== Semaphores ==========
-        public int $semaphorePermitTtl, // for `api` semaphoreDriver only
+        // === Semaphores ===
+        public int $semaphorePermitTtl,
 
-        // ========== Queue ==========
+        // === Task Engine ===
         public int $queueCapacity,
         public int $queuePrefetchBatch,
-
-        // ========== Task Meta ==========
         public int $taskMaxActive,
         public int $taskMetaTtlSec,
-
-        // ========== Task Engine ==========
         public int $taskMaxBatchSize,
         public int $taskSemaphoreLimit,
         public float $taskLockTimeoutSec,
         public int $taskRetryDelaySec,
         public int $taskMaxRetries,
 
-        // ========== Real-time ==========
-        public int $shutdownTimeoutSec,
-
-        // ========== Messaging consumer (group) name ==========
-        public string $taskQueueConsumer,
-
-        // ========== Messaging subjects/streams ==========
-        public string $broadcastSubject,
-        public string $taskQueueSubject,
-        public string $taskQueueStream,
-
-        // ========== OpenTelemetry/Jaeger ==========
+        // === OpenTelemetry ===
         public string $otelServiceName,
 
-        // ========== Misc ==========
+        // === Misc ===
         public array $rateLimiters,
     ) {
     }
