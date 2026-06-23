@@ -7,6 +7,10 @@ namespace App\Contract\Provider;
 use DI\Container;
 use DI\ContainerBuilder;
 
+/**
+ * Standard service provider interface for registering dependencies into the
+ * PHP-DI container.
+ */
 interface ServiceProvider
 {
     /**
