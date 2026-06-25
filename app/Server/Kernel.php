@@ -26,15 +26,8 @@ use App\Service\Provider\Telemetry\TelemetryServiceProvider;
 use App\Service\Task\TaskService;
 use App\Service\Telemetry\TraceContext;
 use App\Support\StdoutLogger;
-
-use function DI\autowire;
-
 use DI\Container;
 use DI\ContainerBuilder;
-
-use function DI\create;
-use function DI\get;
-
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use Psr\Log\LoggerInterface;
@@ -44,6 +37,10 @@ use Swoole\Http\Server;
 use Swoole\Server\Task;
 use Swoole\Timer;
 use Throwable;
+
+use function DI\autowire;
+use function DI\create;
+use function DI\get;
 
 class Kernel
 {
@@ -162,7 +159,6 @@ class Kernel
             'tcp_keepinterval' => 10,
 
             // Graceful shutdown
-            // 'reload_async' => true,
             'max_wait_time' => $options->shutdownTimeoutSec,
 
             // Workers
@@ -260,6 +256,13 @@ class Kernel
         }
     }
 
+    /**
+     * Boots providers that implement Bootable interface.
+     *
+     * Called ONCE in the master process BEFORE forking workers.
+     * Providers registered here share the same container instance
+     * across all workers after fork.
+     */
     private function bootProviders(): void
     {
         foreach ($this->providerRegistry as $providerClass) {
