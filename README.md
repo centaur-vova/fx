@@ -173,6 +173,18 @@ jaeger_query:
 
 ---
 
+## Benchmarks
+
+| Metric      | PHP Atomic              | Go Distributed           |
+| ----------- | ----------------------- | ------------------------ |
+| Avg latency | 0.5 µs                  | 380 µs                   |
+| Throughput  | ~2M ops/sec             | ~2.6K ops/sec            |
+| Use case    | Single-node local locks | Cluster-wide consistency |
+
+> Go Distributed is slower but guarantees consistency across nodes.
+
+---
+
 ## How it works
 
 1. You create tasks through the interface
