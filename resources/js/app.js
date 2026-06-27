@@ -4,6 +4,7 @@ import { decodeMessage } from './modules/decoder.js';
 import { drawShape } from './modules/ui.js';
 import { tasks, Task, addTask, clearTasks } from './modules/task-store.js';
 import { updateMessagesChart } from './modules/chart.js';
+import { setupCanvas } from './modules/canvas.js';
 import terminalLog from './modules/terminal-log.js';
 import {
     WS,
@@ -37,31 +38,7 @@ const pipelineContainer = document.getElementById("pipeline");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d', { alpha: true });
 pipelineContainer.appendChild(canvas);
-
-const resize = () => {
-    const w = pipelineContainer.clientWidth || window.innerWidth;
-    const h = pipelineContainer.clientHeight || 500;
-
-    store.width = w;
-    store.height = h;
-
-    canvas.width = w * window.devicePixelRatio;
-    canvas.height = h * window.devicePixelRatio;
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-    // console.log(`Canvas resized: ${w}x${h}`);
-}; window.addEventListener('resize', resize);
-
-// Apply resize observer
-const ro = new ResizeObserver(() => {
-    resize();
-});
-ro.observe(pipelineContainer);
-// And call resize() just to make sure
-resize();
+const ro = setupCanvas(pipelineContainer, store, ctx); // auto-resizer
 
 // Websockets
 const connect = () => {
