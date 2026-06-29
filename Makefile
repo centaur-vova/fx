@@ -69,7 +69,7 @@ test-go-race:
 
 check:
 	composer check-all
-	lint-go
+	make lint-go
 
 nats-sub:
 	@NATS_TOKEN=$$(sed -n 's/^NATS_TOKEN=//p' .env | tr -d '\r'); \

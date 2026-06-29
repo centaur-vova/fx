@@ -41,7 +41,6 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 	channel := fmt.Sprintf("semaphore:%d:events", mc)
 
 	deadline := p.clock.Now().Add(timeout)
-
 	var pubsub *redis.PubSub
 
 	for {
@@ -74,15 +73,21 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 			}()
 		}
 
+		// Create temporary context with deadline (for select)
+		selectCtx, cancel := context.WithDeadline(ctx, deadline)
+
 		// No free slots, wait and retry
 		select {
 		case <-pubsub.Channel():
+			cancel()
 			// There's a free slot, try again
 			continue
-		case <-time.After(time.Until(deadline)):
-			return "", fmt.Errorf("acquire timeout after %v", timeout)
-		case <-ctx.Done():
-			return "", ctx.Err()
+		case <-selectCtx.Done():
+			cancel()
+			if errors.Is(selectCtx.Err(), context.DeadlineExceeded) {
+				return "", fmt.Errorf("acquire timeout after %v", timeout)
+			}
+			return "", selectCtx.Err()
 		}
 	}
 }
