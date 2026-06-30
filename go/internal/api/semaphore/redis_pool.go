@@ -37,8 +37,8 @@ func NewRedisPool(client *redis.Client, cl clock.Clock) *RedisPool {
 // ttl — how long the permit lives before auto-expiry.
 func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Duration) (SlotUID, error) {
 	// Build Redis keys for this semaphore
-	activeKey := fmt.Sprintf("semaphore:%d:active", mc)
-	channel := fmt.Sprintf("semaphore:%d:events", mc)
+	activeKey := fmt.Sprintf("{semaphore:%d}:active", mc)
+	channel := fmt.Sprintf("{semaphore:%d}:events", mc)
 
 	deadline := p.clock.Now().Add(timeout)
 	var pubsub *redis.PubSub
@@ -99,8 +99,8 @@ func (p *RedisPool) Release(sid SlotUID) error {
 		return err
 	}
 
-	activeKey := fmt.Sprintf("semaphore:%d:active", mc)
-	channel := fmt.Sprintf("semaphore:%d:events", mc)
+	activeKey := fmt.Sprintf("{semaphore:%d}:active", mc)
+	channel := fmt.Sprintf("{semaphore:%d}:events", mc)
 
 	_, err = p.releaseScript.Run(
 		context.Background(),
