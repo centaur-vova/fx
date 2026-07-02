@@ -20,6 +20,10 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
   <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
+  <br>
+  <!-- Row 4: Work Style -->
+  <img src="https://img.shields.io/badge/AI--assisted-%D0%B4%D0%B0-10b981?style=flat" alt="AI-assisted">
+  <img src="https://img.shields.io/badge/вайб--кодинг-0%25-ef4444?style=flat" alt="Вайб-кодинг: 0%">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
