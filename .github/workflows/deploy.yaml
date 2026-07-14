@@ -90,5 +90,5 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose -f docker-compose.prod.yaml pull app ws balancer api
-            # docker compose -f docker-compose.prod.yaml up -d --remove-orphans --scale api=3 app ws api balancer redis jaeger
+            docker compose -f docker-compose.prod.yaml up -d --remove-orphans --scale api=3 app ws api balancer redis jaeger
             docker image prune -f

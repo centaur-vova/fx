@@ -327,10 +327,7 @@ func (u *Upstream) ReviveInstance(hash string) bool {
 func (u *Upstream) getInstancesCopy() []*APIInstance {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
-
-	instances := make([]*APIInstance, len(u.APIInstances))
-	copy(instances, u.APIInstances)
-	return instances
+	return append([]*APIInstance(nil), u.APIInstances...)
 }
 
 // shortHash generates a short 8-character hash from a string.
