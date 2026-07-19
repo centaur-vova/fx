@@ -142,7 +142,8 @@ Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 a
 - **Auto-cleanup (TTL):** Each semaphore slot has an individual TTL via `HEXPIRE`. A crashed worker won't hold a slot forever — Redis frees it automatically
 - **Distributed release:** A semaphore can be released from **any** API instance, regardless of where it was acquired. `SlotUID` (a compact string like `"5:3"` — semaphore 5, slot 3) carries all the information needed
 - **Maximum 255 slots:** 1 byte for `max_concurrent`. Enough for any real-world scenario
-- **Client-side polling:** When no slots are available, the API instance polls Redis every 100 ms until the timeout expires
+- **Event‑driven slot acquisition:** When no slots are available, the API instance subscribes to Redis Pub/Sub and waits for a slot‑release event. This eliminates busy‑waiting and reduces Redis load
+
 
 | Component   | Technology | Purpose                             |
 | ----------- | ---------- | ----------------------------------- |
