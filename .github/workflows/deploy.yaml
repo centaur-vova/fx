@@ -75,7 +75,8 @@ jobs:
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
 
   deploy-vps:
-    if: github.repository == 'centaur-vova/fast-atomic-flow'
+    ## DISABLED: temporarily disable auto-deploy (2026-08-16)
+    if: github.repository == 'centaur-vova/fast-atomic-flow' && false
     name: Pull & Restart on VPS
     needs: build-and-push
     runs-on: ubuntu-latest
