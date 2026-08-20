@@ -63,12 +63,45 @@ h1 span:first-child {
     content: "💀";
     opacity: 1;
   }
+
+  &.flash-retry::after {
+    content: "😰";
+    opacity: 1;
+  }
+
+  &.flash-wait::after {
+    content: "⏳";
+    opacity: 1;
+    animation: pulse-wait 0.8s ease-in-out infinite;
+  }
 }
 
 // Reset default animations — we use emoji, not colors
 .worker-bar.flash-success,
 .worker-bar.flash-error {
   animation: none;
+}
+
+// Disable animation for flash-retry
+.worker-bar.flash-retry {
+  animation: none;
+}
+
+// Force transparent background
+.worker-bar.flash-wait {
+  background: transparent !important;
+  animation: none !important;
+}
+
+// Use pulsation for flash-wait
+@keyframes pulse-wait {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* --- Pastel buttons with rainbow hover --- */

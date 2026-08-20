@@ -63,10 +63,27 @@ canvas {
   background: var(--color-success) !important;
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
-
 .flash-error {
   background: var(--color-error) !important;
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+.flash-retry {
+  background: var(--color-warning) !important;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+}
+.flash-wait {
+  background: var(--color-info) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  animation: pulse-wait 0.8s ease-in-out infinite;
+}
+@keyframes pulse-wait {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Zone labels — clean typography */
