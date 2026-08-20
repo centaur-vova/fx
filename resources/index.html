@@ -103,7 +103,7 @@
                       >
                         <div
                           class="worker-bar"
-                          :class="{ 'flash-success': $store.app.workers[i-1]?.status === 'success', 'flash-error': $store.app.workers[i-1]?.status === 'error' }"
+                          :class="$store.app.getWorkerClass(i, 0)"
                         ></div>
                       </template>
                     </div>
@@ -122,7 +122,7 @@
                       >
                         <div
                           class="worker-bar"
-                          :class="{ 'flash-success': $store.app.workers[$store.app.workers.length/2 + i - 1]?.status === 'success', 'flash-error': $store.app.workers[$store.app.workers.length/2 + i - 1]?.status === 'error' }"
+                          :class="$store.app.getWorkerClass(i-1, 1)"
                         ></div>
                       </template>
                     </div>

@@ -117,3 +117,11 @@ export const ROUTES = {
         INSTANCE_TOGGLE: '/api/instance/toggle',
     },
 };
+
+export const WORKER_FLASH = {
+    SUCCESS: 'success',
+    ERROR: 'error',
+    RETRY: 'retry',
+    WAIT: 'wait',
+    DURATION_MS: 400,
+};

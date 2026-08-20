@@ -135,7 +135,7 @@ class TaskService
             );
 
             $permit = $semaphore->forLimit($payload->mc);
-            $this->notify(TaskStatusUpdate::checkLock($payload));
+            $this->notify(TaskStatusUpdate::checkLock($payload, $workerId));
 
             /**
              * Attempt to acquire lock.
@@ -158,7 +158,7 @@ class TaskService
                     return;
                 }
 
-                $this->notify(TaskStatusUpdate::lockFailed($payload));
+                $this->notify(TaskStatusUpdate::lockFailed($payload, $workerId));
 
                 $semSpan
                     ->addEvent('retry.scheduled')
@@ -169,13 +169,13 @@ class TaskService
                  */
                 $base = $this->retryDelaySec * 1000;
                 $jitter = random_int(0, (int) ($base * 0.5)); // ±50
-                Timer::after($base + $jitter, function () use ($payload): void {
+                Timer::after($base + $jitter, function () use ($payload, $workerId): void {
                     // Republish back into the queue
                     $this->taskQueue->push($payload->incrAttempt());
                     // Ack
                     $this->manager->ack($payload);
 
-                    $this->notify(TaskStatusUpdate::retry($payload));
+                    $this->notify(TaskStatusUpdate::retry($payload, $workerId));
                 });
 
                 return;
@@ -215,9 +215,9 @@ class TaskService
 
                 $processor = $this->processorFactory->get($payload->mode);
 
-                $progressCallback = function (int $progress) use ($payload, $execSpan): void {
+                $progressCallback = function (int $progress) use ($payload, $workerId, $execSpan): void {
                     $execSpan->setAttribute('task.progress', $progress);
-                    $this->notify(TaskStatusUpdate::progress($payload, $progress));
+                    $this->notify(TaskStatusUpdate::progress($payload, $workerId, $progress));
                     Co::sleep(0.001);
                 };
 

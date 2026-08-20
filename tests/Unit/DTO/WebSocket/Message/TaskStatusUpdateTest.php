@@ -49,29 +49,31 @@ class TaskStatusUpdateTest extends TestCase
 
     public function testRetry(): void
     {
-        $dto = TaskStatusUpdate::retry($this->payload);
+        $dto = TaskStatusUpdate::retry($this->payload, 1);
 
         $this->assertSame(TaskStatusUpdate::EVENT_RETRY, $dto->status);
         $this->assertSame('Retrying', $dto->message);
-        $this->assertNull($dto->worker);
+        $this->assertSame(1, $dto->worker);
         $this->assertNull($dto->progress);
     }
 
     public function testCheckLock(): void
     {
-        $dto = TaskStatusUpdate::checkLock($this->payload);
+        $dto = TaskStatusUpdate::checkLock($this->payload, 1);
 
         $this->assertSame(TaskStatusUpdate::EVENT_CHECK_LOCK, $dto->status);
         $this->assertSame('Limit: 5', $dto->message);
+        $this->assertSame(1, $dto->worker);
     }
 
     public function testProgress(): void
     {
-        $dto = TaskStatusUpdate::progress($this->payload, 75);
+        $dto = TaskStatusUpdate::progress($this->payload, 1, 75);
 
         $this->assertSame(TaskStatusUpdate::EVENT_PROGRESS, $dto->status);
         $this->assertSame('75%', $dto->message);
         $this->assertSame(75, $dto->progress);
+        $this->assertSame(1, $dto->worker);
     }
 
     public function testCompleted(): void
@@ -94,10 +96,11 @@ class TaskStatusUpdateTest extends TestCase
 
     public function testLockFailed(): void
     {
-        $dto = TaskStatusUpdate::lockFailed($this->payload);
+        $dto = TaskStatusUpdate::lockFailed($this->payload, 1);
 
         $this->assertSame(TaskStatusUpdate::EVENT_LOCK_FAILED, $dto->status);
         $this->assertSame('Timeout', $dto->message);
+        $this->assertSame(1, $dto->worker);
     }
 
     public function testRetriesFailed(): void

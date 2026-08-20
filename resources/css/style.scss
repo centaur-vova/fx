@@ -341,6 +341,9 @@ body {
   &.flash-error {
     animation: flash-error 0.4s ease-out forwards;
   }
+  &.flash-retry {
+    animation: flash-retry 0.4s ease-out forwards;
+  }
 }
 
 @keyframes flash-success {
@@ -359,6 +362,28 @@ body {
   }
   100% {
     background: var(--worker-bar-idle);
+  }
+}
+@keyframes flash-retry {
+  0% {
+    background: var(--color-warning);
+    box-shadow: 0 0 10px var(--color-warning);
+  }
+  100% {
+    background: var(--worker-bar-idle);
+  }
+}
+.worker-bar.flash-wait {
+  background: var(--color-info) !important;
+  animation: pulse-wait 0.8s ease-in-out infinite;
+}
+@keyframes pulse-wait {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
   }
 }
 

@@ -69,19 +69,19 @@ final readonly class TaskStatusUpdate implements JsonSerializable
         );
     }
 
-    public static function retry(TaskExecutionPayload $payload): self
+    public static function retry(TaskExecutionPayload $payload, int $worker): self
     {
-        return self::fromPayload($payload, self::EVENT_RETRY, 'Retrying');
+        return self::fromPayload($payload, self::EVENT_RETRY, 'Retrying', $worker);
     }
 
-    public static function checkLock(TaskExecutionPayload $payload): self
+    public static function checkLock(TaskExecutionPayload $payload, int $worker): self
     {
-        return self::fromPayload($payload, self::EVENT_CHECK_LOCK, "Limit: {$payload->mc}");
+        return self::fromPayload($payload, self::EVENT_CHECK_LOCK, "Limit: {$payload->mc}", $worker);
     }
 
-    public static function progress(TaskExecutionPayload $payload, int $percent): self
+    public static function progress(TaskExecutionPayload $payload, int $worker, int $percent): self
     {
-        return self::fromPayload($payload, self::EVENT_PROGRESS, "{$percent}%", null, $percent);
+        return self::fromPayload($payload, self::EVENT_PROGRESS, "{$percent}%", $worker, $percent);
     }
 
     public static function completed(TaskExecutionPayload $payload, int $worker): self
@@ -94,9 +94,9 @@ final readonly class TaskStatusUpdate implements JsonSerializable
         return self::fromPayload($payload, self::EVENT_LOCK_ACQUIRED, 'Accepted');
     }
 
-    public static function lockFailed(TaskExecutionPayload $payload): self
+    public static function lockFailed(TaskExecutionPayload $payload, int $worker): self
     {
-        return self::fromPayload($payload, self::EVENT_LOCK_FAILED, 'Timeout');
+        return self::fromPayload($payload, self::EVENT_LOCK_FAILED, 'Timeout', $worker);
     }
 
     public static function retriesFailed(TaskExecutionPayload $payload, int $worker, int $maxRetries): self

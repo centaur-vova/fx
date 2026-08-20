@@ -1,4 +1,4 @@
-import { COLORS, LABEL_COLORS, LOD, TERMINAL_LOG, ROUTES, } from './config';
+import { COLORS, LABEL_COLORS, LOD, TERMINAL_LOG, ROUTES, WORKER_FLASH, } from './config';
 import { clearTasks } from './task-store.js';
 import { resetThemeColors } from './theme-config.js';
 
@@ -129,15 +129,32 @@ export const state = {
     },
 
     // Heatmap
-    flashWorker(id, isFailed, sem) {
+    flashWorker(id, flashType, sem, persistent = false) {
         const workerNum = this.workers.length / 2;
         const idx = (sem * workerNum) + (id % workerNum);
         if (!this.workers[idx]) return;
 
-        this.workers[idx].status = isFailed ? 'error' : 'success';
-        setTimeout(() => {
-            this.workers[idx].status = '';
-        }, 400);
+        this.workers[idx].status = flashType;
+
+        // Remove animation if not persistent
+        if (!persistent) {
+            setTimeout(() => {
+                this.workers[idx].status = '';
+            }, WORKER_FLASH.DURATION_MS);
+        }
+    },
+
+    // Reactive worker class, sem - row index (0, 1)
+    getWorkerClass(index, sem) {
+        const workerNum = this.workers.length / 2;
+        const idx = (sem * workerNum) + (index % workerNum);
+        const status = this.workers[idx]?.status || '';
+        return {
+            'flash-success': status === WORKER_FLASH.SUCCESS,
+            'flash-error': status === WORKER_FLASH.ERROR,
+            'flash-retry': status === WORKER_FLASH.RETRY,
+            'flash-wait': status === WORKER_FLASH.WAIT,
+        };
     },
 
     // Reset metrics

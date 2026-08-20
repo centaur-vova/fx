@@ -16,6 +16,7 @@ import {
     COORDS,
     REMOVE_DELAYS,
     TERMINAL_LOG,
+    WORKER_FLASH,
 } from './modules/config';
 import {
     UI,
@@ -132,11 +133,25 @@ const handleUpdateTasks = (data) => {
     task.status = status;
     if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
 
-    if (status === 'completed' || status === 'retries_failed') {
-        task.endTime = Date.now() + REMOVE_DELAYS.completed;
-        store.flashWorker(worker, status === 'retries_failed', sem);
-    } else if (status === 'retry') {
-        task.endTime = Date.now() + REMOVE_DELAYS.retry_stall;
+    switch (status) {
+        case 'completed':
+            task.endTime = Date.now() + REMOVE_DELAYS.completed;
+            store.flashWorker(worker, WORKER_FLASH.SUCCESS, sem);
+            break;
+        case 'retries_failed':
+            task.endTime = Date.now() + REMOVE_DELAYS.completed;
+            store.flashWorker(worker, WORKER_FLASH.ERROR, sem);
+            break;
+        case 'retry':
+            task.endTime = Date.now() + REMOVE_DELAYS.retry_stall;
+            break;
+        case 'progress':
+        case 'check_lock':
+            store.flashWorker(worker, WORKER_FLASH.WAIT, sem, true);
+            break;
+        case 'lock_failed':
+            store.flashWorker(worker, WORKER_FLASH.RETRY, sem);
+            break;
     }
 };
 
