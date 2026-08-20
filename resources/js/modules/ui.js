@@ -1,4 +1,4 @@
-import { COLORS, LABEL_COLORS, LOD, PROGRESS_BAR } from './config';
+import { COLORS, LABEL_COLORS, LOD, PROGRESS_BAR, TASK_STATUS } from './config';
 
 /**
  * Draw a single task square (or dot) on the canvas.
@@ -13,7 +13,7 @@ import { COLORS, LABEL_COLORS, LOD, PROGRESS_BAR } from './config';
 export const drawShape = (ctx, x, y, size, task, mode, scale) => {
     const { status, sem, progress = null } = task;
     const s = size * scale;
-    const isFinished = task.isFinished?.() || status === 'completed' || status === 'retries_failed';
+    const isFinished = task.isFinished?.() || status === TASK_STATUS.COMPLETED || status === TASK_STATUS.RETRIES_FAILED;
 
     // Get label and measure its width
     const label = task.getLabel ? task.getLabel() : (task.mc?.toString() || '?');
@@ -67,15 +67,12 @@ const setAlpha = (ctx, task, status, isFinished, scale) => {
     }
 
     switch (status) {
-        case 'progress':
+        case TASK_STATUS.PROGRESS:
             const speed = 150;
             const pulse = 0.6 + 0.4 * Math.sin((Date.now() / speed) + (task.pulseOffset || 0));
             ctx.globalAlpha = pulse;
             break;
-        case 'queued':
-            ctx.globalAlpha = 0.8;
-            break;
-        case 'check_lock':
+        case TASK_STATUS.CHECK_LOCK:
             ctx.globalAlpha = 0.6;
             break;
         default:
@@ -103,7 +100,7 @@ const drawLabel = (ctx, x, y, label, task, scale) => {
 
 const shouldDrawProgressBar = (scale, status, progress) => {
     return scale >= PROGRESS_BAR.min_scale &&
-        status === 'progress' &&
+        status === TASK_STATUS.PROGRESS &&
         progress && progress > 0 && progress < 100 &&
         PROGRESS_BAR.height > 0;
 };

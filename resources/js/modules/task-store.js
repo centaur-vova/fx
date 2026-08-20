@@ -1,4 +1,4 @@
-import { COLORS } from './config.js';
+import { COLORS, TASK_STATUS } from './config.js';
 
 export class Task {
     constructor(data) {
@@ -37,12 +37,29 @@ export class Task {
         return COLORS[this.mc] || '#ffffff';
     }
 
+    /**
+     * Checks whether the task should be removed from the view.
+     *
+     * A task is considered expired when:
+     * - It has finished (completed or failed), OR
+     * - It is in retry state (to avoid cluttering the view with queued retries)
+     *
+     * In both cases, the task is removed after `endTime` has passed.
+     *
+     * @param {number} now - Current timestamp in milliseconds
+     * @returns {boolean} True if the task should be removed
+     */
+    isExpired(now) {
+        const isFinished = this.isFinished() || this.status === TASK_STATUS.RETRY;
+        return isFinished && now > this.endTime;
+    }
+
     isFinished() {
-        return this.status === 'completed' || this.status === 'retries_failed';
+        return this.status === TASK_STATUS.COMPLETED || this.status === TASK_STATUS.RETRIES_FAILED;
     }
 
     isProgress() {
-        return this.status === 'progress';
+        return this.status === TASK_STATUS.PROGRESS;
     }
 }
 

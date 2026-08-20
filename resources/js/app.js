@@ -9,7 +9,7 @@ import terminalLog from './modules/terminal-log.js';
 import {
     WS,
     HEALTH_CHECK,
-    TASK,
+    TASK_STATUS,
     BRAND_LOGO,
     PING_INTERVAL_MS,
     STATUS_LABELS,
@@ -121,7 +121,6 @@ const handleUpdateTasks = (data) => {
             jitterX: jitterX,
             currentX: COORDS.queued + jitterX,
             targetX: COORDS.queued + jitterX,
-            status: 'queued',
             sem: sem,
             pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
@@ -133,23 +132,24 @@ const handleUpdateTasks = (data) => {
     task.status = status;
     if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
 
+    // Update heatmap
     switch (status) {
-        case 'completed':
+        case TASK_STATUS.COMPLETED:
             task.endTime = Date.now() + REMOVE_DELAYS.completed;
             store.flashWorker(worker, WORKER_FLASH.SUCCESS, sem);
             break;
-        case 'retries_failed':
+        case TASK_STATUS.RETRIES_FAILED:
             task.endTime = Date.now() + REMOVE_DELAYS.completed;
             store.flashWorker(worker, WORKER_FLASH.ERROR, sem);
             break;
-        case 'retry':
+        case TASK_STATUS.RETRY:
             task.endTime = Date.now() + REMOVE_DELAYS.retry_stall;
             break;
-        case 'progress':
-        case 'check_lock':
+        case TASK_STATUS.PROGRESS:
+        case TASK_STATUS.CHECK_LOCK:
             store.flashWorker(worker, WORKER_FLASH.WAIT, sem, true);
             break;
-        case 'lock_failed':
+        case TASK_STATUS.LOCK_FAILED:
             store.flashWorker(worker, WORKER_FLASH.RETRY, sem);
             break;
     }
@@ -174,7 +174,7 @@ const render = () => {
     const now = Date.now();
     tasks.forEach((task, id) => {
         task.currentX += (task.targetX - task.currentX) * 0.1;
-        if ((task.status === 'completed' || task.status === 'retries_failed' || task.status === 'retry') && now > task.endTime) {
+        if (task.isExpired(now)) {
             tasks.delete(id);
             return;
         }

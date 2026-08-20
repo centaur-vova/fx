@@ -81,31 +81,39 @@ export const HEALTH_CHECK = {
     INTERVAL_MS: 1000,
 };
 
-export const TASK = {
-    // Binary id mappings
-    STATUS_MAP: {
-        0: 'check_lock',
-        1: 'progress',
-        2: 'completed',
-        3: 'lock_acquired',
-        4: 'lock_failed',
-        5: 'retries_failed',
-        6: 'retry'
-    },
+export const TASK_STATUS = {
+    CHECK_LOCK: 'check_lock',
+    PROGRESS: 'progress',
+    COMPLETED: 'completed',
+    LOCK_ACQUIRED: 'lock_acquired',
+    LOCK_FAILED: 'lock_failed',
+    RETRIES_FAILED: 'retries_failed',
+    RETRY: 'retry',
 };
+
+// Binary id mappings
+export const TASK_STATUS_MAP = [
+    TASK_STATUS.CHECK_LOCK,      // 0
+    TASK_STATUS.PROGRESS,        // 1
+    TASK_STATUS.COMPLETED,       // 2
+    TASK_STATUS.LOCK_ACQUIRED,   // 3
+    TASK_STATUS.LOCK_FAILED,     // 4
+    TASK_STATUS.RETRIES_FAILED,  // 5
+    TASK_STATUS.RETRY,           // 6
+];
 
 export const TERMINAL_LOG = {
     DISABLED_THRESHOLD: 200,
     MAX_LOG_ENTRIES: 50,
 
     STATUS_COLORS: {
-        completed: 'var(--color-success)',
-        retries_failed: 'var(--color-error)',
-        lock_failed: 'var(--color-error)',
-        retry: 'var(--color-warning)',
-        check_lock: 'var(--color-info)',
-        lock_acquired: 'var(--color-accent)',
-        progress: 'var(--color-urgent)',
+        [TASK_STATUS.COMPLETED]: 'var(--color-success)',
+        [TASK_STATUS.RETRIES_FAILED]: 'var(--color-error)',
+        [TASK_STATUS.LOCK_FAILED]: 'var(--color-error)',
+        [TASK_STATUS.RETRY]: 'var(--color-warning)',
+        [TASK_STATUS.CHECK_LOCK]: 'var(--color-info)',
+        [TASK_STATUS.LOCK_ACQUIRED]: 'var(--color-accent)',
+        [TASK_STATUS.PROGRESS]: 'var(--color-urgent)',
     },
 };
 

@@ -1,4 +1,4 @@
-import { WS, TASK } from './config.js';
+import { WS, TASK_STATUS_MAP } from './config.js';
 
 /**
  * Decodes an incoming WebSocket message, either binary (9-byte protocol frame)
@@ -20,7 +20,7 @@ export const decodeMessage = (rawData, labels) => {
 
         // Magic byte uniquely identifies the message type — no need to check payload length
         if (type === WS.BINARY_TYPE.STATUS_UPDATE) {
-            const status = TASK.STATUS_MAP[view.getUint8(1)];
+            const status = TASK_STATUS_MAP[view.getUint8(1)];
 
             // Unpack task ID (31 bits) and semaphore type (1 bit) from a single uint32
             const packed32 = view.getUint32(2);
