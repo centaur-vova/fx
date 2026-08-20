@@ -75,8 +75,7 @@ jobs:
             BUILD_DATE=${{ steps.vars.outputs.build_date }}
 
   deploy-vps:
-    ## DISABLED: temporarily disable auto-deploy (2026-08-16)
-    if: github.repository == 'centaur-vova/fast-atomic-flow' && false
+    if: github.repository == 'centaur-vova/fast-atomic-flow'
     name: Pull & Restart on VPS
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -91,5 +90,5 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose -f docker-compose.prod.yaml pull app ws balancer api
-            docker compose -f docker-compose.prod.yaml up -d --remove-orphans --scale api=3 app ws api balancer redis jaeger
+            # docker compose -f docker-compose.prod.yaml up -d --remove-orphans --scale api=3 app ws api balancer redis jaeger
             docker image prune -f
