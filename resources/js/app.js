@@ -96,6 +96,10 @@ const connect = () => {
                 break;
         }
     };
+
+    ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+    };
 };
 
 const handleUpdateTasks = (data) => {
@@ -113,8 +117,8 @@ const handleUpdateTasks = (data) => {
     } else {
         const jitterX = (Math.random() - 0.5) * 0.22;
 
-        task = new Task({
-            taskId,
+        task = addTask({
+            id: taskId,
             mc: mc || store.mc,
             title: data.title,
             y: 0.15 + Math.random() * 0.7,
@@ -124,8 +128,6 @@ const handleUpdateTasks = (data) => {
             sem: sem,
             pulseOffset: Math.random() * Math.PI * 2 // random phase
         });
-
-        tasks.set(taskId, task);
     }
 
     task.progress = progress;
