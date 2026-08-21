@@ -107,7 +107,7 @@ The WebSocket proxy (Go) communicates with the frontend via a **binary protocol*
 - Each message is packed into **9 bytes**:
   - `magic byte` — message type (1 byte)
   - `status` — task status (1 byte, 8 predefined states)
-  - `taskId + sem` — semaphore driver type (1 bit, highest bit) packed with task ID (31 bits, lower bits) into a single uint32 (4 bytes)
+  - `id + sem` — task identifier (31 bits) and semaphore driver flag (1 bit, highest) packed into a single uint32 (4 bytes)
   - `max_concurrent` — concurrency limit (1 byte, 0–255)
   - `progress + task_mode` — completion percentage (7 bits, 0–100) + task mode (1 bit, highest bit: 0 = observation, 1 = stress) packed into a single byte
   - `worker_id` — worker that processed the task (1 byte, 0–255)

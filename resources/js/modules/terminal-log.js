@@ -29,7 +29,7 @@ class TerminalLog {
         const fragment = document.createDocumentFragment();
 
         for (const data of this.buffer) {
-            const { taskId, status, message, sem, progress } = data;
+            const { id, status, message, sem, progress } = data;
             const entry = document.createElement('div');
             entry.className = 'whitespace-nowrap truncate text-[9px] leading-tight mb-0.5 opacity-80';
 
@@ -37,7 +37,7 @@ class TerminalLog {
             const statusColor = TERMINAL_LOG.STATUS_COLORS[status] || 'var(--text-muted)';
             const semLabel = sem === 1 ? 'API' : 'PHP';
             const paddedStatus = status.toUpperCase().padEnd(14, ' ');
-            const hexId = (taskId & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+            const hexId = (id & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
             const progressText = progress > 0 ? ` (${progress}%)` : '';
 
             entry.innerHTML = `

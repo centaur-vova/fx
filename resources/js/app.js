@@ -108,17 +108,17 @@ const handleUpdateTasks = (data) => {
         terminalLog.add(data, tasks);
     }
 
-    const { taskId, worker, mc, status, sem, message, progress = null } = data;
+    const { id, worker, mc, status, sem, message, progress = null } = data;
 
     let task;
 
-    if (tasks.has(taskId)) {
-        task = tasks.get(taskId);
+    if (tasks.has(id)) {
+        task = tasks.get(id);
     } else {
         const jitterX = (Math.random() - 0.5) * 0.22;
 
         task = addTask({
-            id: taskId,
+            id,
             mc: mc || store.mc,
             title: data.title,
             y: 0.15 + Math.random() * 0.7,

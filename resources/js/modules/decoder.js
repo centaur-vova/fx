@@ -24,8 +24,8 @@ export const decodeMessage = (rawData, labels) => {
 
             // Unpack task ID (31 bits) and semaphore type (1 bit) from a single uint32
             const packed32 = view.getUint32(2);
-            const taskId = packed32 & 0x7FFFFFFF,
-                sem = (packed32 >>> 31) & 1;
+            const id = packed32 & 0x7FFFFFFF;
+            const sem = (packed32 >>> 31) & 1;
 
             // Unpack progress (7 lower bits) and task mode (1 higher bit) from a single uint8
             const packed8 = view.getUint8(7);
@@ -38,7 +38,7 @@ export const decodeMessage = (rawData, labels) => {
                     mc: view.getUint8(6),
                     worker: view.getUint8(8),
                     message: labels[status] || '',
-                    taskId,
+                    id,
                     status,
                     sem,
                     progress,

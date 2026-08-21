@@ -2,7 +2,7 @@ import { COLORS, TASK_STATUS } from './config.js';
 
 export class Task {
     constructor(data) {
-        this.id = data.taskId;
+        this.id = data.id;
         this.mc = data.mc;
         this.title = data.title;
         this.status = data.status;

@@ -34,7 +34,7 @@ final readonly class TaskExecutionPayload implements Identifiable, FromArray
      * when packed into the binary WebSocket frame.
      *
      * @see go/internal/protocol/messages.go TaskStatusUpdate.Pack()
-     * @see resources/js/modules/decoder.js taskId unpacking
+     * @see resources/js/modules/decoder.js id unpacking
      */
     public static function create(int $mc, TaskMode $mode, SemaphoreDriver $sem, ?string $traceparent = null): self
     {
