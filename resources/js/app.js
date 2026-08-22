@@ -157,6 +157,33 @@ const handleUpdateTasks = (data) => {
     }
 };
 
+/**
+ * Handles real-time system metrics from WebSocket.
+ *
+ * @param {Object} data - Metrics payload
+ * @param {number} data.connections - Number of active WebSocket clients
+ * @param {number} data.memory_mb - Memory usage in MB
+ * @param {number} data.free_mem - Free system memory in MB
+ * @param {number} data.cpu_usage - CPU usage percentage
+ * @param {Object} data.nats_stats - NATS JetStream statistics
+ * @param {number} data.nats_stats.messages - Total messages in stream
+ * @param {number} data.nats_stats.bytes - Total bytes in stream
+ * @param {number} data.nats_stats.consumers - Number of active consumers
+ *
+ * @example
+ * // Example metrics payload:
+ * {
+ *   "connections": 1,
+ *   "memory_mb": 12.83,
+ *   "free_mem": 19984.82,
+ *   "cpu_usage": 69.33,
+ *   "nats_stats": {
+ *     "messages": 0,
+ *     "bytes": 0,
+ *     "consumers": 1
+ *   }
+ * }
+ */
 const handleMetrics = (data) => {
     // Update metrics
     store.updateMetrics(data);
