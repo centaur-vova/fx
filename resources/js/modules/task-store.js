@@ -1,4 +1,4 @@
-import { COLORS, TASK_STATUS } from './config.js';
+import { COLORS, COORDS, TASK_STATUS } from './config.js';
 
 export class Task {
     constructor(data) {
@@ -69,9 +69,22 @@ export function clearTasks() {
     tasks.clear();
 }
 
-export function addTask(rawData) {
-    const task = new Task(rawData);
-    tasks.set(task.id, task);
+export function addTask(id, mc, title, sem) {
+    const jitterX = (Math.random() - 0.5) * 0.22;
+
+    const task = new Task({
+        id,
+        mc,
+        title,
+        sem,
+        y: 0.15 + Math.random() * 0.7,
+        jitterX,
+        currentX: COORDS.queued + jitterX,
+        targetX: COORDS.queued + jitterX,
+        pulseOffset: Math.random() * Math.PI * 2,
+    });
+
+    tasks.set(id, task);
     return task;
 }
 

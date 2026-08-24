@@ -115,19 +115,7 @@ const handleUpdateTasks = (data) => {
     if (tasks.has(id)) {
         task = tasks.get(id);
     } else {
-        const jitterX = (Math.random() - 0.5) * 0.22;
-
-        task = addTask({
-            id,
-            mc: mc || store.mc,
-            title: data.title,
-            y: 0.15 + Math.random() * 0.7,
-            jitterX: jitterX,
-            currentX: COORDS.queued + jitterX,
-            targetX: COORDS.queued + jitterX,
-            sem: sem,
-            pulseOffset: Math.random() * Math.PI * 2 // random phase
-        });
+        task = addTask(id, mc, data.title, sem);
     }
 
     task.progress = progress;
