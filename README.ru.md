@@ -30,7 +30,9 @@
 
 [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
-<img width="2564" height="1788" alt="Скриншот Fast темы: множество мелких точек (star dust) в зонах Pipeline, демонстрация LOD при большом количестве задач" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
+<img width="1760" height="1156" alt="Нагрузочный тест" src="https://github.com/user-attachments/assets/1ffec96a-b293-4fd5-a14f-a78ea0cf5818" />
+
+> _Нагрузочный тест: 10 001 одновременное WebSocket-соединение, 8 API-инстансов, 8 Swoole-воркеров. Узкое место — CPU локальной машины (load average 26 при 12 потоках), не архитектура._
 
 ---
 

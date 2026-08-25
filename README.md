@@ -30,7 +30,9 @@
 
 [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
-<img width="2564" height="1788" alt="Fast theme - star dust mode" src="https://github.com/user-attachments/assets/895c7ba9-a502-472c-be2b-ee32817320c0" />
+<img width="1760" height="1156" alt="Load test" src="https://github.com/user-attachments/assets/1ffec96a-b293-4fd5-a14f-a78ea0cf5818" />
+
+> _Load test: 10,001 concurrent WebSocket connections across 8 API instances and 8 Swoole workers. Bottleneck: local machine's CPU (load average 26 on 12 threads), not the architecture._
 
 ---
 
