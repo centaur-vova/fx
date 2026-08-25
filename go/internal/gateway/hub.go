@@ -18,7 +18,7 @@ import (
 )
 
 // clientSendBufferSize is the size of the send channel buffer per client.
-const clientSendBufferSize = 1024
+const clientSendBufferSize = 4096
 
 // ClientMessage wraps a WebSocket message with its type.
 type ClientMessage struct {
@@ -120,6 +120,7 @@ func (h *Hub) Broadcast(data any) {
 		case client.Send <- msg:
 		default:
 			// This pony can't keep up with the herd, remove it
+			logger.Warn("Removing slow WebSocket client connection")
 			go h.Remove(client)
 		}
 	}
