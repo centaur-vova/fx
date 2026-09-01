@@ -30,6 +30,9 @@ export class Task {
         // Base Y for wave animation (stored separately to avoid drift)
         this._baseY = this.y;
 
+        // In task-store.js, Task constructor
+        this.exitSpeed = 0;
+
         // Wave animation instance (set later)
         this.wave = new WaveAnimation(this.mc ?? 1);
     }
@@ -65,12 +68,7 @@ export class Task {
      * @returns {boolean} True if the task should be removed
      */
     isExpired(now) {
-        const isFinished = this.isFinished() || this.status === TASK_STATUS.RETRY;
-        return isFinished && now > this.endTime;
-    }
-
-    isFinished() {
-        return this.status === TASK_STATUS.COMPLETED || this.status === TASK_STATUS.RETRIES_FAILED;
+        return this.status === TASK_STATUS.RETRY && now > this.endTime;
     }
 
     isProgress() {
@@ -90,6 +88,13 @@ export class Task {
         if (x !== undefined) {
             this.targetX = x + this.jitterX;
             this.targetY = 0.15 + Math.random() * 0.7;
+        }
+
+        // Trigger exit animation for terminal states
+        if (status === TASK_STATUS.COMPLETED) {
+            this.exitSpeed = -0.004;
+        } else if (status === TASK_STATUS.RETRIES_FAILED) {
+            this.exitSpeed = 0.004;
         }
     }
 }

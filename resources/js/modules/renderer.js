@@ -30,6 +30,21 @@ export const createRenderer = (ctx, tasks, store) => {
                 return;
             }
 
+            // Handle exit animation
+            if (task.exitSpeed !== 0) {
+                task.y += task.exitSpeed;
+                task.exitSpeed += 0.0006 * Math.sign(task.exitSpeed); // gravity always downward
+
+                const distance = Math.abs(task.y - 0.5);
+                const maxDistance = 0.7;
+                task._exitAlpha = Math.max(0, 1 - distance / maxDistance);
+
+                if (task.y < -0.3 || task.y > 1.3) {
+                    tasks.delete(id);
+                    return;
+                }
+            }
+
             if (task.status === TASK_STATUS.PROGRESS && task.wave) {
                 task.wave.apply(task, nowSec);
             } else {
