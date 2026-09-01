@@ -1,8 +1,8 @@
 import Alpine from 'alpinejs';
 import { state } from './modules/state';
 import { decodeMessage } from './modules/decoder.js';
-import { drawShape } from './modules/ui.js';
-import { tasks, Task, addTask, clearTasks } from './modules/task-store.js';
+import { createRenderer } from './modules/renderer.js';
+import { tasks, addTask, clearTasks } from './modules/task-store.js';
 import { updateMessagesChart } from './modules/chart.js';
 import { setupCanvas } from './modules/canvas.js';
 import terminalLog from './modules/terminal-log.js';
@@ -11,16 +11,12 @@ import {
     HEALTH_CHECK,
     TASK_STATUS,
     BRAND_LOGO,
-    PING_INTERVAL_MS,
     STATUS_LABELS,
     COORDS,
     REMOVE_DELAYS,
     TERMINAL_LOG,
     WORKER_FLASH,
 } from './modules/config';
-import {
-    UI,
-} from './modules/theme-config.js';
 
 // Init store
 window.Alpine = Alpine;
@@ -181,27 +177,7 @@ const handleMetrics = (data) => {
 };
 
 // Rendering
-const render = () => {
-    requestAnimationFrame(render);
-
-    if (store.renderEnabled) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    const now = Date.now();
-    tasks.forEach((task, id) => {
-        task.currentX += (task.targetX - task.currentX) * 0.1;
-        if (task.isExpired(now)) {
-            tasks.delete(id);
-            return;
-        }
-        if (store.renderEnabled) {
-            drawShape(ctx, task.currentX * store.width, task.y * store.height, 24, task, store.mode, store.scale);
-        }
-    });
-
-    store.updateTaskNum(tasks.size);
-};
+const render = createRenderer(ctx, tasks, store);
 
 // Ping timer
 let pingTimer = null;
