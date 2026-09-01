@@ -1,22 +1,37 @@
 import { COLORS, COORDS, TASK_STATUS } from './config.js';
+import { WaveAnimation } from './wave-animation.js';
 
 export class Task {
     constructor(data) {
+        // Core task data
         this.id = data.id;
         this.mc = data.mc;
         this.title = data.title;
-        this.status = data.status;
-        this.progress = data.progress;
         this.sem = data.sem;
-        this.mode = data.mode;
-        this.worker = data.worker;
 
-        this.pulseOffset = Math.random() * Math.PI * 2;
-        this.jitterX = data.jitterX ?? (Math.random() - 0.5) * 0.22;
-        this.currentX = data.currentX ?? COORDS.queued + this.jitterX;
-        this.targetX = data.targetX ?? COORDS.queued + this.jitterX;
-        this.y = data.y ?? 0.15 + Math.random() * 0.7;
+        // Status and progress
+        this.status = data.status ?? 'queued';
+        this.progress = data.progress ?? 0;
         this.endTime = data.endTime ?? null;
+
+        // Random visual offset for horizontal spread
+        this.jitterX = (Math.random() - 0.5) * 0.22;
+
+        // Random vertical position
+        this.y = 0.15 + Math.random() * 0.7;
+
+        // Current and target X positions (based on zone coordinates)
+        this.currentX = COORDS.queued + this.jitterX;
+        this.targetX = COORDS.queued + this.jitterX;
+
+        // Random phase for sinusoidal animation
+        this.pulseOffset = Math.random() * Math.PI * 2;
+
+        // Base Y for wave animation (stored separately to avoid drift)
+        this._baseY = this.y;
+
+        // Wave animation instance (set later)
+        this.wave = new WaveAnimation(this.mc ?? 1);
     }
 
     getLabel() {
@@ -61,6 +76,22 @@ export class Task {
     isProgress() {
         return this.status === TASK_STATUS.PROGRESS;
     }
+
+    /**
+     * Update task state and target position in one go.
+     * @param {string} status - New task status
+     * @param {number} progress - Progress percentage (0-100)
+     */
+    update(status, progress) {
+        this.status = status;
+        this.progress = progress;
+
+        const x = COORDS[status];
+        if (x !== undefined) {
+            this.targetX = x + this.jitterX;
+            this.targetY = 0.15 + Math.random() * 0.7;
+        }
+    }
 }
 
 export const tasks = new Map();
@@ -70,18 +101,11 @@ export function clearTasks() {
 }
 
 export function addTask(id, mc, title, sem) {
-    const jitterX = (Math.random() - 0.5) * 0.22;
-
     const task = new Task({
         id,
         mc,
         title,
         sem,
-        y: 0.15 + Math.random() * 0.7,
-        jitterX,
-        currentX: COORDS.queued + jitterX,
-        targetX: COORDS.queued + jitterX,
-        pulseOffset: Math.random() * Math.PI * 2,
     });
 
     tasks.set(id, task);

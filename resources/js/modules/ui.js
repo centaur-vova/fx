@@ -11,48 +11,51 @@ import { COLORS, LABEL_COLORS, LOD, PROGRESS_BAR, TASK_STATUS } from './config';
  * @param {number} scale - current global scale factor
  */
 export const drawShape = (ctx, x, y, size, task, mode, scale) => {
-    const { status, sem, progress = null } = task;
-    const s = size * scale;
-    const isFinished = task.isFinished?.() || status === TASK_STATUS.COMPLETED || status === TASK_STATUS.RETRIES_FAILED;
-
-    // Get label and measure its width
-    const label = task.getLabel ? task.getLabel() : (task.mc?.toString() || '?');
-
-    // Set font for measurement
-    ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
-    const textWidth = ctx.measureText(label).width;
-
-    // Calculate block dimensions based on text width
-    const paddingX = 12 * scale;
-    const paddingY = 0;
-    const blockWidth = Math.max(s, textWidth + paddingX * 2);
-    const blockHeight = s + paddingY * 2;
-    const halfWidth = blockWidth / 2;
-    const halfHeight = blockHeight / 2;
-
-    // Set color
-    let fillColor = task.getColor ? task.getColor() : (COLORS[task.mc] || '#ffffff');
-    ctx.fillStyle = fillColor;
-
-    // Alpha / pulsation
-    setAlpha(ctx, task, status, isFinished, scale);
-
+    // Early exit: dot mode
     if (mode === 'dot') {
         ctx.fillRect(x, y, 1, 1);
         return;
     }
 
-    // Draw background
-    drawTaskBackground(ctx, x, y, halfWidth, halfHeight, sem, scale);
+    const { status, sem, progress = null } = task;
+    const s = size * scale;
 
-    ctx.globalAlpha = 1;
+    const isFinished = task.isFinished();
+    const showLabel = scale > LOD.scale_medium;
 
-    // Draw label
-    if (scale > LOD.scale_medium) {
-        drawLabel(ctx, x, y, label, task, scale);
+    // Medium LOD — no label, just square
+    if (!showLabel) {
+        const fillColor = task.getColor ? task.getColor() : (COLORS[task.mc] || '#ffffff');
+        ctx.fillStyle = fillColor;
+        setAlpha(ctx, task, status, isFinished, scale);
+        drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale);
+        ctx.globalAlpha = 1;
+
+        if (shouldDrawProgressBar(scale, status, progress)) {
+            drawProgressBar(ctx, x, y, s, s / 2, progress, scale);
+        }
+        return;
     }
 
-    // Draw progress bar
+    // Full LOD — with label
+    const label = task.getLabel ? task.getLabel() : (task.mc?.toString() || '?');
+    ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
+    const textWidth = ctx.measureText(label).width;
+    const paddingX = 12 * scale;
+    const blockWidth = Math.max(s, textWidth + paddingX * 2);
+    const blockHeight = s;
+    const halfWidth = blockWidth / 2;
+    const halfHeight = blockHeight / 2;
+
+    const fillColor = task.getColor();
+    ctx.fillStyle = fillColor;
+    setAlpha(ctx, task, status, isFinished, scale);
+
+    drawTaskBackground(ctx, x, y, halfWidth, halfHeight, sem, scale);
+    ctx.globalAlpha = 1;
+
+    drawLabel(ctx, x, y, label, task, scale);
+
     if (shouldDrawProgressBar(scale, status, progress)) {
         drawProgressBar(ctx, x, y, blockWidth, halfHeight, progress, scale);
     }
@@ -68,9 +71,7 @@ const setAlpha = (ctx, task, status, isFinished, scale) => {
 
     switch (status) {
         case TASK_STATUS.PROGRESS:
-            const speed = 150;
-            const pulse = 0.6 + 0.4 * Math.sin((Date.now() / speed) + (task.pulseOffset || 0));
-            ctx.globalAlpha = pulse;
+            ctx.globalAlpha = 0.9;
             break;
         case TASK_STATUS.CHECK_LOCK:
             ctx.globalAlpha = 0.6;
@@ -91,7 +92,7 @@ const drawTaskBackground = (ctx, x, y, halfWidth, halfHeight, sem, scale) => {
 };
 
 const drawLabel = (ctx, x, y, label, task, scale) => {
-    ctx.fillStyle = task.getColor ? task.getColor() : (LABEL_COLORS[task.mc] || '#ffffff');
+    ctx.fillStyle = LABEL_COLORS[task.mc];
     ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

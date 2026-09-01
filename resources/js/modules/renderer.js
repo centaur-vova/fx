@@ -1,4 +1,5 @@
 import { drawShape } from './ui.js';
+import { TASK_STATUS } from './config.js';
 
 /**
  * Creates the main render loop for task visualization.
@@ -19,15 +20,21 @@ export const createRenderer = (ctx, tasks, store) => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         const now = Date.now();
+        const nowSec = now / 1000;
         const { width, mode, scale } = store;
         const baseSize = 24 * scale;
 
         tasks.forEach((task, id) => {
-            task.currentX += (task.targetX - task.currentX) * 0.1;
-
             if (task.isExpired(now)) {
                 tasks.delete(id);
                 return;
+            }
+
+            if (task.status === TASK_STATUS.PROGRESS && task.wave) {
+                task.wave.apply(task, nowSec);
+            } else {
+                // Regular linear motion for all other statuses
+                task.currentX += (task.targetX - task.currentX) * 0.1;
             }
 
             drawShape(

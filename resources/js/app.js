@@ -114,9 +114,8 @@ const handleUpdateTasks = (data) => {
         task = addTask(id, mc, data.title, sem);
     }
 
-    task.progress = progress;
-    task.status = status;
-    if (COORDS[status]) task.targetX = COORDS[status] + task.jitterX;
+    // Update task
+    task.update(status, progress);
 
     // Update heatmap
     switch (status) {
