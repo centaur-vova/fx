@@ -20,14 +20,13 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
     const { status, sem, progress = null } = task;
     const s = size * scale;
 
-    const isFinished = task.isFinished();
     const showLabel = scale > LOD.scale_medium;
 
     // Medium LOD — no label, just square
     if (!showLabel) {
-        const fillColor = task.getColor ? task.getColor() : (COLORS[task.mc] || '#ffffff');
+        const fillColor = task.getColor();
         ctx.fillStyle = fillColor;
-        setAlpha(ctx, task, status, isFinished, scale);
+        setAlpha(ctx, task);
         drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale);
         ctx.globalAlpha = 1;
 
@@ -49,7 +48,7 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
 
     const fillColor = task.getColor();
     ctx.fillStyle = fillColor;
-    setAlpha(ctx, task, status, isFinished, scale);
+    setAlpha(ctx, task);
 
     drawTaskBackground(ctx, x, y, halfWidth, halfHeight, sem, scale);
     ctx.globalAlpha = 1;
@@ -61,24 +60,11 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
     }
 };
 
-const setAlpha = (ctx, task, status, isFinished, scale) => {
-    const alphaScale = scale > PROGRESS_BAR.min_scale;
-
-    if (!alphaScale) {
-        ctx.globalAlpha = isFinished ? 0.3 : 1;
-        return;
-    }
-
-    switch (status) {
-        case TASK_STATUS.PROGRESS:
-            ctx.globalAlpha = 0.9;
-            break;
-        case TASK_STATUS.CHECK_LOCK:
-            ctx.globalAlpha = 0.6;
-            break;
-        default:
-            ctx.globalAlpha = isFinished ? 0.3 : 1;
-    }
+const setAlpha = (ctx, task) => {
+    // Sharp ramp: 0.1 at left, 1.0 at right, with power curve
+    const raw = Math.pow(task.currentX, 0.5); // 0.0 → 0.0, 1.0 → 1.0, but steeper
+    const alpha = 0.05 + 0.95 * raw;
+    ctx.globalAlpha = Math.min(alpha, 1);
 };
 
 const drawTaskBackground = (ctx, x, y, halfWidth, halfHeight, sem, scale) => {
