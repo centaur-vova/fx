@@ -82,53 +82,54 @@ class Kernel
 
         // Options
         $options = new Options(
-            appEnv:               $loader->getEnum('APP_ENV', AppEnv::class, AppEnv::DEV),
-            serverHost:           $loader->getString('SERVER_HOST', '0.0.0.0'),
-            logLevel:             $loader->getString('LOG_LEVEL', 'info'),
-            serverPort:           $loader->getInt('SERVER_PORT', 9501),
-            taskMaxBatchSize:     $loader->getInt('TASK_MAX_BATCH_SIZE', 5000),
-            taskSemaphoreLimit:   $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
-            taskLockTimeoutSec:   $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
-            taskRetryDelaySec:    $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
-            taskMaxRetries:       $loader->getInt('TASK_MAX_RETRIES', 3),
-            shutdownTimeoutSec:   $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
-            natsHost:             $natsHost,
-            natsPort:             $natsPort,
-            natsToken:            $loader->getString('NATS_TOKEN', ''),
-            workerNum:            $workerNum,
+            appEnv:                $loader->getEnum('APP_ENV', AppEnv::class, AppEnv::DEV),
+            serverHost:            $loader->getString('SERVER_HOST', '0.0.0.0'),
+            logLevel:              $loader->getString('LOG_LEVEL', 'info'),
+            serverPort:            $loader->getInt('SERVER_PORT', 9501),
+            taskMaxBatchSize:      $loader->getInt('TASK_MAX_BATCH_SIZE', 5000),
+            taskSemaphoreLimit:    $loader->getInt('TASK_SEMAPHORE_MAX_LIMIT', 10),
+            taskLockTimeoutSec:    $loader->getFloat('TASK_LOCK_TIMEOUT_SEC', 4.0),
+            taskRetryDelaySec:     $loader->getInt('TASK_RETRY_DELAY_SEC', 5),
+            taskRetryJitterFactor: $loader->getFloat('TASK_RETRY_JITTER_FACTOR', 0.75),
+            taskMaxRetries:        $loader->getInt('TASK_MAX_RETRIES', 3),
+            shutdownTimeoutSec:    $loader->getInt('GRACEFUL_SHUTDOWN_TIMEOUT_SEC', 5),
+            natsHost:              $natsHost,
+            natsPort:              $natsPort,
+            natsToken:             $loader->getString('NATS_TOKEN', ''),
+            workerNum:             $workerNum,
             // Cache
-            cacheDriver:          $loader->getEnum('CACHE_DRIVER', CacheDriver::class, CacheDriver::SWOOLE_TABLE),
-            cacheDefaultTtlSec:   $loader->getInt('CACHE_DEFAULT_TTL_SEC', 60),
-            cacheMaxSize:         $loader->getInt('CACHE_MAX_SIZE', 131072),
-            cacheAutoCleanSec:    $loader->getFloat('CACHE_AUTO_CLEAN_SEC', 60),
-            cacheValueMaxSize:    $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
+            cacheDriver:           $loader->getEnum('CACHE_DRIVER', CacheDriver::class, CacheDriver::SWOOLE_TABLE),
+            cacheDefaultTtlSec:    $loader->getInt('CACHE_DEFAULT_TTL_SEC', 60),
+            cacheMaxSize:          $loader->getInt('CACHE_MAX_SIZE', 131072),
+            cacheAutoCleanSec:     $loader->getFloat('CACHE_AUTO_CLEAN_SEC', 60),
+            cacheValueMaxSize:     $loader->getInt('CACHE_VALUE_MAX_SIZE', 256), // swoole only
             // API
-            apiUrl:               $apiUrl,
-            apiAuthKey:           $loader->getString('API_AUTH_KEY'),
-            semaphorePermitTtl:   $loader->getInt('SEMAPHORE_PERMIT_TTL', 10),
+            apiUrl:                $apiUrl,
+            apiAuthKey:            $loader->getString('API_AUTH_KEY'),
+            semaphorePermitTtl:    $loader->getInt('SEMAPHORE_PERMIT_TTL', 10),
             // Queue
-            queueCapacity:        $loader->getInt('QUEUE_CAPACITY', 1000),
-            queuePrefetchBatch:   $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
+            queueCapacity:         $loader->getInt('QUEUE_CAPACITY', 1000),
+            queuePrefetchBatch:    $loader->getInt('QUEUE_PREFETCH_BATCH', 100),
             // NATS & broadcast
-            natsAckWaitMs:        $loader->getInt('NATS_ACK_WAIT_MS', 30000),
-            natsTimeoutSec:       $loader->getFloat('NATS_TIMEOUT_SEC', 1.0),
-            natsPingIntervalSec:  $loader->getInt('NATS_PING_INTERVAL_SEC', 10),
+            natsAckWaitMs:         $loader->getInt('NATS_ACK_WAIT_MS', 30000),
+            natsTimeoutSec:        $loader->getFloat('NATS_TIMEOUT_SEC', 1.0),
+            natsPingIntervalSec:   $loader->getInt('NATS_PING_INTERVAL_SEC', 10),
             natsWorkerPingIntervalSec: $loader->getInt('NATS_WORKER_PING_INTERVAL_SEC', 5),
             // Queue/streams
-            broadcastSubject:     $loader->getString('NATS_SUBJECT_BROADCAST', 'ws.broadcast'),
-            taskQueueSubject:     $loader->getString('NATS_SUBJECT_TASKS', 'task.queue'),
-            taskQueueConsumer:    $loader->getString('NATS_CONSUMER_TASKS', 'php-task-consumers'),
-            taskQueueStream:      $loader->getString('NATS_STREAM_TASKS', 'tasks'),
+            broadcastSubject:      $loader->getString('NATS_SUBJECT_BROADCAST', 'ws.broadcast'),
+            taskQueueSubject:      $loader->getString('NATS_SUBJECT_TASKS', 'task.queue'),
+            taskQueueConsumer:     $loader->getString('NATS_CONSUMER_TASKS', 'php-task-consumers'),
+            taskQueueStream:       $loader->getString('NATS_STREAM_TASKS', 'tasks'),
             // Maximum number of concurrent tasks tracked in metadata cache (taskId → receiptId for ack/nack).
             // This also limits how many tasks can be processed simultaneously — no more than this many tasks
             // will ever be in flight at once.
-            taskMaxActive:        $loader->getInt('TASK_MAX_ACTIVE', 2048),
+            taskMaxActive:         $loader->getInt('TASK_MAX_ACTIVE', 2048),
             // How long to keep task receipt after completion before evicting from cache.
-            taskMetaTtlSec:       $loader->getInt('TASK_META_TTL_SEC', 10),
+            taskMetaTtlSec:        $loader->getInt('TASK_META_TTL_SEC', 10),
             // Otel
-            otelServiceName:      $loader->getString('OTEL_SERVICE_NAME', 'fast-atomic-flow'),
+            otelServiceName:       $loader->getString('OTEL_SERVICE_NAME', 'fast-atomic-flow'),
             // Misc
-            rateLimiters:         $rateLimiters,
+            rateLimiters:          $rateLimiters,
         );
 
         // Assign options to object state
@@ -225,6 +226,7 @@ class Kernel
                     ->constructorParameter('broadcastSubject', static fn (Options $o) => $o->broadcastSubject)
                     ->constructorParameter('maxRetries', static fn (Options $o) => $o->taskMaxRetries)
                     ->constructorParameter('retryDelaySec', static fn (Options $o) => $o->taskRetryDelaySec)
+                    ->constructorParameter('retryJitterFactor', static fn (Options $o) => $o->taskRetryJitterFactor)
                     ->constructorParameter('lockTimeoutSec', static fn (Options $o) => $o->taskLockTimeoutSec),
 
                 TaskController::class => autowire()

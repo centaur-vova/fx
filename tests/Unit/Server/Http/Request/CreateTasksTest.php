@@ -27,40 +27,36 @@ class CreateTasksTest extends TestCase
         $this->assertSame(5, $dto->maxConcurrent);
         $this->assertSame(TaskMode::STRESS, $dto->taskMode);
         $this->assertSame(SemaphoreDriver::API, $dto->semaphoreDriver);
-        $this->assertFalse($dto->inRandomMode());
     }
 
     public function testFromArrayWithMissingData(): void
     {
-        $payload = [];
+        $this->expectException(InvalidTaskBatchException::class);
+        $this->expectExceptionMessage('Invalid semaphore driver or task mode');
 
-        $dto = CreateTasks::fromArray($payload);
-
-        $this->assertSame(1, $dto->count);
-        $this->assertSame(2, $dto->maxConcurrent);
-        $this->assertNull($dto->taskMode);
-        $this->assertNull($dto->semaphoreDriver);
+        CreateTasks::fromArray([]);
     }
 
-    public function testInRandomMode(): void
+    public function testFromArrayWithInvalidSemaphoreDriver(): void
     {
-        $dto = new CreateTasks(0, 5, null, null);
-        $this->assertTrue($dto->inRandomMode());
+        $this->expectException(InvalidTaskBatchException::class);
+        $this->expectExceptionMessage('Invalid semaphore driver or task mode');
 
-        $dto2 = new CreateTasks(10, 5, null, null);
-        $this->assertFalse($dto2->inRandomMode());
-    }
+        $payload = [
+            'count' => 10,
+            'max_concurrent' => 5,
+            'task_mode' => 'stress',
+            'semaphore_driver' => 'invalid',
+        ];
 
-    public function testValidateRandomModeSkipsChecks(): void
-    {
-        $dto = new CreateTasks(0, 999, null, null);
-        $dto->validate(100, 10);
-        $this->assertTrue(true); // не выбросило исключение
+        CreateTasks::fromArray($payload);
     }
 
     public function testValidateInvalidCount(): void
     {
         $this->expectException(InvalidTaskBatchException::class);
+        $this->expectExceptionMessage('Count must be between 1 and 100');
+
         $dto = new CreateTasks(1000, 5, TaskMode::OBSERVATION, SemaphoreDriver::SHARED);
         $dto->validate(100, 10);
     }
@@ -68,21 +64,9 @@ class CreateTasksTest extends TestCase
     public function testValidateInvalidMaxConcurrent(): void
     {
         $this->expectException(InvalidTaskBatchException::class);
+        $this->expectExceptionMessage('Concurrency must be between 1 and 10');
+
         $dto = new CreateTasks(10, 20, TaskMode::OBSERVATION, SemaphoreDriver::SHARED);
-        $dto->validate(100, 10);
-    }
-
-    public function testValidateMissingSemaphoreDriver(): void
-    {
-        $this->expectException(InvalidTaskBatchException::class);
-        $dto = new CreateTasks(10, 5, TaskMode::OBSERVATION, null);
-        $dto->validate(100, 10);
-    }
-
-    public function testValidateMissingTaskMode(): void
-    {
-        $this->expectException(InvalidTaskBatchException::class);
-        $dto = new CreateTasks(10, 5, null, SemaphoreDriver::SHARED);
         $dto->validate(100, 10);
     }
 
@@ -90,6 +74,6 @@ class CreateTasksTest extends TestCase
     {
         $dto = new CreateTasks(50, 5, TaskMode::OBSERVATION, SemaphoreDriver::SHARED);
         $dto->validate(100, 10);
-        $this->assertTrue(true); // не выбросило исключение
+        $this->assertTrue(true);
     }
 }

@@ -33,21 +33,22 @@ final readonly class TaskController
         // Validate DTO
         $dto->validate($this->taskMaxBatchSize, $this->taskSemaphoreLimit);
 
-        // Random mode
-        if ($dto->inRandomMode()) {
-            go(fn () => $this->taskService->createRandomBatches());
-            return ApiResponse::ok('RAND mode initiated');
-        }
-
-        // Guess mode
-        go(function () use ($dto): void {
-            assert($dto->semaphoreDriver !== null);
-            assert($dto->taskMode !== null);
-
-            $this->taskService->createBatch($dto->count, $dto->maxConcurrent, $dto->semaphoreDriver, $dto->taskMode);
-        });
+        // Run tasks creation in coroutine
+        go(fn () => $this->dispatchBatch($dto));
 
         return ApiResponse::ok('Tasks queued');
+    }
+
+    #[Route(method: 'POST', path: '/tasks/ford-bronco')]
+    #[RateLimit(limiterName: 'create-tasks')]
+    public function fordBronco(): ApiResponse
+    {
+        // Save timestamp when last createTasks request was sent
+        $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
+
+        go(fn () => $this->taskService->createRandomBatches());
+
+        return ApiResponse::ok('🐎 Ford Bronco unleashed — hold your horses!');
     }
 
     #[Route(method: 'POST', path: '/tasks/purge')]
@@ -56,5 +57,15 @@ final readonly class TaskController
     {
         $this->taskQueue->purge();
         return ApiResponse::ok('Queue purged');
+    }
+
+    private function dispatchBatch(CreateTasks $dto): void
+    {
+        $this->taskService->createBatch(
+            $dto->count,
+            $dto->maxConcurrent,
+            $dto->semaphoreDriver,
+            $dto->taskMode
+        );
     }
 }

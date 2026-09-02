@@ -8,9 +8,11 @@ APP_API_URL = http://localhost:8090
 
 # --- Methods ---
 .PHONY: install build app stop restart distclean watch test test-php test-go test-go-race check help nats-sub dev
-.PHONE: lint-go
+.PHONY: lint-go
+.PHONY: fix fix-php
 .PHONY: logs logs-ws logs-balancer logs-api
 .PHONY: swagger-api
+.PHONY: if-density
 
 help:
 	@echo "Usage:"
@@ -71,6 +73,11 @@ check:
 	composer check-all
 	make lint-go
 
+fix: fix-php lint-go
+
+fix-php:
+	composer fix-all
+
 nats-sub:
 	@NATS_TOKEN=$$(sed -n 's/^NATS_TOKEN=//p' .env | tr -d '\r'); \
 	nats sub "v1.ws.broadcast" --token="$$NATS_TOKEN" -s localhost:4222
@@ -95,3 +102,12 @@ swagger-api:
 # Go linter
 lint-go:
 	cd go && golangci-lint run --timeout=5m
+
+if-density:
+	@echo "📊 PHP IRD (excluding tests)..."
+	@IF_COUNT=$$(find app -name "*.php" -exec grep -o '\<if\>' {} \; | wc -l); \
+	TOTAL_LINES=$$(find app -name "*.php" -type f -exec cat {} \; | wc -l); \
+	DENSITY=$$(echo "scale=2; $$IF_COUNT * 100 / $$TOTAL_LINES" | bc); \
+	echo "  If count:   $$IF_COUNT"; \
+	echo "  Total lines: $$TOTAL_LINES"; \
+	echo "  IRD: $$DENSITY%"

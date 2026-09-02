@@ -20,6 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
   <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
+  <img src="https://img.shields.io/badge/IRD-2.38%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: Work Style -->
   <img src="https://img.shields.io/badge/AI--assisted-%D0%B4%D0%B0-10b981?style=flat" alt="AI-assisted">
@@ -298,6 +299,17 @@ docker compose -f docker-compose.prod.yaml up -d --scale api=3
 - **Semaphore Store:** Redis 8.0 + Lua scripts
 - **Balancer:** Round-robin, auto-registration, health checks каждые 5 секунд
 - **Трейсинг:** OpenTelemetry + Jaeger 2.17
+
+---
+
+## Метрика качества кода
+
+**IRD (If/Row Density)** — собственная метрика, показывающая плотность условных операторов в коде.
+
+- **< 2%** — безупречно
+- **2–5%** — хорошо
+- **5–10%** — требует внимания
+- **> 10%** — для пони
 
 ---
 

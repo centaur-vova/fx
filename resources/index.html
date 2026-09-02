@@ -460,7 +460,9 @@
                       ]"
                       @mouseenter="if (btn.tasks === 0) $store.app.hoverRand = true"
                       @mouseleave="if (btn.tasks === 0) $store.app.hoverRand = false"
-                      @click="$store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
+                      @click="btn.tasks === 0
+                        ? $store.app.fordBronco()
+                        : $store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
                       x-text="btn.label"
                     ></button>
                   </template>

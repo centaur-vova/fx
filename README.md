@@ -20,6 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
+  <img src="https://img.shields.io/badge/IRD-2.38%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: Work Style -->
   <img src="https://img.shields.io/badge/AI--assisted-true-10b981?style=flat" alt="AI-assisted">
@@ -293,6 +294,17 @@ These settings control how tasks behave when the semaphore is busy:
 - **Semaphore Store:** Redis 8.0 + Lua scripts
 - **Balancer:** Round-robin, auto-registration, health checks every 5 seconds
 - **Tracing:** OpenTelemetry + Jaeger 2.17
+
+---
+
+## IRD — If/Row Density
+
+A custom metric: number of `if` statements per 100 lines of code.
+
+- **< 2%** — clean
+- **2–5%** — good
+- **5–10%** — needs attention
+- **> 10%** — for ponies
 
 ---
 

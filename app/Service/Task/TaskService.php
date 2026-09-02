@@ -25,22 +25,23 @@ use Swoole\Coroutine as Co;
 use Swoole\Timer;
 use Throwable;
 
-class TaskService
+final readonly class TaskService
 {
     use Snafubarable;
 
     public function __construct(
-        private readonly RuntimeContext $context,
-        private readonly SemaphoreFactory $semaphoreFactory,
-        private readonly ProcessorFactory $processorFactory,
-        private readonly Broadcaster $broadcaster,
-        private readonly TaskQueue $taskQueue,
-        private readonly TaskQueueManager $manager,
-        private readonly LoggerInterface $logger,
-        private readonly string $broadcastSubject,
-        private readonly int $maxRetries,
-        private readonly int $retryDelaySec,
-        private readonly float $lockTimeoutSec,
+        private RuntimeContext $context,
+        private SemaphoreFactory $semaphoreFactory,
+        private ProcessorFactory $processorFactory,
+        private Broadcaster $broadcaster,
+        private TaskQueue $taskQueue,
+        private TaskQueueManager $manager,
+        private LoggerInterface $logger,
+        private string $broadcastSubject,
+        private int $maxRetries,
+        private int $retryDelaySec,
+        private float $retryJitterFactor,
+        private float $lockTimeoutSec,
     ) {
     }
 
@@ -168,7 +169,7 @@ class TaskService
                  * Re-queue with delay & jitter
                  */
                 $base = $this->retryDelaySec * 1000;
-                $jitter = random_int(0, (int) ($base * 0.5)); // ±50
+                $jitter = random_int(0, (int) ($base * $this->retryJitterFactor));
                 Timer::after($base + $jitter, function () use ($payload, $workerId): void {
                     // Republish back into the queue
                     $this->taskQueue->push($payload->incrAttempt());

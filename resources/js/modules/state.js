@@ -314,6 +314,26 @@ export const state = {
         }
     },
 
+    // API - Ford Bronco
+    async fordBronco() {
+        this.flashQueue();
+
+        try {
+            const res = await fetch(ROUTES.FORD_BRONCO, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                this.showToast(data.message, false);
+                return;
+            }
+        } catch (e) {
+            this.showToast('Connection error', false);
+        }
+    },
+
     // === API HEALTH / METHODS ===
     async fetchBalancerHealth() {
         try {

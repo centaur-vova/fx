@@ -10,19 +10,14 @@ use App\Exception\Http\InvalidTaskBatchException;
 
 /**
  * Incoming request DTO for the task creation endpoint.
- *
- * When $count is 0 (RAND mode), all other parameters are ignored — random batches are generated instead.
- * When $count > 0, $taskMode and $semaphoreDriver are required.
- *
- * $semaphoreDriver is nullable — only required when not in random mode.
  */
 final readonly class CreateTasks
 {
     public function __construct(
         public int $count,
         public int $maxConcurrent,
-        public ?TaskMode $taskMode,
-        public ?SemaphoreDriver $semaphoreDriver,
+        public TaskMode $taskMode,
+        public SemaphoreDriver $semaphoreDriver,
     ) {
     }
 
@@ -31,59 +26,40 @@ final readonly class CreateTasks
      */
     public static function fromArray(array $payload): self
     {
-        // semaphore_driver literal to SemaphoreDriver
-        $semAsString = is_string($payload['semaphore_driver'] ?? null)
-            ? $payload['semaphore_driver']
-            : '';
-        $sem = SemaphoreDriver::tryFrom($semAsString);
+        $driverValue = is_scalar($payload['semaphore_driver'] ?? null) ? (string) $payload['semaphore_driver'] : '';
+        $modeValue = is_scalar($payload['task_mode'] ?? null) ? (string) $payload['task_mode'] : '';
 
-        // task_mode literal to TaskMode
-        $taskModeAsString = is_string($payload['task_mode'] ?? null)
-            ? $payload['task_mode']
-            : '';
-        $taskMode = TaskMode::tryFrom($taskModeAsString);
+        $sem = SemaphoreDriver::tryFrom($driverValue);
+        $taskMode = TaskMode::tryFrom($modeValue);
 
-        /** @var array{
-         *      count?: int|string,
-         *      max_concurrent?: int|string,
-         *      semaphore_driver?: string,
-         *      task_mode?: string
-         *  } $payload
-         */
+        if ($sem === null || $taskMode === null) {
+            throw new InvalidTaskBatchException('Invalid semaphore driver or task mode');
+        }
+
+        /** @var int|string $count */
+        $count = $payload['count'] ?? 0;
+        /** @var int|string $maxConcurrent */
+        $maxConcurrent = $payload['max_concurrent'] ?? 0;
+
         return new self(
-            count: (int) ($payload['count'] ?? 1),
-            maxConcurrent: (int) ($payload['max_concurrent'] ?? 2),
+            count: (int) $count,
+            maxConcurrent: (int) $maxConcurrent,
             taskMode: $taskMode,
             semaphoreDriver: $sem,
         );
     }
 
+    /**
+     * @throws InvalidTaskBatchException
+     */
     public function validate(int $maxBatchSize, int $semaphoreLimit): void
     {
-        if ($this->inRandomMode()) {
-            return;
-        }
-
-        /* --- Further checks for non-random mode --- */
         if ($this->count < 1 || $this->count > $maxBatchSize) {
-            throw new InvalidTaskBatchException("Count must be between 1 and $maxBatchSize");
+            throw new InvalidTaskBatchException("Count must be between 1 and {$maxBatchSize}");
         }
 
         if ($this->maxConcurrent < 1 || $this->maxConcurrent > $semaphoreLimit) {
-            throw new InvalidTaskBatchException("Concurrency must be between 1 and $semaphoreLimit");
+            throw new InvalidTaskBatchException("Concurrency must be between 1 and {$semaphoreLimit}");
         }
-
-        if (!$this->semaphoreDriver) {
-            throw new InvalidTaskBatchException('Invalid semaphore driver');
-        }
-
-        if (!$this->taskMode) {
-            throw new InvalidTaskBatchException('Invalid task mode');
-        }
-    }
-
-    public function inRandomMode(): bool
-    {
-        return $this->count === 0;
     }
 }

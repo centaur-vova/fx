@@ -65,6 +65,7 @@ readonly class Options
         public int $taskSemaphoreLimit,
         public float $taskLockTimeoutSec,
         public int $taskRetryDelaySec,
+        public float $taskRetryJitterFactor,
         public int $taskMaxRetries,
 
         // === OpenTelemetry ===

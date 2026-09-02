@@ -119,6 +119,7 @@ export const TERMINAL_LOG = {
 
 export const ROUTES = {
     TASKS_CREATE: '/tasks/create',
+    FORD_BRONCO: '/tasks/ford-bronco',
     HEALTH: '/health',
 
     API: {
