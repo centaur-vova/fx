@@ -31,7 +31,7 @@
 
 [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
-<img width="1760" height="1156" alt="Нагрузочный тест" src="https://github.com/user-attachments/assets/1ffec96a-b293-4fd5-a14f-a78ea0cf5818" />
+<img width="1770" height="1182" alt="Нагрузочный тест" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
 
 > _Нагрузочный тест: 10 001 одновременное WebSocket-соединение, 8 API-инстансов, 8 Swoole-воркеров. Узкое место — CPU локальной машины (load average 26 при 12 потоках), не архитектура._
 

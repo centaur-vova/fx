@@ -31,7 +31,7 @@
 
 [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
-<img width="1760" height="1156" alt="Load test" src="https://github.com/user-attachments/assets/1ffec96a-b293-4fd5-a14f-a78ea0cf5818" />
+<img width="1770" height="1182" alt="Load test" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
 
 > _Load test: 10,001 concurrent WebSocket connections across 8 API instances and 8 Swoole workers. Bottleneck: local machine's CPU (load average 26 on 12 threads), not the architecture._
 

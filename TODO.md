@@ -4,8 +4,10 @@
 
 ### 🟡 Medium Priority
 - [ ] **Load & Stress Testing**:
-  - [ ] Implement **k6** or **Locust** scripts to simulate 1,000+ concurrent WebSocket clients
+  - [x] Implement **k6** scripts to simulate 10,000+ concurrent WebSocket clients
   - [ ] Measure memory stability and `Swoole\Table` contention under high-frequency broadcasting
+  - [ ] Publish benchmark results in README or Wiki
+- [ ] **Configuration**: Make WebSocket client send buffer configurable via `.env`
 - [ ] **NATS**: Add batch injecting tasks into JetStream (ADR-50 fast-ingest batch publishing)
 - [x] **Theme Fallback**: Add client-side validation for `?theme=` parameter
   - [x] Check `allowedThemes = ['fast', 'crystal', 'sin-city']` in the inline script

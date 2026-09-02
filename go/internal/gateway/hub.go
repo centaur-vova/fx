@@ -18,7 +18,7 @@ import (
 )
 
 // clientSendBufferSize is the size of the send channel buffer per client.
-const clientSendBufferSize = 4096
+const clientSendBufferSize = 512
 
 // ClientMessage wraps a WebSocket message with its type.
 type ClientMessage struct {

@@ -13,6 +13,7 @@ APP_API_URL = http://localhost:8090
 .PHONY: logs logs-ws logs-balancer logs-api
 .PHONY: swagger-api
 .PHONY: if-density
+.PHONY: bench-bronco
 
 help:
 	@echo "Usage:"
@@ -111,3 +112,7 @@ if-density:
 	echo "  If count:   $$IF_COUNT"; \
 	echo "  Total lines: $$TOTAL_LINES"; \
 	echo "  IRD: $$DENSITY%"
+
+bench-bronco:
+	@echo "🏎️ Setting system limits and spawning Ford Bronco test..."
+	@ulimit -n 65535 && k6 run benchmarks/bronco.js
