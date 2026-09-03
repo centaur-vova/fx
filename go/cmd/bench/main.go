@@ -1,3 +1,6 @@
+// Command bench is a native Go WebSocket load testing tool for Fast Atomic Flow.
+// It spawns N concurrent connections to the WebSocket proxy, sends periodic pings,
+// and measures message throughput under high concurrency to validate system stability.
 package main
 
 import (
@@ -62,7 +65,7 @@ func main() {
 			return
 		case <-limiter.C:
 			wg.Add(1)
-			go func(id int) {
+			go func() {
 				defer wg.Done()
 
 				dialer := websocket.Dialer{
@@ -111,7 +114,7 @@ func main() {
 					}
 					msgReceived.Add(1)
 				}
-			}(i)
+			}()
 		}
 	}
 

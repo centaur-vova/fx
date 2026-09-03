@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Service\Task\Processor;
 
 use App\Contract\Task\Processor;
-use Swoole\Coroutine as Co;
 
 /**
  * Fast hash calculations
