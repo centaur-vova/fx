@@ -77,14 +77,6 @@ const drawTaskBackground = (ctx, x, y, halfWidth, halfHeight, sem, scale) => {
     }
 };
 
-const drawLabel = (ctx, x, y, label, task, scale) => {
-    ctx.fillStyle = LABEL_COLORS[task.mc];
-    ctx.font = `bold ${10 * scale}px Inter, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, x, y);
-};
-
 const shouldDrawProgressBar = (scale, status, progress) => {
     return scale >= PROGRESS_BAR.min_scale &&
         status === TASK_STATUS.PROGRESS &&
