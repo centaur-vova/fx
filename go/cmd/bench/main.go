@@ -35,6 +35,7 @@ func main() {
 	conns := make(map[*websocket.Conn]struct{})
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Catch Ctrl+C for graceful shutdown and final stats output
 	interrupt := make(chan os.Signal, 1)
