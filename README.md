@@ -33,7 +33,7 @@
 
 <img width="1770" height="1182" alt="Load test" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
 
-> _Load test: 10,001 concurrent WebSocket connections across 8 API instances and 8 Swoole workers. Bottleneck: local machine's CPU (load average 26 on 12 threads), not the architecture._
+> _Load test with k6: 10,000+ concurrent WebSocket connections. System remained stable. Bottleneck: local CPU and RAM, not architecture._
 
 ---
 
