@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
   <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
-  <img src="https://img.shields.io/badge/IRD-2.38%25-brightgreen?style=flat" alt="If/Row Density">
+  <img src="https://img.shields.io/badge/IRD-2.39%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: Work Style -->
   <img src="https://img.shields.io/badge/AI--assisted-%D0%B4%D0%B0-10b981?style=flat" alt="AI-assisted">
@@ -33,7 +33,7 @@
 
 <img width="1770" height="1182" alt="Нагрузочный тест" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
 
-> _Нагрузочный тест с k6: 10 000+ одновременных WebSocket-соединений. Система сохраняла стабильность. Узкое место — локальный CPU и RAM, не архитектура._
+> _Нагрузочный тест: 10 000+ одновременных WebSocket-соединений. Система сохраняет абсолютную стабильность под пиковой нагрузкой в 171 000 msg/s._
 
 ---
 
@@ -214,7 +214,7 @@ jaeger_query:
 
 - **Стресс-тест** (`task_mode: stress`):
   Кнопки стресс-теста визуально отличаются от обычных — цветной фон, рамка или акцент, в зависимости от выбранной темы.
-  Полезная нагрузка — `hash('sha256', $data)` в цикле.
+  Полезная нагрузка — один вызов `hash('sha256', $data)`.
   [`HighLoadProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
 Режим передаётся в теле POST-запроса при создании задач (`/api/tasks/create`).

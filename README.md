@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
-  <img src="https://img.shields.io/badge/IRD-2.38%25-brightgreen?style=flat" alt="If/Row Density">
+  <img src="https://img.shields.io/badge/IRD-2.39%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: Work Style -->
   <img src="https://img.shields.io/badge/AI--assisted-true-10b981?style=flat" alt="AI-assisted">
@@ -33,7 +33,7 @@
 
 <img width="1770" height="1182" alt="Load test" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
 
-> _Load test with k6: 10,000+ concurrent WebSocket connections. System remained stable. Bottleneck: local CPU and RAM, not architecture._
+> _Load test: 10,000+ concurrent WebSocket connections. The system maintains absolute stability under a peak load of 171,000 msg/s._
 
 ---
 
@@ -209,7 +209,7 @@ jaeger_query:
 
 - **Stress test mode** (`task_mode: stress`):
   Stress test buttons are visually distinct — colored background, border, or accent depending on the theme.
-  Instead of `sleep()` — real CPU work: `hash('sha256', $data)` in a loop.
+  Instead of `sleep()` — real CPU work: a single `hash('sha256', $data)` call.
   [`HighLoadProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
 The mode is passed in the POST request body when creating tasks (`/api/tasks/create`).

@@ -12,25 +12,14 @@ use Swoole\Coroutine as Co;
  */
 class HighLoadProcessor implements Processor
 {
-    public const int STEPS = 1;
-    public const int ITERATIONS = 1;
-
     public function execute(?callable $onProgress = null): string
     {
-        $data = random_bytes(32);
-        for ($step = 1; $step <= self::STEPS; $step++) {
-            for ($i = 0; $i < self::ITERATIONS; $i++) {
-                $data = hash('sha256', $data);
-            }
+        $data = hash('sha256', random_bytes(32));
 
-            // Allow others to do their work
-            Co::sleep(0.001);
-
-            if ($onProgress !== null) {
-                $progress = (int) round($step / self::STEPS * 100);
-                $onProgress(min($progress, 100));
-            }
+        if ($onProgress !== null) {
+            $onProgress(100);
         }
+
         return "hash: {$data}";
     }
 }

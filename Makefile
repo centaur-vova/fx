@@ -13,7 +13,7 @@ APP_API_URL = http://localhost:8090
 .PHONY: logs logs-ws logs-balancer logs-api
 .PHONY: swagger-api
 .PHONY: if-density
-.PHONY: bench-bronco
+.PHONY: bench
 
 help:
 	@echo "Usage:"
@@ -35,7 +35,8 @@ help:
 	@echo "  make logs-balancer - 📋 Show balancer logs"
 	@echo "  make logs-api      - 📋 Show API instance logs"
 	@echo "  make swagger-api   - 📋 Generate Swagger docs (API)"
-
+	@echo "  make if-density    - 📊 Calculate PHP IRD (If/Row Density)"
+	@echo "  make bench         - 🏎️ Run WebSocket benchmark (Go)"
 
 install:
 	cp .env.example .env
@@ -113,6 +114,5 @@ if-density:
 	echo "  Total lines: $$TOTAL_LINES"; \
 	echo "  IRD: $$DENSITY%"
 
-bench-bronco:
-	@echo "🏎️ Setting system limits and spawning Ford Bronco test..."
-	@ulimit -n 65535 && k6 run benchmarks/bronco.js
+bench:
+	cd go && go run cmd/bench/main.go
