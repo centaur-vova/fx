@@ -20,11 +20,12 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
   <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
-  <img src="https://img.shields.io/badge/IRD-2.39%25-brightgreen?style=flat" alt="If/Row Density">
+  <img src="https://img.shields.io/badge/IRD-1.95%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
-  <!-- Row 4: Work Style -->
-  <img src="https://img.shields.io/badge/AI--assisted-%D0%B4%D0%B0-10b981?style=flat" alt="AI-assisted">
-  <img src="https://img.shields.io/badge/вайб--кодинг-0%25-ef4444?style=flat" alt="Вайб-кодинг: 0%">
+  <!-- Row 4: CI/CD Status -->
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Lint&job=go-lint" alt="Go Lint">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Tests&job=go-tests" alt="Go Tests">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
@@ -310,6 +311,8 @@ docker compose -f docker-compose.prod.yaml up -d --scale api=3
 - **2–5%** — хорошо
 - **5–10%** — требует внимания
 - **> 10%** — для пони
+
+Текущий IRD: **1.95%**
 
 ---
 

@@ -106,13 +106,7 @@ lint-go:
 	cd go && golangci-lint run --timeout=5m
 
 if-density:
-	@echo "📊 PHP IRD (excluding tests)..."
-	@IF_COUNT=$$(find app -name "*.php" -exec grep -o '\<if\>' {} \; | wc -l); \
-	TOTAL_LINES=$$(find app -name "*.php" -type f -exec cat {} \; | wc -l); \
-	DENSITY=$$(echo "scale=2; $$IF_COUNT * 100 / $$TOTAL_LINES" | bc); \
-	echo "  If count:   $$IF_COUNT"; \
-	echo "  Total lines: $$TOTAL_LINES"; \
-	echo "  IRD: $$DENSITY%"
+	@php tools/if-density.php app
 
 bench:
 	cd go && go run cmd/bench/main.go

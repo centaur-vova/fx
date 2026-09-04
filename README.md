@@ -20,11 +20,12 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
-  <img src="https://img.shields.io/badge/IRD-2.39%25-brightgreen?style=flat" alt="If/Row Density">
+  <img src="https://img.shields.io/badge/IRD-1.95%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
-  <!-- Row 4: Work Style -->
-  <img src="https://img.shields.io/badge/AI--assisted-true-10b981?style=flat" alt="AI-assisted">
-  <img src="https://img.shields.io/badge/Vibe--coding-0%25-ef4444?style=flat" alt="Vibe-coding: 0%">
+  <!-- Row 4: CI/CD Status -->
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Lint&job=go-lint" alt="Go Lint">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Tests&job=go-tests" alt="Go Tests">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
@@ -305,6 +306,8 @@ A custom metric: number of `if` statements per 100 lines of code.
 - **2–5%** — good
 - **5–10%** — needs attention
 - **> 10%** — for ponies
+
+Current IRD: **1.95%**
 
 ---
 
