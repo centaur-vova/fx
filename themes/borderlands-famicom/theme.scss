@@ -3,11 +3,14 @@
    Cel-shaded chaos meets 8-bit nostalgia
    ============================================ */
 
+@import url("https://fonts.googleapis.com/css2?family=Bungee&display=swap");
+
 body {
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
+  font-family: "Bungee", sans-serif;
 }
 
 /* Canvas — cel-shaded drop shadow */
@@ -25,10 +28,12 @@ canvas {
   color: #000000;
   border: 3px solid #000000;
   box-shadow: 4px 4px 0 #000000;
-  font-family: "JetBrains Mono", monospace;
-  font-weight: 700;
+  font-family: "Bungee", sans-serif;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-size: 11px;
+  padding: 8px 12px;
   transition: all 0.1s ease;
   position: relative;
 
@@ -163,7 +168,7 @@ canvas {
    ============================================ */
 
 .zone-label {
-  font-weight: 900;
+  font-weight: 400;
   letter-spacing: 0.1em;
   color: #000000;
   font-size: 10px;
@@ -218,7 +223,7 @@ canvas {
   border: 3px solid #000000;
   box-shadow: 4px 4px 0 #000000;
   color: #000000;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 /* ============================================
