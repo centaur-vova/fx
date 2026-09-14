@@ -2,6 +2,8 @@
    MATRIX THEME — Digital Rain / CRT Terminal
    ============================================ */
 
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+
 /* Global CRT effect on the whole body */
 body::before {
   content: "";
@@ -17,6 +19,11 @@ body::before {
     transparent 3px
   );
   animation: crt-flicker 8s infinite;
+}
+
+body {
+  font-family: "VT323", monospace;
+  font-size: 18px;
 }
 
 @keyframes crt-flicker {
@@ -52,7 +59,8 @@ canvas {
   transition: all 0.2s ease;
   color: var(--text-primary);
   border: 1px solid var(--border-default);
-  font-family: "JetBrains Mono", monospace;
+  font-family: "VT323", monospace;
+  font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   position: relative;
@@ -248,7 +256,7 @@ canvas {
   letter-spacing: 0.08em;
   color: var(--text-primary);
   opacity: 0.85;
-  font-size: 9px;
+  font-size: 12px;
   text-transform: uppercase;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
