@@ -1,0 +1,51 @@
+:root {
+  /* Semantic color roles — Borderlands Yellow + Famicom Red */
+  --color-error: #d32f2f; /* Famicom red */
+  --color-warning: #ff9800; /* Borderlands orange */
+  --color-success: #7cb342; /* Muted green */
+  --color-info: #0288d1; /* Blue accent */
+  --color-accent: #ffd700; /* Borderlands yellow */
+  --color-highlight: #fff8e1; /* Cream white */
+  --color-urgent: #d32f2f; /* Famicom red */
+  --color-subtle: #8d6e63; /* Brown-gray */
+  --color-bright: #000000; /* Black outlines */
+  --color-vivid: #ff5722; /* Vivid orange-red */
+
+  /* Surface & background colors — Famicom white + Borderlands cream */
+  --bg-primary: #faf6e9; /* Warm off-white */
+  --bg-secondary: #f5e6c8; /* Cream */
+  --bg-elevated: #fff8e1; /* Light cream */
+  --bg-control: rgba(255, 248, 225, 0.95);
+  --bg-control-disabled: rgba(245, 230, 200, 0.5);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Border colors — thick black outlines (cel-shading) */
+  --border-default: #000000;
+  --border-subtle: #2d2d2d;
+  --border-emphasized: #ffd700;
+  --border-disabled: #8d6e63;
+
+  /* Text colors — High contrast, black on yellow */
+  --text-primary: #000000; /* Black outlines */
+  --text-secondary: #2d2d2d; /* Dark gray */
+  --text-muted: #5d4037; /* Brown */
+  --text-accent: #d32f2f; /* Famicom red */
+  --text-white: #ffffff;
+
+  /* UI elements */
+  --color-slider-track: #f5e6c8;
+  --worker-bar-idle: #f5e6c8;
+  --grid-dot: rgba(0, 0, 0, 0.08);
+  --divider-subtle: #2d2d2d;
+
+  /* Opacity variants */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+
+  /* Borderlands-specific */
+  --cel-outline: 3px solid #000000;
+  --cel-shadow: 4px 4px 0 #000000;
+  --famicom-red: #d32f2f;
+  --borderlands-yellow: #ffd700;
+}

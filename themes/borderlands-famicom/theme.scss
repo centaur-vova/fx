@@ -1,0 +1,241 @@
+/* ============================================
+   BORDERLANDS + FAMICOM THEME
+   Cel-shaded chaos meets 8-bit nostalgia
+   ============================================ */
+
+body {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Canvas — cel-shaded drop shadow */
+canvas {
+  background: transparent;
+  filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.8));
+}
+
+/* ============================================
+   TASK BUTTONS — Cel-shaded Borderlands style
+   ============================================ */
+
+.task-button {
+  background: #ffd700;
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0 #000000;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.1s ease;
+  position: relative;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #000000;
+    background: #ffe44d;
+  }
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #000000;
+  }
+
+  /* --- Warning (250 PHP) — Famicom red --- */
+  &-warning {
+    background: #d32f2f;
+    color: #ffffff;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0 #000000;
+
+    &:hover {
+      background: #e53935;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #000000;
+    }
+  }
+
+  /* --- Accent (500 Go API) — Vivid orange --- */
+  &-accent {
+    background: #ff5722;
+    color: #ffffff !important;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0 #000000;
+
+    &:hover {
+      background: #ff6b35;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #000000;
+    }
+
+    &:focus,
+    &:active,
+    &:disabled {
+      color: #ffffff !important;
+    }
+  }
+
+  /* --- Danger (RAND) — Black with yellow --- */
+  &-danger {
+    background: #000000;
+    color: #ffd700;
+    border: 3px solid #ffd700;
+    box-shadow: 4px 4px 0 #d32f2f;
+
+    &:hover {
+      background: #1a1a1a;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #d32f2f;
+      animation: glitch 0.3s infinite;
+    }
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-3px, 3px);
+  }
+  40% {
+    transform: translate(-3px, -3px);
+  }
+  60% {
+    transform: translate(3px, 3px);
+  }
+  80% {
+    transform: translate(3px, -3px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+@keyframes pulse-wait {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   WORKER BARS — 8-bit blocks
+   ============================================ */
+
+.worker-bar {
+  background: #ffd700;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0 #000000;
+  border-radius: 0;
+}
+
+/* Flash effects */
+.flash-success {
+  background: #7cb342 !important;
+  box-shadow: 0 0 15px rgba(124, 179, 66, 0.8);
+}
+.flash-error {
+  background: #d32f2f !important;
+  box-shadow: 0 0 15px rgba(211, 47, 47, 0.8);
+}
+.flash-retry {
+  background: #ff9800 !important;
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.8);
+}
+.flash-wait {
+  background: #0288d1 !important;
+  box-shadow: 0 0 15px rgba(2, 136, 209, 0.8);
+  animation: pulse-wait 0.8s ease-in-out infinite;
+}
+
+/* ============================================
+   ZONE LABELS — Comic book style
+   ============================================ */
+
+.zone-label {
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #000000;
+  font-size: 10px;
+  text-transform: uppercase;
+  background: #ffd700;
+  padding: 3px 10px;
+  border: 3px solid #000000;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #000000;
+  white-space: nowrap;
+}
+
+/* ============================================
+   SLIDER — Famicom style
+   ============================================ */
+
+#max-concurrent-slider {
+  background: #f5e6c8;
+  border: 2px solid #000000;
+  height: 8px;
+
+  &::-webkit-slider-thumb {
+    background: #d32f2f;
+    border: 3px solid #000000;
+    box-shadow: 2px 2px 0 #000000;
+    width: 18px;
+    height: 18px;
+    border-radius: 0;
+  }
+}
+
+/* ============================================
+   STATUS
+   ============================================ */
+
+.status-dot {
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+.is-online .status-dot {
+  background: #7cb342;
+  box-shadow: 2px 2px 0 #000000;
+}
+
+/* ============================================
+   TOAST — Comic book speech bubble
+   ============================================ */
+
+.toast {
+  background: #fff8e1;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0 #000000;
+  color: #000000;
+  font-weight: 700;
+}
+
+/* ============================================
+   TASK SQUARES — Cel-shaded
+   ============================================ */
+
+.task {
+  transition: all 0.1s ease;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.8);
+  }
+}
+
+.zone-bg {
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+}
