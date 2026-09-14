@@ -1,0 +1,320 @@
+/* ============================================
+   MATRIX THEME — Digital Rain / CRT Terminal
+   ============================================ */
+
+/* Global CRT effect on the whole body */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--scanline-color) 0px,
+    var(--scanline-color) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  animation: crt-flicker 8s infinite;
+}
+
+@keyframes crt-flicker {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  52% {
+    opacity: 0.85;
+  }
+  54% {
+    opacity: 1;
+  }
+}
+
+/* Canvas — phosphor glow */
+canvas {
+  background: transparent;
+  filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.4));
+}
+
+/* ============================================
+   TASK BUTTONS
+   ============================================ */
+
+.task-button {
+  background: rgba(0, 255, 65, 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  font-family: "JetBrains Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 0 4px var(--glow-color);
+
+  /* Shimmer sweep on hover */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 255, 65, 0.25),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
+  &:hover {
+    background: rgba(0, 255, 65, 0.15);
+    border-color: var(--color-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.5);
+    text-shadow: 0 0 8px var(--glow-color);
+  }
+
+  &:active {
+    background: var(--color-accent);
+    color: #000000;
+    box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.8);
+    text-shadow: none;
+  }
+
+  /* Blinking cursor on hover */
+  &:hover::after {
+    content: "_";
+    margin-left: 4px;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* --- Warning (250 PHP) --- */
+  &-warning {
+    background: rgba(255, 204, 0, 0.08);
+    color: var(--color-warning);
+    border-color: var(--color-warning);
+    text-shadow: 0 0 4px rgba(255, 204, 0, 0.5);
+    animation: pulse-warning 2s ease-in-out infinite;
+
+    &:hover {
+      background: var(--color-warning);
+      color: #000000;
+      text-shadow: none;
+      animation: none;
+    }
+  }
+
+  /* --- Accent (500 Go API) --- */
+  &-accent {
+    background: var(--color-accent);
+    color: #000000 !important;
+    box-shadow: 0 4px 15px rgba(0, 255, 65, 0.6);
+    border: none;
+    font-weight: 700;
+    text-shadow: none;
+
+    &:hover {
+      background: #00ff41;
+      color: #000000 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 255, 65, 0.7);
+    }
+
+    &:focus,
+    &:active,
+    &:disabled {
+      color: #000000 !important;
+    }
+  }
+
+  /* --- Danger (RAND) --- */
+  &-danger {
+    background: rgba(255, 51, 51, 0.1);
+    color: var(--color-error);
+    border-color: var(--color-error);
+    text-shadow: 0 0 4px rgba(255, 51, 51, 0.5);
+
+    &:hover {
+      background: var(--color-error);
+      color: #000000;
+      text-shadow: none;
+      animation: glitch 0.3s infinite;
+    }
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-warning {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+@keyframes pulse-wait {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   WORKER BARS
+   ============================================ */
+
+.worker-bar {
+  background: rgba(0, 255, 65, 0.1);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.15);
+  border-radius: 2px;
+}
+
+/* Flash effects — Matrix pulse */
+.flash-success {
+  background: var(--color-success) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.7);
+}
+.flash-error {
+  background: var(--color-error) !important;
+  box-shadow: 0 0 20px rgba(255, 51, 51, 0.7);
+}
+.flash-retry {
+  background: var(--color-warning) !important;
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.7);
+}
+.flash-wait {
+  background: var(--color-info) !important;
+  box-shadow: 0 0 20px rgba(0, 204, 255, 0.7);
+  animation: pulse-wait 0.8s ease-in-out infinite;
+}
+
+/* ============================================
+   ZONE LABELS
+   ============================================ */
+
+.zone-label {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  opacity: 0.85;
+  font-size: 9px;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-default);
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
+}
+
+/* ============================================
+   SLIDER
+   ============================================ */
+
+#max-concurrent-slider {
+  background: var(--color-slider-track);
+
+  &::-webkit-slider-thumb {
+    background: var(--color-accent);
+    box-shadow: 0 0 12px var(--color-accent);
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ============================================
+   STATUS
+   ============================================ */
+
+.status-dot {
+  box-shadow: 0 0 6px var(--color-accent);
+}
+
+.is-online .status-dot {
+  background: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success);
+}
+
+/* ============================================
+   TOAST
+   ============================================ */
+
+.toast {
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 65, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 255, 65, 0.25);
+  color: var(--text-primary);
+  text-shadow: 0 0 4px var(--glow-color);
+}
+
+/* ============================================
+   TASK SQUARES
+   ============================================ */
+
+.task {
+  transition: all 0.15s ease;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  backdrop-filter: blur(2px);
+
+  &:hover {
+    filter: brightness(1.2);
+    transform: scale(0.98);
+  }
+}
+
+.zone-bg {
+  backdrop-filter: blur(1px);
+}

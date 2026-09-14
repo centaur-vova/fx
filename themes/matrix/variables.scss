@@ -1,0 +1,51 @@
+:root {
+  /* Semantic color roles — Phosphor Green on Black */
+  --color-error: #ff3333;
+  --color-warning: #ffcc00;
+  --color-success: #00ff41;
+  --color-info: #00ccff;
+  --color-accent: #00ff41;
+  --color-highlight: #0a0f0a;
+  --color-urgent: #ff3333;
+  --color-subtle: #008f11;
+  --color-bright: #00ff41;
+  --color-vivid: #00ff41;
+
+  /* Surface & background colors — Deep Black Terminal */
+  --bg-primary: #000000;
+  --bg-secondary: #0a0f0a;
+  --bg-elevated: #0d140d;
+  --bg-control: rgba(10, 15, 10, 0.9);
+  --bg-control-disabled: rgba(0, 0, 0, 0.5);
+  --bg-overlay: rgba(0, 0, 0, 0.85);
+
+  /* Border colors */
+  --border-default: #003b00;
+  --border-subtle: #001a00;
+  --border-emphasized: #00ff4166;
+  --border-disabled: #001a00;
+
+  /* Text colors — High contrast for Dark Theme */
+  --text-primary: #00ff41;
+  --text-secondary: #00cc33;
+  --text-muted: #008f11;
+  --text-accent: #00ff41;
+  --text-white: #00ff41;
+
+  /* UI elements */
+  --color-slider-track: #003b00;
+  --worker-bar-idle: #0a0f0a;
+  --grid-dot: rgba(0, 255, 65, 0.08);
+  --divider-subtle: #001a00;
+
+  /* Opacity variants */
+  --bg-info: color-mix(in srgb, var(--color-info), transparent 85%);
+  --bg-warning: color-mix(in srgb, var(--color-warning), transparent 85%);
+  --bg-success: color-mix(in srgb, var(--color-success), transparent 85%);
+
+  /* Matrix-specific effects */
+  --scanline-color: rgba(0, 255, 65, 0.03);
+  --glow-color: rgba(0, 255, 65, 0.5);
+  --glitch-color-1: #ff3333;
+  --glitch-color-2: #00ccff;
+}
