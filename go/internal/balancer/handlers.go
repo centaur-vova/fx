@@ -225,18 +225,6 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 			logger.Info("Circuit Breaker HALF-OPEN - probing instance", "instance", peer.URL.Host)
 		}
 
-		// Catch network errors during proxying
-		peer.Proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, err error) {
-			logger.Error("Proxy error inside handler", "host", peer.URL.Host, "error", err)
-
-			// Unalive the peer if CB just became opened
-			if peer.CB.RecordFailure() {
-				peer.SetUnalive(false)
-				logger.Warn("Circuit Breaker OPENED - instance isolated", "instance", peer.URL.Host)
-			}
-			rw.WriteHeader(http.StatusBadGateway)
-		}
-
 		// Try proxying the request
 		peer.Proxy.ServeHTTP(w, r)
 

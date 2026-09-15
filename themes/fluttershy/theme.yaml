@@ -9,11 +9,11 @@ settings:
     min_concurrent: 1
     max_concurrent: 7
     task_buttons:
-      - { label: "🌸 10 🦄", tasks: 10, stress: false, semaphore_driver: "shared" }
-      - { label: "🌸 50 🐴", tasks: 50, stress: false, semaphore_driver: "api" }
-      - { label: "🦋 100 🦄", tasks: 100, class: "warning", stress: true, semaphore_driver: "shared" }
-      - { label: "🦋 250 🐴", tasks: 250, class: "accent", stress: true, semaphore_driver: "api" }
-      - { label: "🎲✨ YAY!", tasks: 0, class: "danger", full_width: true }
+      - { label: "🌸 25 🦄", tasks: 25, stress: false, semaphore_driver: "shared", tooltip: "25 slow tasks, shared memory" }
+      - { label: "🌸 25 🐴", tasks: 25, stress: false, semaphore_driver: "api", tooltip: "25 slow tasks, Go API" }
+      - { label: "🦋 500 🦄", tasks: 500, class: "warning", stress: true, semaphore_driver: "shared", tooltip: "500 fast tasks, shared memory" }
+      - { label: "🦋 500 🐴", tasks: 500, class: "accent", stress: true, semaphore_driver: "api", tooltip: "500 fast tasks, Go API" }
+      - { label: "🎲✨ YAY!", tasks: 0, class: "danger", full_width: true, tooltip: "Random pony chaos!" }
 
   ui:
     # See color-generators.js

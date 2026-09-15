@@ -94,7 +94,7 @@
                     <span
                       class="text-[8px] font-mono"
                       style="color: var(--text-muted)"
-                      >[PHP]</span
+                      >[🚦PHP]</span
                     >
                     <div class="flex gap-1 items-center h-[10px]">
                       <template
@@ -113,7 +113,7 @@
                     <span
                       class="text-[8px] font-mono"
                       style="color: var(--text-muted)"
-                      >[API]</span
+                      >[🚦API]</span
                     >
                     <div class="flex gap-1 items-center h-[10px]">
                       <template
@@ -329,44 +329,122 @@
                 <span
                   class="font-mono text-[9px] font-black tracking-[0.2em] uppercase"
                   style="color: var(--text-muted)"
-                  >DEEZ-NUTZ.STATS</span
+                  >SEMAPHORE.OPS</span
                 >
-                <span
-                  class="text-[8px] font-mono uppercase tracking-widest"
-                  style="color: var(--text-secondary)"
-                >
-                  Stream created:
-                  <span
-                    x-text="$store.app.system.stream_created_at ?? ''"
-                  ></span>
-                </span>
               </div>
 
               <!-- Stats Content -->
-              <div class="p-4 flex flex-col h-full gap-2 font-mono text-[10px]">
-                <div class="flex justify-between">
-                  <span style="color: var(--text-muted)">Messages:</span>
-                  <span
-                    style="color: var(--color-success)"
-                    x-text="$store.app.metrics.natsStats?.messages ?? 0"
-                  ></span>
+              <div
+                class="p-4 grid grid-cols-2 gap-3 font-mono text-[10px] h-full"
+              >
+                <!-- LEFT: Metrics -->
+                <div class="flex flex-col gap-2">
+                  <div
+                    class="text-[8px] font-mono uppercase tracking-widest mb-1"
+                    style="color: var(--text-muted)"
+                  >
+                    Metrics
+                  </div>
+
+                  <!-- Semaphore Ops -->
+                  <div
+                    class="flex flex-col gap-1 p-2 rounded"
+                    style="
+                      background: var(--bg-secondary);
+                      border: 1px solid var(--border-default);
+                    "
+                  >
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)"
+                        >acquires/sec:</span
+                      >
+                      <span
+                        style="color: var(--color-accent)"
+                        x-text="$store.app.semaphoreMetrics.acquireRps ?? 0"
+                      ></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)">retries/sec:</span>
+                      <span
+                        style="color: var(--color-warning)"
+                        x-text="$store.app.semaphoreMetrics.retryRps ?? 0"
+                      ></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)">total:</span>
+                      <span
+                        style="color: var(--color-success)"
+                        x-text="($store.app.semaphoreMetrics.totalAcquires ?? 0).toLocaleString()"
+                      ></span>
+                    </div>
+                  </div>
+
+                  <!-- WebSocket -->
+                  <div
+                    class="flex flex-col gap-1 p-2 rounded"
+                    style="
+                      background: var(--bg-secondary);
+                      border: 1px solid var(--border-default);
+                    "
+                  >
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)"
+                        >websocket msgs/sec:</span
+                      >
+                      <span
+                        style="color: var(--color-info)"
+                        x-text="$store.app.wsMetrics.rps ?? 0"
+                      ></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)">total:</span>
+                      <span
+                        style="color: var(--color-info)"
+                        x-text="($store.app.wsMetrics.totalMessages ?? 0).toLocaleString()"
+                      ></span>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex justify-between">
-                  <span style="color: var(--text-muted)">Size:</span>
-                  <span
-                    style="color: var(--color-success)"
-                    x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
-                  ></span>
+
+                <!-- RIGHT: Queue -->
+                <div class="flex flex-col gap-2">
+                  <div
+                    class="text-[8px] font-mono uppercase tracking-widest mb-1"
+                    style="color: var(--text-muted)"
+                  >
+                    Queue
+                  </div>
+
+                  <div
+                    class="flex flex-col gap-1 p-2 rounded"
+                    style="
+                      background: var(--bg-secondary);
+                      border: 1px solid var(--border-default);
+                    "
+                  >
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)">messages:</span>
+                      <span
+                        style="color: var(--color-success)"
+                        x-text="$store.app.metrics.natsStats?.messages ?? 0"
+                      ></span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span style="color: var(--text-muted)">size:</span>
+                      <span
+                        style="color: var(--color-success)"
+                        x-text="($store.app.metrics.natsStats?.bytes / 1024).toFixed(1) + ' KB'"
+                      ></span>
+                    </div>
+
+                    <button
+                      class="task-button task-button-danger w-full py-1 mt-2"
+                      @click="$store.app.confirmPurge()"
+                    >
+                      Clear Queue
+                    </button>
+                  </div>
                 </div>
-                <div class="flex justify-center mt-auto">
-                  <canvas id="msg-chart"></canvas>
-                </div>
-                <button
-                  class="task-button task-button-danger w-full mt-2 py-2"
-                  @click="$store.app.confirmPurge()"
-                >
-                  Clear Queue
-                </button>
               </div>
             </div>
 
@@ -423,7 +501,10 @@
               <!-- Panel content -->
               <div class="p-4 flex flex-col gap-4">
                 <!-- Concurrency slider -->
-                <div class="slider-group w-full">
+                <div
+                  class="slider-group w-full"
+                  x-show="!$store.app.hideMcSlider"
+                >
                   <label
                     class="flex justify-between items-center text-[10px] font-mono font-black uppercase mb-2 tracking-widest"
                     style="color: var(--text-muted)"
@@ -449,21 +530,23 @@
 
                 <!-- Task injection buttons -->
                 <div class="grid grid-cols-2 auto-rows-min gap-2 flex-grow">
-                  <template x-for="btn in $store.app.flow.buttons">
+                  <template
+                    x-for="btn in $store.app.flow.buttons"
+                    :key="btn.label"
+                  >
                     <button
                       class="task-button py-2"
                       :class="[
-                        'task-button',
-                        'py-2',
-                        `task-button-${btn.class}`,
-                        btn.full_width ? 'w-full col-span-2' : ''
-                      ]"
-                      @mouseenter="if (btn.tasks === 0) $store.app.hoverRand = true"
-                      @mouseleave="if (btn.tasks === 0) $store.app.hoverRand = false"
+            `task-button-${btn.class}`,
+            btn.full_width ? 'w-full col-span-2' : ''
+        ]"
+                      x-data="{ hovered: false }"
+                      @mouseenter="hovered = true; if (btn.tasks === 0) $store.app.hoverRand = true"
+                      @mouseleave="hovered = false; if (btn.tasks === 0) $store.app.hoverRand = false"
                       @click="btn.tasks === 0
-                        ? $store.app.fordBronco()
-                        : $store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
-                      x-text="btn.label"
+            ? $store.app.fordBronco()
+            : $store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
+                      x-text="hovered && btn.tooltip ? btn.tooltip : btn.label"
                     ></button>
                   </template>
                 </div>

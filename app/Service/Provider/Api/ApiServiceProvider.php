@@ -24,7 +24,7 @@ use Swoole\Server;
  */
 final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartAware
 {
-    private const int CONNECTION_POOL_SIZE = 1024;
+    private const int CONNECTION_POOL_SIZE = 4096;
 
     /**
      * Registers services into the DI container.
@@ -48,9 +48,9 @@ final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartA
                 $ssl = ($urlParts['scheme'] ?? 'http') === 'https';
                 $port = (int)($urlParts['port'] ?? ($ssl ? 443 : 80));
 
-                // Add a 30% safety margin to the connection timeout to ensure
+                // Add a safety margin to the connection timeout to ensure
                 // the PHP worker doesn't drop the connection before the Go semaphore expires.
-                $timeout = (int) ($options->taskLockTimeoutSec * 1.3);
+                $timeout = (int) ($options->taskLockTimeoutSec * 3);
 
                 // API Token
                 $apiAuthKey = $options->apiAuthKey;

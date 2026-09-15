@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs';
-import { state } from './modules/state';
+import { state } from './store/index.js';
 import { decodeMessage } from './modules/decoder.js';
 import { createRenderer } from './modules/renderer.js';
 import { tasks, addTask, clearTasks } from './modules/task-store.js';
@@ -71,6 +71,8 @@ const connect = () => {
         const msg = decodeMessage(e.data, STATUS_LABELS);
         if (!msg) return;
 
+        store.trackWsMessage();
+
         const { event, data } = msg;
 
         switch (event) {
@@ -115,7 +117,18 @@ const handleUpdateTasks = (data) => {
     }
 
     // Update task
+    const prevStatus = task.status;
     task.update(status, progress);
+
+    // === SEMAPHORE METRICS ===
+    if (status === TASK_STATUS.PROGRESS && prevStatus !== TASK_STATUS.PROGRESS) {
+        store.incrementAcquire();
+    }
+
+    // Retry: task failed to acquire semaphore
+    if (status === TASK_STATUS.LOCK_FAILED) {
+        store.incrementRetry();
+    }
 
     // Update heatmap
     switch (status) {
@@ -188,6 +201,11 @@ const startPinger = (ws) => {
     }, WS.PING_INTERVAL_MS);
 };
 const stopPinger = () => { clearInterval(pingTimer); };
+
+// Semaphores stats
+setInterval(() => {
+    store.updateSemaphoreRps();
+}, 1000);
 
 // Go!
 connect();

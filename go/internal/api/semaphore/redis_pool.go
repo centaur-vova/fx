@@ -40,19 +40,22 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 	activeKey := fmt.Sprintf("{semaphore:%d}:active", mc)
 	channel := fmt.Sprintf("{semaphore:%d}:events", mc)
 
-	deadline := p.clock.Now().Add(timeout)
+	// Create context with deadline ONCE
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	var pubsub *redis.PubSub
+	var ch <-chan *redis.Message
 
 	for {
 		result, err := p.acquireScript.Run(
 			ctx,
 			p.client,
-			// KEYS
 			[]string{activeKey},
-			// ARGV
-			mc,                 // ARGV[1] — max concurrent slots
-			int(ttl.Seconds()), // ARGV[2] — TTL in seconds
+			mc,
+			int(ttl.Seconds()),
 		).Result()
+
 		if err != nil && !errors.Is(err, redis.Nil) {
 			return "", fmt.Errorf("acquire script error: %w", err)
 		}
@@ -62,8 +65,7 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 			return NewSlotUID(mc, int(slotIdx)), nil
 		}
 
-		// Subscribe for the events channel & wait until a slot is freed
-		// Use only when a very first attempt failed
+		// Lazy pubsub creation — only if first attempt failed
 		if pubsub == nil {
 			pubsub = p.client.Subscribe(ctx, channel)
 			defer func() {
@@ -71,23 +73,19 @@ func (p *RedisPool) Acquire(ctx context.Context, mc int, timeout, ttl time.Durat
 					logger.Warn("Error closing pubsub", "pkg", "semaphore", "func", "Acquire", "error", err)
 				}
 			}()
+			ch = pubsub.Channel(redis.WithChannelSize(1000))
 		}
 
-		// Create temporary context with deadline (for select)
-		selectCtx, cancel := context.WithDeadline(ctx, deadline)
-
-		// No free slots, wait and retry
+		// Wait for event or timeout
 		select {
-		case <-pubsub.Channel():
-			cancel()
-			// There's a free slot, try again
+		case <-ch:
+			// Slot freed, retry
 			continue
-		case <-selectCtx.Done():
-			cancel()
-			if errors.Is(selectCtx.Err(), context.DeadlineExceeded) {
+		case <-ctx.Done():
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 				return "", fmt.Errorf("acquire timeout after %v", timeout)
 			}
-			return "", selectCtx.Err()
+			return "", ctx.Err()
 		}
 	}
 }

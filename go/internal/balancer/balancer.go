@@ -162,20 +162,48 @@ func (u *Upstream) RegisterInstance(targetURL string) {
 	}
 
 	// New instance - create and add
-	proxy := httputil.NewSingleHostReverseProxy(origin)
-	proxy.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, e error) {
-		logger.Error("Proxy error", "host", origin.Host, "error", e)
-		w.WriteHeader(http.StatusBadGateway)
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   5 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:        10000,
+		MaxIdleConnsPerHost: 1000,
+		MaxConnsPerHost:     0,
+		IdleConnTimeout:     90 * time.Second,
+		DisableKeepAlives:   false,
+		DisableCompression:  true,
+		ForceAttemptHTTP2:   false,
 	}
 
 	instance := &APIInstance{
 		URL:         origin,
-		Proxy:       proxy,
 		Hash:        shortHash(targetURL),
 		instanceTTL: u.cfg.InstanceTTL,
 		clock:       clock.RealClock{},
 		CB:          cb.NewCircuitBreaker(),
 	}
+
+	instance.Proxy = &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			req.URL.Scheme = origin.Scheme
+			req.URL.Host = origin.Host
+			req.Host = origin.Host
+		},
+		Transport: transport,
+		ErrorHandler: func(w http.ResponseWriter, _ *http.Request, e error) {
+			logger.Error("Proxy error", "host", origin.Host, "error", e)
+
+			// Unalive the peer if CB just became opened
+			if instance.CB.RecordFailure() {
+				instance.SetUnalive(false)
+				logger.Warn("Circuit Breaker OPENED - instance isolated", "instance", origin.Host)
+			}
+
+			w.WriteHeader(http.StatusBadGateway)
+		},
+	}
+
 	instance.SetAlive()
 	instance.Touch()
 
