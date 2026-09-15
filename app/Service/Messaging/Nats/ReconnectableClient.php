@@ -16,6 +16,7 @@ use Basis\Nats\Stream\DiscardPolicy;
 use Basis\Nats\Stream\RetentionPolicy;
 use Basis\Nats\Stream\StorageBackend;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Swoole\Process;
 use Throwable;
 
@@ -77,10 +78,10 @@ class ReconnectableClient extends Client
     {
         try {
             if (($this->connection === null) || ($this->ping() === false)) {
-                throw new \RuntimeException('NATS ping returned false');
+                throw new RuntimeException('NATS ping returned false');
             }
 
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $this->internalLogger->info('Reconnecting to NATS', ['workerId' => $workerId]);
 
             if (!$this->reconnect()) {

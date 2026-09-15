@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use ArrayIterator;
+use IteratorAggregate;
+use Traversable;
+
 /**
- * @implements \IteratorAggregate<int, class-string>
+ * @implements IteratorAggregate<int, class-string>
  */
-final class ServiceProviderRegistry implements \IteratorAggregate
+final class ServiceProviderRegistry implements IteratorAggregate
 {
     /** @var array<int, class-string> */
     private array $providers = [];
@@ -45,11 +49,11 @@ final class ServiceProviderRegistry implements \IteratorAggregate
     }
 
     /**
-     * @return \Traversable<int, class-string>
+     * @return Traversable<int, class-string>
      */
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->providers);
+        return new ArrayIterator($this->providers);
     }
 
     /** @return array<string> */

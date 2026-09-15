@@ -17,13 +17,13 @@ use App\Service\Queue\Nats\NatsQueue;
 use App\Service\Queue\Nats\NatsTaskQueue;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Configuration as NatsConfiguration;
-
-use function DI\autowire;
-
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Swoole\Server;
+use Throwable;
+
+use function DI\autowire;
 
 final readonly class MessagingServiceProvider implements ServiceProvider, WorkerStartAware
 {
@@ -127,7 +127,7 @@ final readonly class MessagingServiceProvider implements ServiceProvider, Worker
 
         try {
             $client->ensureTopology();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error(
                 'NATS init failed, horse falls into medically induced coma',
                 ['error' => $e->getMessage()]

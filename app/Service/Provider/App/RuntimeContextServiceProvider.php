@@ -7,11 +7,10 @@ namespace App\Service\Provider\App;
 use App\Contract\Provider\Bootable;
 use App\Contract\Provider\ServiceProvider;
 use App\Server\RuntimeContext;
-
-use function DI\autowire;
-
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
+
+use function DI\autowire;
 
 class RuntimeContextServiceProvider implements ServiceProvider, Bootable
 {

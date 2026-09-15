@@ -15,8 +15,6 @@ interface Bootable
     /**
      * Boot after container is built, before server starts
      *
-     * @param ContainerInterface $container
-     * @return void
      */
     public function boot(ContainerInterface $container): void;
 }

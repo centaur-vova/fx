@@ -12,9 +12,11 @@ use App\DTO\Task\TaskExecutionPayload;
 use App\Exception\Server\WorkerShutdownException;
 use App\Server\Options;
 use App\Server\RuntimeContext;
+use Generator;
 use Psr\Log\LoggerInterface;
 use Swoole\Coroutine as Co;
 use Swoole\Server;
+use Throwable;
 
 final class TaskQueueManager
 {
@@ -76,7 +78,7 @@ final class TaskQueueManager
                 } catch (WorkerShutdownException) {
                     // Shutting down, simply return
                     return;
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $this->logger->error('Manager loop failed. Retrying in 5s...', [
                         'error' => $e->getMessage(),
                     ]);
@@ -115,7 +117,7 @@ final class TaskQueueManager
         }
     }
 
-    private function pumpToTasks(Server $server, \Generator $tasks): int
+    private function pumpToTasks(Server $server, Generator $tasks): int
     {
         $taskCount = 0;
 

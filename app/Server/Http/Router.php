@@ -22,9 +22,11 @@ use OpenTelemetry\API\Trace\SpanKind;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use ReflectionMethod;
+use ReflectionNamedType;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
+use Throwable;
 
 class Router
 {
@@ -145,7 +147,7 @@ class Router
             // fromException
             $result = ApiResponse::fromException($e);
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Log all other errors
             $this->logger->error('Unhandled exception', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $result = ApiResponse::fromException(new InternalServerErrorException()); // Empty message by intent
@@ -191,7 +193,7 @@ class Router
                         $type = $parameter->getType();
 
                         // Check if parameter has a class type and it's not a system request/response object
-                        if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+                        if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
                             $className = $type->getName();
 
                             // Skip system server objects if you typehint them

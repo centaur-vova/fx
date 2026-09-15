@@ -7,12 +7,11 @@ namespace App\Service\Provider\Task;
 use App\Contract\Provider\ServiceProvider;
 use App\Contract\Provider\WorkerStartAware;
 use App\Service\Task\TaskQueueManager;
-
-use function DI\autowire;
-
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Swoole\Server;
+
+use function DI\autowire;
 
 final readonly class TaskServiceProvider implements ServiceProvider, WorkerStartAware
 {

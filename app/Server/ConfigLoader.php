@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Server;
 
+use BackedEnum;
 use Dotenv\Dotenv;
+use RuntimeException;
 
 class ConfigLoader
 {
@@ -61,7 +63,7 @@ class ConfigLoader
      * @param T $default
      * @return T
      */
-    public function getEnum(string $key, string $enumClass, \BackedEnum $default): \BackedEnum
+    public function getEnum(string $key, string $enumClass, BackedEnum $default): BackedEnum
     {
         $value = $this->raw($key);
         if ($value === null) {
@@ -71,13 +73,13 @@ class ConfigLoader
         /** @var scalar|null $value */
         $strValue = is_scalar($value) ? (string) $value : null;
         if ($strValue === null) {
-            throw new \RuntimeException("Invalid value type for {$key}: expected scalar, got " . get_debug_type($value));
+            throw new RuntimeException("Invalid value type for {$key}: expected scalar, got " . get_debug_type($value));
         }
 
         $enum = $enumClass::tryFrom($strValue);
         if ($enum === null) {
-            $allowed = array_map(static fn (\BackedEnum $case) => $case->value, $enumClass::cases());
-            throw new \RuntimeException("Invalid value for {$key}: '{$strValue}'. Expected one of: " . implode(', ', $allowed));
+            $allowed = array_map(static fn (BackedEnum $case) => $case->value, $enumClass::cases());
+            throw new RuntimeException("Invalid value for {$key}: '{$strValue}'. Expected one of: " . implode(', ', $allowed));
         }
         return $enum;
     }
@@ -97,7 +99,7 @@ class ConfigLoader
         $decoded = json_decode($val ?: '{}', true);
 
         if (!is_array($decoded)) {
-            throw new \RuntimeException("Invalid JSON in {$key}. Expected object, got: " . json_last_error_msg());
+            throw new RuntimeException("Invalid JSON in {$key}. Expected object, got: " . json_last_error_msg());
         }
 
         /** @var array<string, mixed> $decoded */

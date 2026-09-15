@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\RateLimiter;
 
+use InvalidArgumentException;
+
 class RateLimiterConfig
 {
     /**
@@ -18,10 +20,10 @@ class RateLimiterConfig
     {
         foreach ($configs as $name => $config) {
             if (!isset($config['max_attempts']) || !isset($config['ttl'])) {
-                throw new \InvalidArgumentException("Missing max_attempts or ttl for rate limiter '$name'");
+                throw new InvalidArgumentException("Missing max_attempts or ttl for rate limiter '$name'");
             }
             if ($config['max_attempts'] <= 0 || $config['ttl'] <= 0) {
-                throw new \InvalidArgumentException("Missing max_attempts or ttl for rate limiter '$name'");
+                throw new InvalidArgumentException("Missing max_attempts or ttl for rate limiter '$name'");
             }
             $this->configs[$name] = [
                 'max_attempts' => (int) $config['max_attempts'],

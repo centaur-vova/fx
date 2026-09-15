@@ -69,7 +69,6 @@ function countIfStatements(array $lines): int
  * Removes comments and string contents from a PHP line.
  * String contents are replaced with spaces to preserve positions.
  *
- * @param string $line
  * @param bool $inBlockComment (by reference)
  */
 function stripCommentsAndStrings(string $line, bool &$inBlockComment): string

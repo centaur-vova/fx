@@ -7,7 +7,9 @@ namespace Tests\Unit\Server\Http\Response;
 use App\Contract\Http\HttpStatus;
 use App\Exception\Http\BadRequestException;
 use App\Server\Http\Response\ApiResponse;
+use JsonSerializable;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class ApiResponseTest extends TestCase
 {
@@ -23,7 +25,7 @@ class ApiResponseTest extends TestCase
 
     public function testOkWithData(): void
     {
-        $data = new class () implements \JsonSerializable {
+        $data = new class () implements JsonSerializable {
             public function jsonSerialize(): array
             {
                 return ['key' => 'value'];
@@ -46,7 +48,7 @@ class ApiResponseTest extends TestCase
 
     public function testErrorWithData(): void
     {
-        $data = new class () implements \JsonSerializable {
+        $data = new class () implements JsonSerializable {
             public function jsonSerialize(): array
             {
                 return ['error_code' => 123];
@@ -74,7 +76,7 @@ class ApiResponseTest extends TestCase
 
     public function testFromGenericException(): void
     {
-        $exception = new \RuntimeException('Generic error');
+        $exception = new RuntimeException('Generic error');
         $response = ApiResponse::fromException($exception);
 
         $this->assertFalse($response->success);
@@ -92,7 +94,7 @@ class ApiResponseTest extends TestCase
 
     public function testJsonSerializeWithData(): void
     {
-        $data = new class () implements \JsonSerializable {
+        $data = new class () implements JsonSerializable {
             public function jsonSerialize(): array
             {
                 return ['nested' => 'value'];

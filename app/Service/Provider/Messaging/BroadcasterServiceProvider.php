@@ -7,11 +7,9 @@ namespace App\Service\Provider\Messaging;
 use App\Contract\Messaging\Broadcaster;
 use App\Contract\Provider\ServiceProvider;
 use App\Service\Messaging\Nats\NatsBroadcaster;
-
-use function DI\autowire;
-
 use DI\ContainerBuilder;
 
+use function DI\autowire;
 use function DI\get;
 
 final readonly class BroadcasterServiceProvider implements ServiceProvider

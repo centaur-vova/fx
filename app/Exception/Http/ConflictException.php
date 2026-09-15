@@ -6,8 +6,9 @@ namespace App\Exception\Http;
 
 use App\Contract\Exception\HttpException;
 use App\Contract\Http\HttpStatus;
+use RuntimeException;
 
-class ConflictException extends \RuntimeException implements HttpException
+class ConflictException extends RuntimeException implements HttpException
 {
     public function getHttpStatus(): HttpStatus
     {

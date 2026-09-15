@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use Psr\Log\AbstractLogger;
+use Stringable;
 
 class StdoutLogger extends AbstractLogger
 {
@@ -19,7 +20,7 @@ class StdoutLogger extends AbstractLogger
     ) {
     }
 
-    public function log($level, \Stringable|string $message, array $context = []): void
+    public function log($level, Stringable|string $message, array $context = []): void
     {
         $levelString = is_scalar($level) ? (string) $level : 'info';
 

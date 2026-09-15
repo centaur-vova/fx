@@ -99,8 +99,8 @@ final readonly class ApiServiceProvider implements ServiceProvider, WorkerStartA
      * Currently only worker #0 is used for future JWT token prefetch.
      *
      * @param ContainerInterface $container The DI container
-     * @param Server             $server   The Swoole server instance
-     * @param int                $workerId The ID of the started worker
+     * @param Server $server The Swoole server instance
+     * @param int $workerId The ID of the started worker
      */
     public function onWorkerStart(ContainerInterface $container, Server $server, int $workerId): void
     {

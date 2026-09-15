@@ -10,6 +10,8 @@ use App\Contract\Queue\Message;
 use App\Contract\Queue\Purgeable;
 use App\Contract\Queue\Queue;
 use App\Contract\Task\TaskQueue;
+use Generator;
+use RuntimeException;
 
 class NatsTaskQueue implements TaskQueue
 {
@@ -26,7 +28,7 @@ class NatsTaskQueue implements TaskQueue
         return $this->queue->publish($this->subject, $task);
     }
 
-    public function pull(int $limit = 10): \Generator
+    public function pull(int $limit = 10): Generator
     {
         $messages = $this->consumer->pull($limit);
 
@@ -63,7 +65,7 @@ class NatsTaskQueue implements TaskQueue
     public function purge(): void
     {
         if (!($this->queue instanceof Purgeable)) {
-            throw new \RuntimeException('Purge not supported for this queue implementation');
+            throw new RuntimeException('Purge not supported for this queue implementation');
         }
         $this->queue->purge();
     }

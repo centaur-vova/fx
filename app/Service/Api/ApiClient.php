@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Api;
 
 use App\Exception\Api\ApiException;
+use JsonException;
 use Psr\Log\LoggerInterface;
 use Swoole\ConnectionPool;
 use Swoole\Coroutine\Http\Client;
@@ -108,7 +109,7 @@ class ApiClient
 
             /** @var ?array<string, mixed> $responseData */
             return $responseData;
-        } catch (\JsonException $e) {
+        } catch (JsonException $e) {
             $this->logger->error('Failed to decode JSON response', ['error' => $e->getMessage()]);
             throw new ApiException('Failed to decode JSON response: ' . $e->getMessage());
         } finally {

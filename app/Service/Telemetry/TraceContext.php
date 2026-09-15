@@ -14,6 +14,8 @@ use OpenTelemetry\Context\Context;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\Context\ScopeInterface;
 use OpenTelemetry\SDK\Trace\TracerProvider;
+use RuntimeException;
+use Throwable;
 
 final class TraceContext
 {
@@ -65,9 +67,9 @@ final class TraceContext
      * @param SpanKind::KIND_* $kind Span kind (e.g., SpanKind::KIND_SERVER)
      * @param array<string, mixed> $attributes Span attributes
      * @param callable(SpanInterface): T $callback Business logic to execute
-     * @param array<int, class-string<\Throwable>> $skipReportingFor Exception classes that should NOT be recorded as errors
+     * @param array<int, class-string<Throwable>> $skipReportingFor Exception classes that should NOT be recorded as errors
      * @return T The return value of the callback
-     * @throws \Throwable Rethrows any exception after recording it in the span
+     * @throws Throwable Rethrows any exception after recording it in the span
      */
     public static function run(
         string $name,
@@ -83,7 +85,7 @@ final class TraceContext
             $result = $callback($scope->span);
             $scope->span->setStatus(StatusCode::STATUS_OK);
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $shouldReport = array_all($skipReportingFor, fn (string $class) => !($e instanceof $class));
             if ($shouldReport) {
                 $scope->span->recordException($e);
@@ -140,12 +142,12 @@ final class TraceContext
     }
 
     /**
-     * @throws \RuntimeException If service name is not initialized.
+     * @throws RuntimeException If service name is not initialized.
      */
     public static function tracer(): TracerInterface
     {
         if (self::$serviceName === null) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'TraceContext not initialized. Call TraceContext::init() first.'
             );
         }
@@ -181,7 +183,6 @@ final class TraceContext
      * @param ?string $traceparent Incoming traceparent header
      * @param SpanKind::KIND_* $kind Span kind
      * @param array<string, mixed> $attributes Span attributes
-     * @return TraceScope
      */
     private static function continueOrStart(string $name, ?string $traceparent, int $kind = SpanKind::KIND_INTERNAL, array $attributes = []): TraceScope
     {

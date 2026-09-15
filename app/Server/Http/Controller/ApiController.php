@@ -12,6 +12,7 @@ use App\Server\Http\Request\ToggleInstance;
 use App\Server\Http\Response\ApiResponse;
 use App\Service\Api\BalancerApi;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class ApiController
 {
@@ -45,7 +46,7 @@ class ApiController
 
             // Shouldn't get here
             throw new InternalServerErrorException();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error('Kill instance failed', ['hash' => $dto->hash, 'error' => $e->getMessage()]);
             throw new InternalServerErrorException('Internal error');
         }

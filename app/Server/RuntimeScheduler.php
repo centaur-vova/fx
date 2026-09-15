@@ -6,6 +6,7 @@ namespace App\Server;
 
 use App\Exception\Server\WorkerShutdownException;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 final class RuntimeScheduler
 {
@@ -40,7 +41,7 @@ final class RuntimeScheduler
                     // This happens if sleepOrDie() was called during shutdown.
                     $this->logger->info('Ticker interrupted by shutdown signal');
                     return;
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Catch any other errors so the ticker doesn't die permanently
                     $this->logger->error('Ticker execution error', ['error' => $e->getMessage()]);
                 }

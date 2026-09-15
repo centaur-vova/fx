@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Service\RateLimiter;
 
 use App\Service\RateLimiter\RateLimiterConfig;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class RateLimiterConfigTest extends TestCase
@@ -24,13 +25,13 @@ class RateLimiterConfigTest extends TestCase
 
     public function testMissingValuesThrowsException(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new RateLimiterConfig(['invalid' => []]);
     }
 
     public function testZeroValuesThrowsException(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new RateLimiterConfig(['zero' => ['max_attempts' => 0, 'ttl' => 60]]);
     }
 }

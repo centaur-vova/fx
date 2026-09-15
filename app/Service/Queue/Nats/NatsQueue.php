@@ -13,6 +13,7 @@ use Basis\Nats\Message\Ack;
 use Basis\Nats\Message\Nak;
 use Basis\Nats\Message\Payload;
 use Basis\Nats\Stream\Stream;
+use Throwable;
 
 class NatsQueue implements Queue, Purgeable
 {
@@ -39,7 +40,7 @@ class NatsQueue implements Queue, Purgeable
         try {
             $this->stream->put($subject, $payload);
             return true;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // TODO: log error
             return false;
         }
@@ -65,7 +66,7 @@ class NatsQueue implements Queue, Purgeable
             /** @var object{state: object{messages: int}} $info */
             $info = $this->stream->info();
             return $info->state->messages ?? 0;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return 0;
         }
     }
@@ -92,7 +93,7 @@ class NatsQueue implements Queue, Purgeable
                 'first_seq' => intval($info->state->first_seq ?? 0),
                 'last_seq' => intval($info->state->last_seq ?? 0),
             ];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return [
                 'name' => $this->streamName,
                 'error' => $e->getMessage(),
@@ -108,7 +109,7 @@ class NatsQueue implements Queue, Purgeable
                 'subject' => $receiptId,
             ]));
             return true;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // TODO: log
             return false;
         }
@@ -122,7 +123,7 @@ class NatsQueue implements Queue, Purgeable
                 'delay' => $delay,
             ]));
             return true;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // TODO: log
             return false;
         }

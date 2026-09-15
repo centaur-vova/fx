@@ -6,6 +6,7 @@ namespace App\Service\Api;
 
 use App\DTO\Balancer\Health;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 final readonly class BalancerApi
 {
@@ -40,7 +41,7 @@ final readonly class BalancerApi
             if ($response !== null) {
                 return Health::fromArray($response);
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error('Balancer health request failed', ['error' => $e->getMessage()]);
         }
 
@@ -61,7 +62,7 @@ final readonly class BalancerApi
         try {
             $this->client->post('/instance/revive', ['hash' => $hash]);
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error('Balancer revive instance failed', ['hash' => $hash, 'error' => $e->getMessage()]);
             return false;
         }
@@ -84,7 +85,7 @@ final readonly class BalancerApi
         try {
             $this->client->post('/instance/unalive', ['hash' => $hash]);
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error('Balancer force request failed', ['hash' => $hash, 'error' => $e->getMessage()]);
         }
 

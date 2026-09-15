@@ -28,7 +28,10 @@ return (new Config())
         'array_syntax' => ['syntax' => 'short'],
 
         // Sort imports alphabetically for consistency
-        'ordered_imports' => ['sort_algorithm' => 'alpha'],
+        'ordered_imports' => [
+            'sort_algorithm' => 'alpha',
+            'imports_order' => ['class', 'function', 'const'],
+        ],
 
         // Remove unused use statements
         'no_unused_imports' => true,
@@ -82,6 +85,29 @@ return (new Config())
         // Ensure return types are always present
         'void_return' => true,
         'fully_qualified_strict_types' => false,
+
+        // Remove PHPDoc tags that duplicate native type declarations (e.g., @param string $name)
+        'no_superfluous_phpdoc_tags' => [
+            'allow_mixed' => true,
+            'allow_unused_params' => false,
+        ],
+
+        // Align PHPDoc tags for readability
+        'phpdoc_align' => [
+            'align' => 'left',
+        ],
+
+        // Import global classes, constants and functions for cleaner code
+        'global_namespace_import' => [
+            'import_classes' => true,
+            'import_constants' => true,
+            'import_functions' => true,
+        ],
+
+        // Ensure single space around concatenation operator (.)
+        'concat_space' => [
+            'spacing' => 'one',
+        ],
     ])
     ->setFinder($finder)
     ->setRiskyAllowed(true);

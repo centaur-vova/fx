@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Contract\Task;
 
+use Generator;
+
 /**
  * Message queue interface for task scheduling and processing.
  *
@@ -25,9 +27,9 @@ interface TaskQueue
      *
      * @param int $limit Maximum number of tasks to pull
      *
-     * @return \Generator<string, object> Yields receipt ID and task object
+     * @return Generator<string, object> Yields receipt ID and task object
      */
-    public function pull(int $limit = 10): \Generator;
+    public function pull(int $limit = 10): Generator;
 
     /**
      * Acknowledges successful processing of a task.
@@ -39,8 +41,8 @@ interface TaskQueue
     /**
      * Rejects a task, optionally requeuing it after a delay.
      *
-     * @param string     $receiptId The receipt ID returned from pull()
-     * @param int|null   $delay     Delay in seconds before requeuing (null = no retry)
+     * @param string $receiptId The receipt ID returned from pull()
+     * @param int|null $delay Delay in seconds before requeuing (null = no retry)
      */
     public function nack(string $receiptId, ?int $delay = null): void;
 

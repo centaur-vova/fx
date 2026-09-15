@@ -8,7 +8,9 @@ use App\Contract\Messaging\Broadcaster;
 use App\Contract\Messaging\MessageSerializer;
 use Basis\Nats\Client as NatsClient;
 use Basis\Nats\Message\Payload;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 final readonly class NatsBroadcaster implements Broadcaster
 {
@@ -25,13 +27,13 @@ final readonly class NatsBroadcaster implements Broadcaster
             is_object($message) => $this->serializer->serialize($message),
             is_string($message) => $message,
             is_scalar($message) => (string) $message,
-            default => throw new \InvalidArgumentException('Message must be object or string'),
+            default => throw new InvalidArgumentException('Message must be object or string'),
         };
 
         try {
             $this->client->publish($subject, $payload);
             return;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->error('NATS publish failed', ['subject' => $subject]);
             throw $e;
         }

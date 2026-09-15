@@ -14,6 +14,7 @@ use App\Service\Api\CoreApi;
 use App\Service\Task\Semaphore\DistributedSemaphore;
 use App\Service\Task\Semaphore\GlobalSharedSemaphore;
 use DI\ContainerBuilder;
+use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Swoole\Atomic;
 
@@ -46,7 +47,7 @@ final readonly class SemaphoreServiceProvider implements ServiceProvider, Bootab
                 {
                     $serviceName = array_search($driver, $this->driverMap, true);
                     if (!$serviceName) {
-                        throw new \InvalidArgumentException("Unknown semaphore driver: {$driver->value}");
+                        throw new InvalidArgumentException("Unknown semaphore driver: {$driver->value}");
                     }
 
                     /** @var TaskSemaphore $service */

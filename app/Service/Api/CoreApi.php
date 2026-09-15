@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Api;
 
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 final readonly class CoreApi
 {
@@ -32,7 +33,7 @@ final readonly class CoreApi
             $uid = $response['uid'] ?? null;
 
             return $uid;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
@@ -50,7 +51,7 @@ final readonly class CoreApi
             ]);
 
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->debug('API semaphore release error', [
                 'uid' => $uid,
                 'error' => $e->getMessage(),

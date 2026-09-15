@@ -26,24 +26,22 @@ use App\Service\Provider\Telemetry\TelemetryServiceProvider;
 use App\Service\Task\TaskService;
 use App\Service\Telemetry\TraceContext;
 use App\Support\StdoutLogger;
-
-use function DI\autowire;
-
 use DI\Container;
 use DI\ContainerBuilder;
-
-use function DI\create;
-use function DI\get;
-
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
 use Swoole\Server\Task;
 use Swoole\Timer;
 use Throwable;
+
+use function DI\autowire;
+use function DI\create;
+use function DI\get;
 
 class Kernel
 {
@@ -139,7 +137,7 @@ class Kernel
         $this->providerRegistry = ServiceProviderRegistry::create($options)
             ->addMatch(fn (Options $o) => match ($o->cacheDriver) {
                 CacheDriver::SWOOLE_TABLE => SwooleTableCacheProvider::class,
-                CacheDriver::REDIS => throw new \RuntimeException('Not implemented'),
+                CacheDriver::REDIS => throw new RuntimeException('Not implemented'),
             })
             ->add(ApiServiceProvider::class)
             ->add(RuntimeContextServiceProvider::class)
