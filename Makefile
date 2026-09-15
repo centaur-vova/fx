@@ -106,7 +106,11 @@ lint-go:
 	cd go && golangci-lint run --timeout=5m
 
 if-density:
-	@php tools/if-density.php app
+	@echo "📊 IRD (with comments):"
+	@vendor/bin/ird-meter app
+	@echo ""
+	@echo "📊 IRD (code only):"
+	@vendor/bin/ird-meter app --ignore-comments
 
 bench:
 	cd go && go run cmd/bench/main.go

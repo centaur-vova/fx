@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d259e4de75f16993320f706d3bae41ef",
+    "content-hash": "970612cd1f3a2f641f552575746236da",
     "packages": [
         {
             "name": "basis-company/nats",
@@ -2841,6 +2841,61 @@
         }
     ],
     "packages-dev": [
+        {
+            "name": "centaur-vova/ird-meter",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/centaur-vova/ird-meter.git",
+                "reference": "6c85506c5b52167203c09b4f3645a53ef4f63351"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/centaur-vova/ird-meter/zipball/6c85506c5b52167203c09b4f3645a53ef4f63351",
+                "reference": "6c85506c5b52167203c09b4f3645a53ef4f63351",
+                "shasum": ""
+            },
+            "require": {
+                "nikic/php-parser": "^5.0",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.0"
+            },
+            "bin": [
+                "bin/ird-meter"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "CentaurVova\\IrdMeter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dmitry Shmanatov",
+                    "email": "dshmanatov@icloud.com"
+                }
+            ],
+            "description": "If/Row Density (IRD) calculator for PHP projects — how linear is your code?",
+            "keywords": [
+                "code-quality",
+                "complexity",
+                "if-density",
+                "ird",
+                "php-parser",
+                "static-analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/centaur-vova/ird-meter/issues",
+                "source": "https://github.com/centaur-vova/ird-meter/tree/v1.0.2"
+            },
+            "time": "2026-09-15T18:51:29+00:00"
+        },
         {
             "name": "clue/ndjson-react",
             "version": "v1.3.0",
@@ -6639,5 +6694,5 @@
         "ext-swoole": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

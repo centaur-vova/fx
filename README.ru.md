@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
   <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
-  <img src="https://img.shields.io/badge/IRD-1.95%25-brightgreen?style=flat" alt="If/Row Density">
+  <img src="https://img.shields.io/badge/IRD-1.91%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: CI/CD Status -->
   <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
@@ -312,7 +312,12 @@ docker compose -f docker-compose.prod.yaml up -d --scale api=3
 - **5–10%** — требует внимания
 - **> 10%** — для пони
 
-Текущий IRD: **1.95%**
+Текущий IRD:
+
+- **1.91%** с комментариями — 🟢 безупречно
+- **2.90%** только код (без комментариев) — 🟡 хорошо
+
+Инструмент: [`centaur-vova/ird-meter`](https://packagist.org/packages/centaur-vova/ird-meter)
 
 ---
 

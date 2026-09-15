@@ -10,7 +10,6 @@
         "psr/container": "^2.0",
         "psr/event-dispatcher": "^1.0",
         "php-di/php-di": "^7.1",
-        "ocramius/proxy-manager": "^1.0",
         "basis-company/nats": "^1.1",
         "open-telemetry/sdk": "^1.14",
         "open-telemetry/exporter-otlp": "^1.4",
@@ -33,7 +32,8 @@
         "friendsofphp/php-cs-fixer": "^3.93",
         "phpunit/phpunit": "^12.5",
         "rector/rector": "^2.3",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "centaur-vova/ird-meter": "^1.0"
     },
     "scripts": {
         "analyze": "vendor/bin/phpstan analyse",

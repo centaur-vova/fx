@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
   <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
   <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
-  <img src="https://img.shields.io/badge/IRD-1.95%25-brightgreen?style=flat" alt="If/Row Density">
+  <img src="https://img.shields.io/badge/IRD-1.91%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: CI/CD Status -->
   <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
@@ -307,7 +307,12 @@ A custom metric: number of `if` statements per 100 lines of code.
 - **5–10%** — needs attention
 - **> 10%** — for ponies
 
-Current IRD: **1.95%**
+Current IRD:
+
+- **1.91%** with comments — 🟢 clean
+- **2.90%** code only (without comments) — 🟡 good
+
+Tool: [`centaur-vova/ird-meter`](https://packagist.org/packages/centaur-vova/ird-meter)
 
 ---
 
