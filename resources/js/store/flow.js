@@ -32,11 +32,11 @@ export const flow = {
         }
     },
 
-    get mcColor() {
+    getMcColor() {
         return COLORS[this.mc];
     },
 
-    get labelColor() {
+    getLabelColor() {
         return LABEL_COLORS[this.mc];
     },
 };

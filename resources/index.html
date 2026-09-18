@@ -512,7 +512,7 @@
                     <span>Concurrent Limit</span>
                     <div
                       class="min-w-[24px] h-4 px-1 rounded flex items-center justify-center text-[8px] font-bold transition-colors"
-                      :style="{ backgroundColor: $store.app.mcColor, color: $store.app.labelColor }"
+                      :style="{ backgroundColor: $store.app.getMcColor(), color: $store.app.getLabelColor() }"
                     >
                       <span x-text="$store.app.mc"></span>
                     </div>
