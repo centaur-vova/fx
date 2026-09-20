@@ -35,7 +35,7 @@ final class ServiceProviderRegistry implements IteratorAggregate
     }
 
     /** @param callable(Options): ?string $selector */
-    public function addMatch(callable $selector): self
+    public function when(callable $selector): self
     {
         /**
          * @var class-string|null $providerClass
@@ -54,11 +54,5 @@ final class ServiceProviderRegistry implements IteratorAggregate
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->providers);
-    }
-
-    /** @return array<string> */
-    public function getProviders(): array
-    {
-        return $this->providers;
     }
 }

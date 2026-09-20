@@ -135,7 +135,7 @@ class Kernel
 
         // Init service provider registry
         $this->providerRegistry = ServiceProviderRegistry::create($options)
-            ->addMatch(fn (Options $o) => match ($o->cacheDriver) {
+            ->when(fn (Options $o) => match ($o->cacheDriver) {
                 CacheDriver::SWOOLE_TABLE => SwooleTableCacheProvider::class,
                 CacheDriver::REDIS => throw new RuntimeException('Not implemented'),
             })
