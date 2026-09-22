@@ -1,4 +1,5 @@
-import { COLORS, COORDS, TASK_STATUS } from './config.js';
+import { COORDS, TASK_STATUS } from './config.js';
+import { getThemeColor } from './theme-config.js';
 import { WaveAnimation } from './wave-animation.js';
 
 export class Task {
@@ -35,6 +36,9 @@ export class Task {
 
         // Wave animation instance (set later)
         this.wave = new WaveAnimation(this.mc ?? 1);
+
+        // lazy cache
+        this._color = null;
     }
 
     getLabel() {
@@ -48,11 +52,10 @@ export class Task {
     }
 
     getColor() {
-        if (this.title) {
-            // TODO
-            return '#aaaaaa';
+        if (this._color === null) {
+            this._color = getThemeColor(this);
         }
-        return COLORS[this.mc] || '#ffffff';
+        return this._color || '#ffffff';
     }
 
     /**

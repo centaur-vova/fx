@@ -1,4 +1,4 @@
-import { COLORS, LABEL_COLORS, LOD, PROGRESS_BAR, TASK_STATUS } from './config';
+import { LABEL_COLORS, LOD, PROGRESS_BAR, TASK_STATUS } from './config';
 
 /**
  * Draw a single task square (or dot) on the canvas.

@@ -23,28 +23,42 @@ const getContrastColor = (hexColor) => {
 };
 
 /**
- * Get the color generator function based on theme config
+ * Resolves the theme color for a task or a max-concurrency value.
+ *
+ * When called with a number (mc), it's used for UI previews (slider).
+ * When called with a task object, the color is resolved from the task's
+ * id (if the theme uses the `*` generator prefix) or from its mc.
+ *
+ * @param {object|number} taskOrMc - Task instance or mc value
+ * @returns {string} CSS color
  */
-const getGenerator = () => {
-    const generatorName = window.THEME_CONFIG?.settings?.ui?.color_generator;
-    return generators[generatorName] || defaultGenerator;
-};
+export const getThemeColor = (taskOrMc) => {
+    const isTask = typeof taskOrMc === 'object' && taskOrMc !== null;
+    const mc = isTask ? taskOrMc.mc : taskOrMc;
+    const id = isTask ? taskOrMc.id : null;
 
-/**
- * Resolves the background color for a specific MC
- */
-export const getThemeColor = (mc) => {
-    // 1. Priority: YAML config
-    const themeColor = window.THEME_CONFIG?.settings?.ui?.task_colors?.[mc];
-    if (themeColor) return themeColor;
+    // 1. Priority: YAML config — only for slider preview (mc as number)
+    if (!isTask) {
+        const themeColor = window.THEME_CONFIG?.settings?.ui?.task_colors?.[mc];
+        if (themeColor) return themeColor;
+    }
 
-    // 2. Secondary: Runtime cache for generated colors
-    if (runtimeColors[mc]) return runtimeColors[mc];
+    // 2. Resolve generator and seed source
+    const raw = window.THEME_CONFIG?.settings?.ui?.color_generator || '';
+    const useId = raw.startsWith('*');
+    const genName = useId ? raw.slice(1) : raw;
+    const generator = generators[genName] || defaultGenerator;
 
-    // 3. Last resort: Generate using theme's color generator
-    const generator = getGenerator();
-    const newColor = generator(mc);
-    runtimeColors[mc] = newColor;
+    // Seed: id (if present and generator expects it) or mc
+    const seed = (useId && id !== null) ? (id % 255) + 1 : mc;
+
+    // 3. Cache by (generator, seed)
+    const cacheKey = `${genName}:${seed}`;
+    if (runtimeColors[cacheKey]) return runtimeColors[cacheKey];
+
+    // 4. Generate
+    const newColor = generator(seed);
+    runtimeColors[cacheKey] = newColor;
     return newColor;
 };
 

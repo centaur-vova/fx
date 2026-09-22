@@ -1,4 +1,5 @@
-import { COLORS, LABEL_COLORS, TASK_BTN_MODE } from '../modules/config.js';
+import { LABEL_COLORS, TASK_BTN_MODE } from '../modules/config.js';
+import { getThemeColor } from '../modules/theme-config.js';
 import { getFlowDefaults } from './defaults.js';
 
 export const flow = {
@@ -38,7 +39,7 @@ export const flow = {
     },
 
     getMcColor() {
-        return COLORS[this.mc];
+        return getThemeColor(this.mc);
     },
 
     getLabelColor() {

@@ -333,7 +333,7 @@ Built‑in themes:
 - `crystal` — icy blues and purples
 - `sin-city` — noir, mostly gray with red accents
 - `matrix` — phosphor green on black, CRT scanlines and digital rain
-- `borderlands-famicom` — cel-shaded chaos meets 8-bit nostalgia. Yellow, red, black outlines
+- `borderlands` — cel-shaded chaos meets 8-bit nostalgia. Yellow, red, black outlines
 
 **Theme‑aware task buttons:** Each button can specify its own semaphore driver (`shared` for PHP Atomic, `api` for Go Distributed).  
 The **RAND** button in every theme fires random batches on **both** drivers simultaneously — perfect for stress testing the hybrid architecture.

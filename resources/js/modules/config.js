@@ -14,13 +14,6 @@ export const BRAND_LOGO = `
 // PROXIES
 
 /**
- * Reactive proxy for task background colors
- */
-export const COLORS = new Proxy({}, {
-    get: (target, prop) => getThemeColor(prop)
-});
-
-/**
  * Reactive proxy for task labels (text inside shapes)
  */
 export const LABEL_COLORS = new Proxy({}, {

@@ -26,15 +26,3 @@ settings:
       medium_max: 1000
       scale_normal: 1.2
       scale_medium: 0.8
-    # Manual Override: uncomment to use fixed colors instead of the procedural generator
-    #task_colors:
-    #  1: "#6366f1" # Indigo
-    #  2: "#3b82f6" # Blue
-    #  3: "#06b6d4" # Cyan
-    #  4: "#10b981" # Emerald
-    #  5: "#84cc16" # Lime
-    #  6: "#eab308" # Yellow
-    #  7: "#f97316" # Orange
-    #  8: "#f43f5e" # Rose
-    #  9: "#ef4444" # Red
-    #  10: "#a855f7" # Purple

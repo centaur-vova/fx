@@ -27,12 +27,3 @@ settings:
       medium_max: 1500
       scale_normal: 1.8
       scale_medium: 1.3
-    # Manual Override: uncomment to use fixed colors instead of the procedural generator
-    task_colors:
-      1: "#ee6fa1"   # Pink (Fluttershy's mane)
-      2: "#f9a8d4"   # Light pink
-      3: "#fde047"   # Yellow (her coat)
-      4: "#a7f3d0"   # Mint green
-      5: "#93c5fd"   # Baby blue
-      6: "#c4b5fd"   # Lavender
-      7: "#f0abfc"   # Soft purple

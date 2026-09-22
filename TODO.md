@@ -27,4 +27,7 @@
   - [ ] Consider removing task labels (numbers on squares) in Matrix theme only
   - [ ] Reduce base square size for Matrix (already at scale_normal: 0.8)
   - [ ] Evaluate if task_colors: 255 -> red should stay hardcoded or become theme-driven
+- [ ] **Documentation**:
+  - [ ] Document color_generator `*` prefix in Wiki (seed from task id, not mc)
+
 
