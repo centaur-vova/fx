@@ -12,7 +12,7 @@ use App\Server\RuntimeContext;
  */
 final readonly class PrecisionProcessor implements Processor
 {
-    public const int STEPS = 11;
+    public const int STEPS = 21;
 
     public function __construct(private RuntimeContext $context)
     {

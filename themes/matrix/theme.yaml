@@ -11,7 +11,7 @@ settings:
     max_concurrent: 200
     task_buttons:
       - { label: "💊 Синяя или Красная", mode: "rand", class: "danger", full_width: true, tooltip: "Правда освободит. Или сломает" }
-      - { label: "🐇 Down the Rabbit Hole", mode: "nitro", class: "danger", full_width: true, tooltip: "Max load. Blue pill stays in the queue" }
+      - { label: "🐎💨 NITRO", mode: "nitro", class: "danger", full_width: true, tooltip: "Max load: 255 concurrency, both semaphores, no way back" }
 
   ui:
     color_generator: "matrix"

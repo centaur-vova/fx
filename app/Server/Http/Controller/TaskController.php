@@ -63,8 +63,8 @@ final readonly class TaskController
         go(fn () => $this->taskService->createBatch(
             count: $this->maxBatchSize,
             maxConcurrent: $this->semaphoreLimit,
-            semaphoreDriver: SemaphoreDriver::SHARED,
-            mode: TaskMode::STRESS,
+            semaphoreDriver: SemaphoreDriver::API,
+            mode: TaskMode::OBSERVATION,
         ));
 
         return ApiResponse::ok('🐎💨 NITRO INJECTED — HOLD YOUR HORSES!');
