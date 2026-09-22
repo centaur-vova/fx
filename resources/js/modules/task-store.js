@@ -136,3 +136,12 @@ export function addTask(id, mc, title, sem) {
 export function getTask(id) {
     return tasks.get(id);
 }
+
+export function purgeTransientTasks() {
+    tasks.forEach((task, id) => {
+        if (task.status === TASK_STATUS.LOCK_FAILED ||
+            task.status === TASK_STATUS.RETRY) {
+            tasks.delete(id);
+        }
+    });
+}

@@ -1,5 +1,5 @@
 import { resetThemeColors } from "../modules/theme-config";
-import { resetTaskColors } from "../modules/task-store";
+import { purgeTransientTasks, resetTaskColors } from "../modules/task-store";
 
 export const theme = {
     isSwitching: false,
@@ -33,9 +33,10 @@ export const theme = {
         newScript.src = `/dist/themes/${info.configFile}`;
         newScript.setAttribute('data-theme-config', '');
         newScript.onload = () => {
+            this.initFlow();
             resetThemeColors();
             resetTaskColors();
-            this.initFlow();
+            purgeTransientTasks();
         }
         newScript.onerror = () => location.reload();
         document.head.appendChild(newScript);
