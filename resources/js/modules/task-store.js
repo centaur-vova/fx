@@ -111,6 +111,16 @@ export function clearTasks() {
     tasks.clear();
 }
 
+/**
+ * Clears cached colors on all tasks.
+ * Call on theme change so colors are recalculated.
+ */
+export function resetTaskColors() {
+    tasks.forEach(task => {
+        task._color = null;
+    });
+}
+
 export function addTask(id, mc, title, sem) {
     const task = new Task({
         id,

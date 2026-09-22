@@ -1,4 +1,5 @@
 import { resetThemeColors } from "../modules/theme-config";
+import { resetTaskColors } from "../modules/task-store";
 
 export const theme = {
     isSwitching: false,
@@ -33,6 +34,7 @@ export const theme = {
         newScript.setAttribute('data-theme-config', '');
         newScript.onload = () => {
             resetThemeColors();
+            resetTaskColors();
             this.initFlow();
         }
         newScript.onerror = () => location.reload();
