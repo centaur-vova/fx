@@ -5,11 +5,6 @@ import { generators, defaultGenerator } from './color-generators.js';
 const runtimeColors = {};
 
 /**
- * Generates a random hex color if nothing is found in config
- */
-const getRandomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-
-/**
  * Calculates brightness of a hex color to determine the best contrast
  * Returns #000000 for light backgrounds and #ffffff for dark ones
  */

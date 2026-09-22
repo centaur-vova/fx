@@ -68,7 +68,10 @@ export class Task {
      * @returns {boolean} True if the task should be removed
      */
     isExpired(now) {
-        return this.status === TASK_STATUS.RETRY && now > this.endTime;
+        const isTransient = this.status === TASK_STATUS.RETRY
+            || this.status === TASK_STATUS.LOCK_FAILED;
+
+        return isTransient && now > this.endTime;
     }
 
     isProgress() {

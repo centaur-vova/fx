@@ -131,17 +131,15 @@ const handleUpdateTasks = (data) => {
     }
 
     // Update heatmap
+    const now = Date.now();
     switch (status) {
         case TASK_STATUS.COMPLETED:
-            task.endTime = Date.now() + REMOVE_DELAYS.completed;
+            task.endTime = now + REMOVE_DELAYS.completed;
             store.flashWorker(worker, WORKER_FLASH.SUCCESS, sem);
             break;
         case TASK_STATUS.RETRIES_FAILED:
-            task.endTime = Date.now() + REMOVE_DELAYS.completed;
+            task.endTime = now + REMOVE_DELAYS.completed;
             store.flashWorker(worker, WORKER_FLASH.ERROR, sem);
-            break;
-        case TASK_STATUS.RETRY:
-            task.endTime = Date.now() + REMOVE_DELAYS.retry_stall;
             break;
         case TASK_STATUS.PROGRESS:
         case TASK_STATUS.CHECK_LOCK:
@@ -149,6 +147,7 @@ const handleUpdateTasks = (data) => {
             break;
         case TASK_STATUS.LOCK_FAILED:
             store.flashWorker(worker, WORKER_FLASH.RETRY, sem);
+            task.endTime = now + REMOVE_DELAYS.LOCK_FAILED;
             break;
     }
 };

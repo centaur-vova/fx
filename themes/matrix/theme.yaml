@@ -6,9 +6,6 @@ emoji: "🟢"
 settings:
   flow:
     hide_mc_slider: true
-    default_concurrent: 100
-    min_concurrent: 1
-    max_concurrent: 200
     task_buttons:
       - { label: "🔴🔵", mode: "rand", class: "danger", full_width: true, tooltip: "RND" }
       - { label: "🐎💨", mode: "nitro", class: "danger", full_width: true, tooltip: "0xFF | API" }
@@ -23,4 +20,6 @@ settings:
       medium_max: 1500
       scale_normal: 0.8
       scale_medium: 0.6
+    remove_delays:
+      lock_failed: 1000
     label_text_color: "#00ff41"  # Phosphor green for max contrast on dark

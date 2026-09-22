@@ -35,10 +35,10 @@ export const THEME_DEFAULTS = {
     /**
      * Task removal delays (milliseconds)
      * completed   - delay before removing successfully finished or failed tasks
-     * retry_stall - max time a stuck "retry" task stays visible before being purged
+     * lock_failed - time a LOCK_FAILED task stays visible before fading out
      */
     REMOVE_DELAYS: {
         completed: 1000,
-        retry_stall: 10000,
+        lock_failed: 10000,
     },
 };
