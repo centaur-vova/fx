@@ -14,12 +14,13 @@ settings:
       - { label: "🐎💨", mode: "nitro", class: "danger", full_width: true, tooltip: "0xFF | API" }
 
   ui:
-    color_generator: "matrix"
     progress_bar:
-      height: 2
+      height: 0
+    task_colors:
+      255: "#ff0000"
     lod:
-      normal_max: 1000
-      medium_max: 2000
-      scale_normal: 1.0
+      normal_max: 500
+      medium_max: 1500
+      scale_normal: 0.8
       scale_medium: 0.6
     label_text_color: "#00ff41"  # Phosphor green for max contrast on dark
