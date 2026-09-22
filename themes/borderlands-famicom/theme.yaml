@@ -13,7 +13,7 @@ settings:
       - { label: "👾 100 (API)", tasks: 100, stress: false, semaphore_driver: "api", tooltip: "~1-2s, Go API" }
       - { label: "🎮 250 (PHP)", tasks: 250, class: "warning", stress: true, semaphore_driver: "shared", tooltip: "~1ms, shared memory" }
       - { label: "🎮 500 (API)", tasks: 500, class: "accent", stress: true, semaphore_driver: "api", tooltip: "~1ms, Go API" }
-      - { label: "🎲 RAND", tasks: 0, class: "danger", full_width: true, tooltip: "CHAOS!" }
+      - { label: "🎲 RAND", mode: "rand", class: "danger", full_width: true, tooltip: "CHAOS!" }
 
   ui:
     color_generator: "borderlands"

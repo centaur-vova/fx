@@ -1,4 +1,4 @@
-import { ROUTES } from "../modules/config";
+import { ROUTES, TASK_BTN_MODE } from "../modules/config";
 import { clearTasks } from "../modules/task-store";
 
 export const tasks = {
@@ -9,48 +9,49 @@ export const tasks = {
         setTimeout(() => label.classList.remove('flash'), 200);
     },
 
-    async createTasks(count, forceStress, semaphoreDriver) {
-        this.flashQueue();
-
+    async _post(url, body = null) {
         try {
-            const res = await fetch(ROUTES.TASKS_CREATE, {
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    count,
-                    semaphore_driver: semaphoreDriver,
-                    max_concurrent: this.mc,
-                    task_mode: forceStress ? 'stress' : 'observation'
-                }),
+                body: body ? JSON.stringify(body) : undefined,
             });
             const data = await res.json();
-
             if (!data.success) {
                 this.showToast(data.message, false);
-                return;
+                return null;
             }
+            return data;
         } catch (e) {
             this.showToast('Connection error', false);
+            return null;
         }
     },
 
-    async fordBronco() {
+    async createTasks(btn) {
         this.flashQueue();
 
-        try {
-            const res = await fetch(ROUTES.FORD_BRONCO, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            const data = await res.json();
-
-            if (!data.success) {
-                this.showToast(data.message, false);
-                return;
-            }
-        } catch (e) {
-            this.showToast('Connection error', false);
+        if (btn.mode === TASK_BTN_MODE.NITRO) {
+            return this.createNitro();
         }
+        if (btn.mode === TASK_BTN_MODE.RAND) {
+            return this.createRand();
+        }
+
+        await this._post(ROUTES.TASKS_CREATE, {
+            count: btn.tasks,
+            semaphore_driver: btn.semaphore_driver,
+            task_mode: btn.stress ? 'stress' : 'observation',
+            max_concurrent: this.mc,
+        });
+    },
+
+    async createRand() {
+        await this._post(ROUTES.TASKS_RAND);
+    },
+
+    async createNitro() {
+        await this._post(ROUTES.TASKS_NITRO);
     },
 
     confirmPurge() {

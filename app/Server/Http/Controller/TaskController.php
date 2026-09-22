@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Server\Http\Controller;
 
 use App\Contract\Storage\CacheStorage;
+use App\Contract\Task\SemaphoreDriver;
+use App\Contract\Task\TaskMode;
 use App\Contract\Task\TaskQueue;
 use App\Server\Http\Attribute\RateLimit;
 use App\Server\Http\Attribute\Route;
@@ -18,8 +20,8 @@ final readonly class TaskController
         private TaskService $taskService,
         private TaskQueue $taskQueue,
         private CacheStorage $cache,
-        private int $taskMaxBatchSize,
-        private int $taskSemaphoreLimit,
+        private int $maxBatchSize,
+        private int $semaphoreLimit,
     ) {
     }
 
@@ -31,7 +33,7 @@ final readonly class TaskController
         $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
 
         // Validate DTO
-        $dto->validate($this->taskMaxBatchSize, $this->taskSemaphoreLimit);
+        $dto->validate($this->maxBatchSize, $this->semaphoreLimit);
 
         // Run tasks creation in coroutine
         go(fn () => $this->dispatchBatch($dto));
@@ -39,9 +41,9 @@ final readonly class TaskController
         return ApiResponse::ok('Tasks queued');
     }
 
-    #[Route(method: 'POST', path: '/tasks/ford-bronco')]
+    #[Route(method: 'POST', path: '/tasks/rand')]
     #[RateLimit(limiterName: 'create-tasks')]
-    public function fordBronco(): ApiResponse
+    public function rand(): ApiResponse
     {
         // Save timestamp when last createTasks request was sent
         $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
@@ -49,6 +51,23 @@ final readonly class TaskController
         go(fn () => $this->taskService->createRandomBatches());
 
         return ApiResponse::ok('🐎 Ford Bronco unleashed — hold your horses!');
+    }
+
+    #[Route(method: 'POST', path: '/tasks/nitro')]
+    #[RateLimit(limiterName: 'create-tasks')]
+    public function nitro(): ApiResponse
+    {
+        // Save timestamp when last createTasks request was sent
+        $this->cache->set('task-last-created', (string) time(), 30 * 60); // Keep for 30 minutes
+
+        go(fn () => $this->taskService->createBatch(
+            count: $this->maxBatchSize,
+            maxConcurrent: $this->semaphoreLimit,
+            semaphoreDriver: SemaphoreDriver::SHARED,
+            mode: TaskMode::STRESS,
+        ));
+
+        return ApiResponse::ok('🐎💨 NITRO INJECTED — HOLD YOUR HORSES!');
     }
 
     #[Route(method: 'POST', path: '/tasks/purge')]

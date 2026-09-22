@@ -13,7 +13,7 @@ settings:
       - { label: "🌸 25 🐴", tasks: 25, stress: false, semaphore_driver: "api", tooltip: "25 slow tasks, Go API" }
       - { label: "🦋 500 🦄", tasks: 500, class: "warning", stress: true, semaphore_driver: "shared", tooltip: "500 fast tasks, shared memory" }
       - { label: "🦋 500 🐴", tasks: 500, class: "accent", stress: true, semaphore_driver: "api", tooltip: "500 fast tasks, Go API" }
-      - { label: "🎲✨ YAY!", tasks: 0, class: "danger", full_width: true, tooltip: "Random pony chaos!" }
+      - { label: "🎲✨ YAY!", mode: "rand", class: "danger", full_width: true, tooltip: "Random pony chaos!" }
 
   ui:
     # See color-generators.js

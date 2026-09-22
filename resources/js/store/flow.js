@@ -1,11 +1,11 @@
-import { COLORS, LABEL_COLORS } from '../modules/config.js';
+import { COLORS, LABEL_COLORS, TASK_BTN_MODE } from '../modules/config.js';
 import { getFlowDefaults } from './defaults.js';
 
 export const flow = {
     mc: 2,
     mode: 'normal',
     scale: 1,
-    hoverRand: false,
+    disableMcSlider: false,
     hideMcSlider: false,
     flow: getFlowDefaults(),
 
@@ -24,12 +24,17 @@ export const flow = {
                 label: btn.label || (btn.tasks || btn).toString(),
                 tasks: btn.tasks ?? btn,
                 stress: !!btn.stress,
+                mode: btn.mode || TASK_BTN_MODE.NORMAL,
                 class: btn.class || 'default',
                 full_width: btn.full_width || false,
                 semaphore_driver: btn.semaphore_driver || 'shared',
                 tooltip: btn.tooltip || '',
             }));
         }
+    },
+
+    onTaskButtonHover(btn, state) {
+        this.disableMcSlider = state && (btn.mode === TASK_BTN_MODE.NITRO || btn.mode === TASK_BTN_MODE.RAND);
     },
 
     getMcColor() {

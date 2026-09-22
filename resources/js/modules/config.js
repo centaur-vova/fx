@@ -119,7 +119,8 @@ export const TERMINAL_LOG = {
 
 export const ROUTES = {
     TASKS_CREATE: '/tasks/create',
-    FORD_BRONCO: '/tasks/ford-bronco',
+    TASKS_RAND: '/tasks/rand',
+    TASKS_NITRO: '/tasks/nitro',
     HEALTH: '/health',
 
     API: {
@@ -133,4 +134,10 @@ export const WORKER_FLASH = {
     RETRY: 'retry',
     WAIT: 'wait',
     DURATION_MS: 400,
+};
+
+export const TASK_BTN_MODE = {
+    NORMAL: 'normal',
+    RAND: 'rand',
+    NITRO: 'nitro',
 };

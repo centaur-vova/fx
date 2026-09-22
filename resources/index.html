@@ -522,7 +522,7 @@
                     id="max-concurrent-slider"
                     x-model="$store.app.mc"
                     class="block w-full cursor-pointer"
-                    :class="{ 'opacity-40': $store.app.hoverRand }"
+                    :class="{ 'opacity-40': $store.app.disableMcSlider }"
                     :min="$store.app.flow.min"
                     :max="$store.app.flow.max"
                   />
@@ -541,11 +541,9 @@
             btn.full_width ? 'w-full col-span-2' : ''
         ]"
                       x-data="{ hovered: false }"
-                      @mouseenter="hovered = true; if (btn.tasks === 0) $store.app.hoverRand = true"
-                      @mouseleave="hovered = false; if (btn.tasks === 0) $store.app.hoverRand = false"
-                      @click="btn.tasks === 0
-            ? $store.app.fordBronco()
-            : $store.app.createTasks(btn.tasks, btn.stress, btn.semaphore_driver)"
+                      @mouseenter="hovered = true; $store.app.onTaskButtonHover(btn, true)"
+                      @mouseleave="hovered = false; $store.app.onTaskButtonHover(btn, false)"
+                      @click="$store.app.createTasks(btn)"
                       x-text="hovered && btn.tooltip ? btn.tooltip : btn.label"
                     ></button>
                   </template>

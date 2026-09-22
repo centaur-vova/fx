@@ -30,6 +30,6 @@ export const getFlowDefaults = () => ({
         { label: '10', tasks: 10, class: 'default', stress: false, semaphore_driver: 'api' },
         { label: '500', tasks: 500, class: 'warning', stress: true, semaphore_driver: 'shared' },
         { label: '1000', tasks: 1000, class: 'accent', stress: true, semaphore_driver: 'api' },
-        { label: 'RAND', tasks: 0, class: 'accent', semaphore_driver: 'api', full_width: true },
+        { label: 'RAND', mode: 'rand', class: 'accent', semaphore_driver: 'api', full_width: true },
     ],
 });

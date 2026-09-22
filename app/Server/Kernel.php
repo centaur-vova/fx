@@ -228,8 +228,8 @@ class Kernel
                     ->constructorParameter('lockTimeoutSec', static fn (Options $o) => $o->taskLockTimeoutSec),
 
                 TaskController::class => autowire()
-                    ->constructorParameter('taskMaxBatchSize', static fn (Options $o) => $o->taskMaxBatchSize)
-                    ->constructorParameter('taskSemaphoreLimit', static fn (Options $o) => $o->taskSemaphoreLimit),
+                    ->constructorParameter('maxBatchSize', static fn (Options $o) => $o->taskMaxBatchSize)
+                    ->constructorParameter('semaphoreLimit', static fn (Options $o) => $o->taskSemaphoreLimit),
 
                 Router::class => autowire(Router::class),
 

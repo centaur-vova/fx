@@ -13,7 +13,7 @@ settings:
       - { label: "🐢 Slow 25 [API]", tasks: 25, stress: false, semaphore_driver: "api", tooltip: "~1-2s per task" }
       - { label: "⚡ Fast 500 [PHP]", tasks: 500, class: "warning", stress: true, semaphore_driver: "shared", tooltip: "~1ms per task" }
       - { label: "⚡ Fast 500 [API]", tasks: 500, class: "accent", stress: true, semaphore_driver: "api", tooltip: "~1ms per task" }
-      - { label: "🎲 RAND", tasks: 0, class: "danger", full_width: true, tooltip: "Random task count, random semaphores" }
+      - { label: "🎲 RAND", mode: "rand", class: "danger", full_width: true, tooltip: "Random task count, random semaphores" }
   ui:
     # See color-generators.js
     color_generator: "neon"
