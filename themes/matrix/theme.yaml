@@ -10,8 +10,8 @@ settings:
     min_concurrent: 1
     max_concurrent: 200
     task_buttons:
-      - { label: "🔴🔵", mode: "rand", class: "danger", full_width: true, tooltip: "Fully random" }
-      - { label: "🐎💨", mode: "nitro", class: "danger", full_width: true, tooltip: "MC 255, both semaphores" }
+      - { label: "🔴🔵", mode: "rand", class: "danger", full_width: true, tooltip: "RND" }
+      - { label: "🐎💨", mode: "nitro", class: "danger", full_width: true, tooltip: "0xFF | API" }
 
   ui:
     color_generator: "matrix"
