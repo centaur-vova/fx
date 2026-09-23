@@ -511,10 +511,14 @@
                   >
                     <span>Concurrent Limit</span>
                     <div
-                      class="min-w-[24px] h-4 px-1 rounded flex items-center justify-center text-[8px] font-bold transition-colors"
-                      :style="{ backgroundColor: $store.app.getMcColor(), color: $store.app.getLabelColor() }"
+                      class="min-w-[24px] h-4 rounded flex items-center justify-center transition-colors"
                     >
-                      <span x-text="$store.app.mc"></span>
+                      <canvas
+                        id="mc-preview"
+                        width="24"
+                        height="24"
+                        x-effect="$store.app.renderMcPreview()"
+                      ></canvas>
                     </div>
                   </label>
                   <input

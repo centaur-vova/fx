@@ -1,5 +1,7 @@
 import { LABEL_COLORS, TASK_BTN_MODE } from '../modules/config.js';
 import { getThemeColor } from '../modules/theme-config.js';
+import { drawShape } from '../modules/ui.js';
+import { Task } from '../modules/task-store.js';
 import { getFlowDefaults } from './defaults.js';
 
 export const flow = {
@@ -32,6 +34,20 @@ export const flow = {
                 tooltip: btn.tooltip || '',
             }));
         }
+    },
+
+    renderMcPreview() {
+        const canvas = document.getElementById('mc-preview');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const size = canvas.width;
+
+        ctx.clearRect(0, 0, size, size);
+
+        const task = Task.preview(this.mc);
+
+        drawShape(ctx, size / 2, size / 2, size * 0.6, task, 'normal', 1, true);
     },
 
     onTaskButtonHover(btn, state) {

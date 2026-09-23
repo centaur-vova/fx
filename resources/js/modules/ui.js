@@ -9,8 +9,9 @@ import { LABEL_COLORS, LOD, PROGRESS_BAR, TASK_STATUS } from './config';
  * @param {Object} task - task object with getLabel() method
  * @param {string} mode - display mode ('normal' or 'dot')
  * @param {number} scale - current global scale factor
+ * @param {boolean} forceShowLabel - always show label
  */
-export const drawShape = (ctx, x, y, size, task, mode, scale) => {
+export const drawShape = (ctx, x, y, size, task, mode, scale, forceShowLabel = false) => {
     if (mode === 'dot') {
         ctx.fillRect(x, y, 1, 1);
         return;
@@ -32,7 +33,7 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
         ctx.globalAlpha *= task._exitAlpha;
     }
 
-    const showLabel = scale > LOD.scale_medium;
+    const showLabel = forceShowLabel || scale > LOD.scale_medium;
 
     if (!showLabel) {
         drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale);
@@ -61,8 +62,14 @@ export const drawShape = (ctx, x, y, size, task, mode, scale) => {
 };
 
 const setAlpha = (ctx, task) => {
+    // Preview tasks (no status) are partially opaque
+    if (task.status === null) {
+        ctx.globalAlpha = 0.5;
+        return;
+    }
+
     // Sharp ramp: 0.1 at left, 1.0 at right, with power curve
-    const raw = Math.pow(task.currentX, 0.5); // 0.0 → 0.0, 1.0 → 1.0, but steeper
+    const raw = Math.pow(task.currentX, 0.5);
     const alpha = 0.05 + 0.95 * raw;
     ctx.globalAlpha = Math.min(alpha, 1);
 };

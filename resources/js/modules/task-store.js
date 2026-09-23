@@ -5,13 +5,13 @@ import { WaveAnimation } from './wave-animation.js';
 export class Task {
     constructor(data) {
         // Core task data
-        this.id = data.id;
-        this.mc = data.mc;
-        this.title = data.title;
-        this.sem = data.sem;
+        this.id = data.id ?? null;
+        this.mc = data.mc ?? null;
+        this.title = data.title ?? null;
+        this.sem = data.sem ?? 0;
 
         // Status and progress
-        this.status = data.status ?? 'queued';
+        this.status = data.status ?? null;
         this.progress = data.progress ?? 0;
         this.endTime = data.endTime ?? null;
 
@@ -39,6 +39,24 @@ export class Task {
 
         // lazy cache
         this._color = null;
+    }
+
+    /**
+     * Creates a lightweight task for UI preview (slider, etc).
+     * Not added to the tasks Map. Visual state is fixed.
+     *
+     * @param {number} mc - concurrency value
+     * @returns {Task}
+     */
+    static preview(mc) {
+        const task = new this({ mc, sem: 1 }); // sem=1 for nicey rounded corners
+
+        task.status = null; // yeah, no status for preview
+        task.progress = 100;
+        task.currentX = 1;
+        task.targetX = 1;
+
+        return task;
     }
 
     getLabel() {
@@ -127,6 +145,7 @@ export function addTask(id, mc, title, sem) {
         mc,
         title,
         sem,
+        status: TASK_STATUS.QUEUED,
     });
 
     tasks.set(id, task);

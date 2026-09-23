@@ -75,6 +75,7 @@ export const HEALTH_CHECK = {
 };
 
 export const TASK_STATUS = {
+    QUEUED: 'queued', // internal status
     CHECK_LOCK: 'check_lock',
     PROGRESS: 'progress',
     COMPLETED: 'completed',
