@@ -10,6 +10,7 @@ export const flow = {
     scale: 1,
     disableMcSlider: false,
     hideMcSlider: false,
+    previewSem: 0, // squared cornerz by default
     flow: getFlowDefaults(),
 
     initFlow() {
@@ -40,18 +41,28 @@ export const flow = {
         const canvas = document.getElementById('mc-preview');
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d');
-        const size = canvas.width;
+        const dpr = window.devicePixelRatio || 1;
+        const cssSize = 32;
+        const size = cssSize * dpr;
 
+        canvas.width = size;
+        canvas.height = size;
+        canvas.style.width = `${cssSize}px`;
+        canvas.style.height = `${cssSize}px`;
+
+        const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
 
-        const task = Task.preview(this.mc);
-
-        drawShape(ctx, size / 2, size / 2, size * 0.6, task, 'normal', 1, true);
+        const task = Task.preview(this.mc, this.previewSem);
+        drawShape(ctx, size / 2, size / 2, size * 0.5, task, 'normal', 1.2, true);
     },
 
     onTaskButtonHover(btn, state) {
         this.disableMcSlider = state && (btn.mode === TASK_BTN_MODE.NITRO || btn.mode === TASK_BTN_MODE.RAND);
+
+        if (state && !this.disableMcSlider && btn.semaphore_driver) {
+            this.previewSem = btn.semaphore_driver === 'api' ? 1 : 0;
+        }
     },
 
     getMcColor() {

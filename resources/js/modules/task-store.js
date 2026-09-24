@@ -46,10 +46,11 @@ export class Task {
      * Not added to the tasks Map. Visual state is fixed.
      *
      * @param {number} mc - concurrency value
+     * @param {number} sem - semaphore type
      * @returns {Task}
      */
-    static preview(mc) {
-        const task = new this({ mc, sem: 1 }); // sem=1 for nicey rounded corners
+    static preview(mc, sem) {
+        const task = new this({ mc, sem });
 
         task.status = null; // yeah, no status for preview
         task.progress = 100;

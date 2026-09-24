@@ -62,9 +62,9 @@ export const drawShape = (ctx, x, y, size, task, mode, scale, forceShowLabel = f
 };
 
 const setAlpha = (ctx, task) => {
-    // Preview tasks (no status) are partially opaque
+    // Preview tasks (no status) are partially opaque - hardcoded for now
     if (task.status === null) {
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = 0.85;
         return;
     }
 

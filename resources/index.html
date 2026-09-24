@@ -512,11 +512,12 @@
                     <span>Concurrent Limit</span>
                     <div
                       class="min-w-[24px] h-4 rounded flex items-center justify-center transition-colors"
+                      :class="{ 'opacity-40': $store.app.disableMcSlider }"
                     >
                       <canvas
                         id="mc-preview"
-                        width="24"
-                        height="24"
+                        width="32"
+                        height="32"
                         x-effect="$store.app.renderMcPreview()"
                       ></canvas>
                     </div>
