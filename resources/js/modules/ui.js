@@ -34,9 +34,10 @@ export const drawShape = (ctx, x, y, size, task, mode, scale, forceShowLabel = f
     }
 
     const showLabel = forceShowLabel || scale > LOD.scale_medium;
+    const altColor = LABEL_COLORS[task.mc] || '#ffffff'; // label/alt color
 
     if (!showLabel) {
-        drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale);
+        drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale, altColor);
         ctx.globalAlpha = 1;
 
         if (shouldDrawProgressBar(scale, status, progress)) {
@@ -45,13 +46,13 @@ export const drawShape = (ctx, x, y, size, task, mode, scale, forceShowLabel = f
         return;
     }
 
-    drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale);
+    drawTaskBackground(ctx, x, y, s / 2, s / 2, sem, scale, altColor);
     ctx.globalAlpha = 1;
 
     const label = task.getLabel();
     const fontSize = Math.min(10 * scale, s * 0.5);
     ctx.font = `bold ${fontSize}px Inter, sans-serif`;
-    ctx.fillStyle = LABEL_COLORS[task.mc] || '#ffffff';
+    ctx.fillStyle = altColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, x, y);
@@ -74,13 +75,37 @@ const setAlpha = (ctx, task) => {
     ctx.globalAlpha = Math.min(alpha, 1);
 };
 
-const drawTaskBackground = (ctx, x, y, halfWidth, halfHeight, sem, scale) => {
+const drawTaskBackground = (ctx, x, y, halfWidth, halfHeight, sem, scale, altColor) => {
+    const left = x - halfWidth;
+    const top = y - halfHeight;
+    const size = halfWidth * 2;
+
     if (sem === 1) {
+        const cut = Math.max(size * 0.2, 3 * scale);
+        const savedFill = ctx.fillStyle;
+
+        // Main square with cut top-left corner
         ctx.beginPath();
-        ctx.roundRect(x - halfWidth, y - halfHeight, halfWidth * 2, halfHeight * 2, 4 * scale);
+        ctx.moveTo(left + cut, top);
+        ctx.lineTo(left + size, top);
+        ctx.lineTo(left + size, top + size);
+        ctx.lineTo(left, top + size);
+        ctx.lineTo(left, top + cut);
+        ctx.closePath();
         ctx.fill();
+
+        // Cut corner — fill with alt color
+        ctx.beginPath();
+        ctx.moveTo(left, top + cut);
+        ctx.lineTo(left + cut, top);
+        ctx.lineTo(left + cut, top + cut);
+        ctx.closePath();
+        ctx.fillStyle = altColor;
+        ctx.fill();
+
+        ctx.fillStyle = savedFill;
     } else {
-        ctx.fillRect(x - halfWidth, y - halfHeight, halfWidth * 2, halfHeight * 2);
+        ctx.fillRect(left, top, size, size);
     }
 };
 
