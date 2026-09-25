@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"fast-atomic-flow/go/internal/protocol"
+	"fx/go/internal/protocol"
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"

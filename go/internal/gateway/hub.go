@@ -3,9 +3,9 @@ package gateway
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/logger"
-	"fast-atomic-flow/go/internal/protocol"
-	"fast-atomic-flow/go/internal/psychotype"
+	"fx/go/internal/logger"
+	"fx/go/internal/protocol"
+	"fx/go/internal/psychotype"
 	"math"
 	"net/http"
 	"sync"

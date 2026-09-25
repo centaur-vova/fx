@@ -3,8 +3,8 @@ package semaphore
 
 import (
 	"context"
-	"fast-atomic-flow/go/internal/logger"
 	"fmt"
+	"fx/go/internal/logger"
 	"time"
 )
 

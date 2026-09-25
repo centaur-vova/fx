@@ -1,4 +1,4 @@
-# FAST ATOMIC FLOW
+# FX
 
 <p align="center">
   <!-- Row 1: Technology Stack -->
@@ -23,9 +23,9 @@
   <img src="https://img.shields.io/badge/IRD-1.91%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: CI/CD Status -->
-  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
-  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Lint&job=go-lint" alt="Go Lint">
-  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Tests&job=go-tests" alt="Go Tests">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fx/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fx/ci.yaml?style=flat&label=Go%20Lint&job=go-lint" alt="Go Lint">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fx/ci.yaml?style=flat&label=Go%20Tests&job=go-tests" alt="Go Tests">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
@@ -40,9 +40,7 @@
 
 🌐 **Live:**
 
-- 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Demo
-- 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Metrics
-- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — ~~Traces~~ _(disabled on demo VPS)_
+- 🚀 [fx.trixter.xyz](https://fx.trixter.xyz) — Demo
 
 ---
 
@@ -122,7 +120,7 @@ The binary format ensures minimal overhead (9 bytes per event vs hundreds in JSO
 
 ## Hybrid Semaphore Strategy (PHP & Go)
 
-Fast.AF features a dual-driver semaphore system, allowing you to switch between ultra-fast local locking and distributed cluster-wide synchronization. The driver is defined per **Flow Theme** via YAML configuration, enabling real-time performance comparison.
+FX features a dual-driver semaphore system, allowing you to switch between ultra-fast local locking and distributed cluster-wide synchronization. The driver is defined per **Flow Theme** via YAML configuration, enabling real-time performance comparison.
 
 ### Drivers:
 
@@ -158,12 +156,12 @@ Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 a
 
 ## Distributed Tracing (Jaeger)
 
-Fast Atomic Flow includes distributed tracing powered by OpenTelemetry + Jaeger.
+FX includes distributed tracing powered by OpenTelemetry + Jaeger.
 
 - **Full pipeline visibility:** traces propagate from the HTTP request through NATS JetStream into Swoole Task Workers and back to WebSocket clients.
 - **Context propagation:** `traceparent` is injected into every task payload and status update, so the trace survives queue boundaries.
 - **Swoole-safe isolation:** each Task Worker resets its OpenTelemetry context before processing a new task, preventing cross-task trace contamination.
-- **Jaeger UI:** open [fast.af.l3373.xyz/jaeger/](https://fast.af.l3373.xyz/jaeger/) to explore traces in real time.
+- **Jaeger UI:** belive me or not, it works.
 
 | Component       | Technology                  | Purpose                                        |
 | --------------- | --------------------------- | ---------------------------------------------- |
@@ -206,12 +204,12 @@ jaeger_query:
 
 - **Observation mode** (`task_mode: observation`, default):
   Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
-  [`PrecisionProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
+  [`PrecisionProcessor.php`](https://github.com/centaur-vova/fx/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
 - **Stress test mode** (`task_mode: stress`):
   Stress test buttons are visually distinct — colored background, border, or accent depending on the theme.
   Instead of `sleep()` — real CPU work: a single `hash('sha256', $data)` call.
-  [`HighLoadProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
+  [`HighLoadProcessor.php`](https://github.com/centaur-vova/fx/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
 The mode is passed in the POST request body when creating tasks (`/api/tasks/create`).
 
@@ -228,8 +226,8 @@ The mode is passed in the POST request body when creating tasks (`/api/tasks/cre
 ### Run from pre-built images (GHCR)
 
 ```bash
-git clone https://github.com/centaur-vova/fast-atomic-flow.git
-cd fast-atomic-flow
+git clone https://github.com/centaur-vova/fx.git
+cd fx
 cp .env.example .env
 docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
@@ -240,7 +238,7 @@ After starting, open [http://localhost:9501](http://localhost:9501)
 
 ### Local development
 
-For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/centaur-vova/fast-atomic-flow/wiki/Local-Development-Workflow)
+For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/centaur-vova/fx/wiki/Local-Development-Workflow)
 
 ---
 
@@ -318,7 +316,7 @@ Tool: [`centaur-vova/ird-meter`](https://packagist.org/packages/centaur-vova/ird
 
 ## Themes
 
-Fast Atomic Flow supports visual themes. Each theme is defined as a separate YAML file and can be switched via URL parameter `?theme=<name>`.
+FX supports visual themes. Each theme is defined as a separate YAML file and can be switched via URL parameter `?theme=<name>`.
 
 **Easy switching:** Just click the **theme links in the page footer** — `fast` 🚀, `crystal` 💎, or `sin city` 🖤. No need to type URLs.
 
@@ -339,7 +337,7 @@ Built‑in themes:
 The **RAND** button in every theme fires random batches on **both** drivers simultaneously — perfect for stress testing the hybrid architecture.
 
 **Custom themes:** You can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, per‑button semaphore drivers, etc.).  
-See the [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes) for details.
+See the [Wiki](https://github.com/centaur-vova/fx/wiki/Themes) for details.
 
 ---
 
@@ -361,5 +359,5 @@ Dmitry Shmanatov (Centaur-Vova)
 ---
 
 <p align="center">
-  <i>© 2026 l3373.xyz</i>
+  <i>trixter.xyz © MMXXVI</i>
 </p>

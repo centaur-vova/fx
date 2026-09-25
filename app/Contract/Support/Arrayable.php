@@ -6,7 +6,7 @@ namespace App\Contract\Support;
 
 /**
  * Interface for objects that can be converted to a raw array.
- * Used for standardized data transmission in the Fast.AF engine.
+ * Used for standardized data transmission in the FX engine.
  */
 interface Arrayable
 {

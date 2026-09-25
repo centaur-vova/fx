@@ -2,7 +2,7 @@ package gateway
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/protocol"
+	"fx/go/internal/protocol"
 )
 
 // Router dispatches incoming WebSocket messages to registered handlers.

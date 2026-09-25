@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"fast-atomic-flow/go/internal/protocol"
+	"fx/go/internal/protocol"
 
 	"github.com/stretchr/testify/assert"
 )

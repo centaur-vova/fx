@@ -3,7 +3,7 @@ package response
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/logger"
+	"fx/go/internal/logger"
 	"net/http"
 )
 

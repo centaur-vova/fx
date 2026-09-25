@@ -3,7 +3,7 @@ package protocol
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/logger"
+	"fx/go/internal/logger"
 )
 
 // IncomingHandler defines the interface for processing incoming WebSocket messages.

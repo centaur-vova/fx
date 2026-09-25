@@ -1,4 +1,4 @@
-# FAST ATOMIC FLOW
+# FX
 
 <p align="center">
   <!-- Row 1: Technology Stack -->
@@ -23,9 +23,9 @@
   <img src="https://img.shields.io/badge/IRD-1.91%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: CI/CD Status -->
-  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
-  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Lint&job=go-lint" alt="Go Lint">
-  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fast-atomic-flow/ci.yaml?style=flat&label=Go%20Tests&job=go-tests" alt="Go Tests">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fx/ci.yaml?style=flat&label=PHP%20Quality&job=quality-gate" alt="PHP Quality">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fx/ci.yaml?style=flat&label=Go%20Lint&job=go-lint" alt="Go Lint">
+  <img src="https://img.shields.io/github/actions/workflow/status/centaur-vova/fx/ci.yaml?style=flat&label=Go%20Tests&job=go-tests" alt="Go Tests">
 </p>
 
 **Atomic task orchestrator on Swoole + NATS + Go WebSocket proxy**
@@ -40,9 +40,7 @@
 
 🌐 **Live:**
 
-- 🚀 [fast.af.l3373.xyz](https://fast.af.l3373.xyz) — Демо
-- 📊 [Grafana](https://fast.af.l3373.xyz/grafana/public-dashboards/e2b10dfa1b884f1a960503e1db51f617) — Метрики
-- 🔍 [Jaeger](https://fast.af.l3373.xyz/jaeger/) — ~~Трейсы~~ (отключено на демо-сервере)
+- 🚀 [fx.trixter.xyz](https://fx.trixter.xyz) — Демо
 
 ---
 
@@ -123,7 +121,7 @@ WebSocket-прокси (Go) общается с фронтендом через 
 
 ## Гибридная стратегия семафоров (PHP и Go)
 
-Fast.AF использует систему с двумя драйверами семафоров, позволяя переключаться между ультрабыстрыми локальными блокировками и распределенной синхронизацией в кластере. Драйвер определяется для каждой **Темы (Flow)** в YAML-конфигурации, что позволяет сравнивать производительность в реальном времени.
+FX использует систему с двумя драйверами семафоров, позволяя переключаться между ультрабыстрыми локальными блокировками и распределенной синхронизацией в кластере. Драйвер определяется для каждой **Темы (Flow)** в YAML-конфигурации, что позволяет сравнивать производительность в реальном времени.
 
 ### Доступные драйверы:
 
@@ -158,12 +156,12 @@ Fast.AF использует систему с двумя драйверами �
 
 ## Распределённый трейсинг (Jaeger)
 
-Fast Atomic Flow включает распределённый трейсинг на базе OpenTelemetry + Jaeger.
+FX включает распределённый трейсинг на базе OpenTelemetry + Jaeger.
 
 - **Полная видимость пайплайна:** трейсы проходят от HTTP-запроса через NATS JetStream в Swoole Task Workers и обратно к WebSocket-клиентам.
 - **Пропагация контекста:** `traceparent` внедряется в каждую задачу и статус-обновление, поэтому трейс не прерывается на границах очереди.
 - **Изоляция в Swoole:** каждый Task Worker сбрасывает контекст OpenTelemetry перед обработкой новой задачи, исключая склеивание трейсов.
-- **Jaeger UI:** откройте [fast.af.l3373.xyz/jaeger/](https://fast.af.l3373.xyz/jaeger/), чтобы смотреть трейсы в реальном времени.
+- **Jaeger UI:** работает.
 
 | Компонент      | Технология                  | Назначение                                           |
 | -------------- | --------------------------- | ---------------------------------------------------- |
@@ -195,7 +193,7 @@ jaeger_query:
 
 > Go Distributed медленнее в 757 раз, но гарантирует синхронизацию между узлами. Выбор зависит от задачи: скорость или консистентность.
 
-Методология бенчмарков описана в [GitHub Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Benchmarks).
+Методология бенчмарков описана в [GitHub Wiki](https://github.com/centaur-vova/fx/wiki/Benchmarks).
 
 ---
 
@@ -211,12 +209,12 @@ jaeger_query:
 
 - **Режим наблюдения** (`task_mode: observation`, по умолчанию): 
   Искусственная задержка через `Co::sleep()` — 11 шагов по 50-200 миллисекунд.
-  [`PrecisionProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
+  [`PrecisionProcessor.php`](https://github.com/centaur-vova/fx/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
 - **Стресс-тест** (`task_mode: stress`):
   Кнопки стресс-теста визуально отличаются от обычных — цветной фон, рамка или акцент, в зависимости от выбранной темы.
   Полезная нагрузка — один вызов `hash('sha256', $data)`.
-  [`HighLoadProcessor.php`](https://github.com/centaur-vova/fast-atomic-flow/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
+  [`HighLoadProcessor.php`](https://github.com/centaur-vova/fx/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
 Режим передаётся в теле POST-запроса при создании задач (`/api/tasks/create`).
 
@@ -233,8 +231,8 @@ jaeger_query:
 ### Запуск из готовых образов (GHCR)
 
 ```bash
-git clone https://github.com/centaur-vova/fast-atomic-flow.git
-cd fast-atomic-flow
+git clone https://github.com/centaur-vova/fx.git
+cd fx
 cp .env.example .env
 docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
@@ -245,7 +243,7 @@ docker compose -f docker-compose.prod.yaml up -d --scale api=3
 
 ### Локальная разработка
 
-Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go нативно, NATS в Docker) — см. [Local Development Workflow](https://github.com/centaur-vova/fast-atomic-flow/wiki/Local-Development-Workflow)
+Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go нативно, NATS в Docker) — см. [Local Development Workflow](https://github.com/centaur-vova/fx/wiki/Local-Development-Workflow)
 
 ---
 
@@ -323,7 +321,7 @@ docker compose -f docker-compose.prod.yaml up -d --scale api=3
 
 ## Темы
 
-Fast Atomic Flow поддерживает визуальные темы. Каждая тема описывается в отдельном YAML-файле и переключается через параметр URL `?theme=<name>`.
+FX поддерживает визуальные темы. Каждая тема описывается в отдельном YAML-файле и переключается через параметр URL `?theme=<name>`.
 
 **Быстрое переключение:** просто кликните по ссылке с названием темы в футере — `fast` 🚀, `crystal` 💎 или `sin city` 🖤. Вбивать URL вручную не нужно.
 
@@ -344,7 +342,7 @@ _Тема Sin City: нуарная эстетика, активна кнопка
 Кнопка **RAND** в любой теме запускает случайные пачки на **обоих** драйверах одновременно — идеально для стресс-теста гибридной архитектуры.
 
 **Свои темы:** вы можете создать собственную тему, добавив папку в `themes/` с файлом `theme.yaml` (цвета, координаты зон, наборы кнопок, драйверы семафоров для каждой кнопки и т.д.).  
-Подробности в [Wiki](https://github.com/centaur-vova/fast-atomic-flow/wiki/Themes).
+Подробности в [Wiki](https://github.com/centaur-vova/fx/wiki/Themes).
 
 ---
 
@@ -355,5 +353,5 @@ Dmitry Shmanatov (Centaur-Vova)
 ---
 
 <p align="center">
-  <i>© 2026 l3373.xyz</i>
+  <i>trixter.xyz © MMXXVI</i>
 </p>

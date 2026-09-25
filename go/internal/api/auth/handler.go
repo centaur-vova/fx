@@ -2,8 +2,8 @@
 package auth
 
 import (
-	"fast-atomic-flow/go/internal/api/response"
-	"fast-atomic-flow/go/internal/clock"
+	"fx/go/internal/api/response"
+	"fx/go/internal/clock"
 	"net/http"
 	"time"
 

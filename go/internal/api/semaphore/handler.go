@@ -3,9 +3,9 @@ package semaphore
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/api/response"
-	"fast-atomic-flow/go/internal/logger"
 	"fmt"
+	"fx/go/internal/api/response"
+	"fx/go/internal/logger"
 	"net/http"
 	"time"
 )

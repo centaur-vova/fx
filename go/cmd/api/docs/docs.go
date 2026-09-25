@@ -338,7 +338,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Fast Atomic Flow API",
+	Title:            "FX API",
 	Description:      "Task status receiver and semaphore API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

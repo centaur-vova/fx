@@ -16,7 +16,7 @@ services:
       - atomic-network
     restart: always
   app:
-    image: ghcr.io/centaur-vova/fast-atomic-flow:latest
+    image: ghcr.io/centaur-vova/fx:latest
     restart: always
     env_file:
       - .env
@@ -65,7 +65,7 @@ services:
         max-file: "3"
 
   ws:
-    image: ghcr.io/centaur-vova/fast-atomic-flow-ws:latest
+    image: ghcr.io/centaur-vova/fx-ws:latest
     restart: always
     command: /usr/local/bin/go-proxy
     environment:
@@ -93,7 +93,7 @@ services:
       - deez-nutz
 
   balancer:
-    image: ghcr.io/centaur-vova/fast-atomic-flow-balancer:latest
+    image: ghcr.io/centaur-vova/fx-balancer:latest
     restart: always
     command: /usr/local/bin/balancer
     environment:
@@ -111,7 +111,7 @@ services:
       - redis
 
   api:
-    image: ghcr.io/centaur-vova/fast-atomic-flow-api:latest
+    image: ghcr.io/centaur-vova/fx-api:latest
     restart: always
     command: /usr/local/bin/api
     environment:

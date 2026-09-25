@@ -2,7 +2,7 @@
 package cb
 
 import (
-	"fast-atomic-flow/go/internal/clock"
+	"fx/go/internal/clock"
 	"sync/atomic"
 	"time"
 )

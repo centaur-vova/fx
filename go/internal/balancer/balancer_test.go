@@ -1,7 +1,7 @@
 package balancer
 
 import (
-	"fast-atomic-flow/go/internal/clock"
+	"fx/go/internal/clock"
 	"net/http"
 	"net/http/httptest"
 	"net/url"

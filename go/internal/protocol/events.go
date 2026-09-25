@@ -1,7 +1,7 @@
 // Package protocol defines binary wire formats and constants for WebSocket communication.
 package protocol
 
-// MagicByte identifies binary frames from Fast AF protocol.
+// MagicByte identifies binary frames from FX protocol.
 const MagicByte byte = 0x02
 
 // Task status codes for binary packing (3 bits used).

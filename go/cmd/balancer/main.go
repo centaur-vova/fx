@@ -1,14 +1,14 @@
-// Package main implements the Fast AF load balancer service.
+// Package main implements the FX load balancer service.
 // It provides dynamic upstream registration, health checks, circuit breaker,
 // round-robin load balancing, and graceful shutdown.
 package main
 
 import (
 	"context"
-	"fast-atomic-flow/go/internal/balancer"
-	"fast-atomic-flow/go/internal/logger"
-	"fast-atomic-flow/go/internal/middleware"
-	"fast-atomic-flow/go/internal/protocol"
+	"fx/go/internal/balancer"
+	"fx/go/internal/logger"
+	"fx/go/internal/middleware"
+	"fx/go/internal/protocol"
 	"net/http"
 	"os"
 	"os/signal"

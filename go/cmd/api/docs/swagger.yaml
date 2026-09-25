@@ -69,7 +69,7 @@ definitions:
 info:
   contact: {}
   description: Task status receiver and semaphore API
-  title: Fast Atomic Flow API
+  title: FX API
   version: "1.0"
 paths:
   /auth/token:

@@ -1,4 +1,4 @@
-module fast-atomic-flow/go
+module fx/go
 
 go 1.26.0
 

@@ -3,7 +3,7 @@ package semaphore
 import (
 	"context"
 	"errors"
-	"fast-atomic-flow/go/internal/clock"
+	"fx/go/internal/clock"
 	"testing"
 	"time"
 

@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"fast-atomic-flow/go/internal/clock"
-	"fast-atomic-flow/go/internal/logger"
 	"fmt"
+	"fx/go/internal/clock"
+	"fx/go/internal/logger"
 	"net/http"
 	"strings"
 

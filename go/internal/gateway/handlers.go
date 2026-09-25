@@ -3,8 +3,8 @@ package gateway
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/logger"
-	"fast-atomic-flow/go/internal/protocol"
+	"fx/go/internal/logger"
+	"fx/go/internal/protocol"
 )
 
 // MessageHandler is a function that processes a raw JSON message.

@@ -125,7 +125,7 @@ class Kernel
             // How long to keep task receipt after completion before evicting from cache.
             taskMetaTtlSec:        $loader->getInt('TASK_META_TTL_SEC', 10),
             // Otel
-            otelServiceName:       $loader->getString('OTEL_SERVICE_NAME', 'fast-atomic-flow'),
+            otelServiceName:       $loader->getString('OTEL_SERVICE_NAME', 'fx'),
             // Misc
             rateLimiters:          $rateLimiters,
         );
@@ -383,10 +383,10 @@ class Kernel
                 ->logger
                 ->info(
                     "\n" .
-                    " ┌──────────────────────────────────────────┐\n" .
-                    " │  FAST.AF :: ATOMIC PIPELINE ENGINE       │\n" .
-                    " │  NODE ID : root@l3373.xyz                │\n" .
-                    " └──────────────────────────────────────────┘\n" .
+                    " ┌─────────────────────────────────────────┐\n" .
+                    " │  FX      : ATOMIC PIPELINE ENGINE       │\n" .
+                    " │  NODE ID : fx@trixter.xyz               │\n" .
+                    " └─────────────────────────────────────────┘\n" .
                     " » STATUS : READY TO FLOW\n" .
                     " » LISTEN : http://{$host}:{$port}\n"
                 );

@@ -1,4 +1,4 @@
-// Command bench is a native Go WebSocket load testing tool for Fast Atomic Flow.
+// Command bench is a native Go WebSocket load testing tool for FX.
 // It spawns N concurrent connections to the WebSocket proxy, sends periodic pings,
 // and measures message throughput under high concurrency to validate system stability.
 package main

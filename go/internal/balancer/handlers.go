@@ -3,9 +3,9 @@ package balancer
 
 import (
 	"encoding/json"
-	"fast-atomic-flow/go/internal/api/response"
-	"fast-atomic-flow/go/internal/cb"
-	"fast-atomic-flow/go/internal/logger"
+	"fx/go/internal/api/response"
+	"fx/go/internal/cb"
+	"fx/go/internal/logger"
 	"io"
 	"net/http"
 	"sync/atomic"
@@ -206,7 +206,7 @@ func ProxyHandler(u *Upstream) http.HandlerFunc {
 
 		peer := u.NextInstance()
 		if peer == nil {
-			http.Error(w, "API Instances gone fishing (KBL v4.0 Rule)", http.StatusServiceUnavailable)
+			http.Error(w, "API Instances gone fishing", http.StatusServiceUnavailable)
 			totalErrors.Add(1)
 			return
 		}

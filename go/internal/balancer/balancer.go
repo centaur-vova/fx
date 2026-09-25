@@ -4,9 +4,9 @@ package balancer
 import (
 	"context"
 	"encoding/hex"
-	"fast-atomic-flow/go/internal/cb"
-	"fast-atomic-flow/go/internal/clock"
-	"fast-atomic-flow/go/internal/logger"
+	"fx/go/internal/cb"
+	"fx/go/internal/clock"
+	"fx/go/internal/logger"
 	"hash/fnv"
 	"net"
 	"net/http"

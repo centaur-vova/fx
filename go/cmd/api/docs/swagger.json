@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "Task status receiver and semaphore API",
-        "title": "Fast Atomic Flow API",
+        "title": "FX Flow API",
         "contact": {},
         "version": "1.0"
     },

@@ -1,18 +1,18 @@
-// Package main implements the Fast AF API service.
+// Package main implements the FX API service.
 // It provides semaphore management, task status forwarding, JWT authentication,
 // and integrates with Redis, NATS, and the load balancer.
 package main
 
 import (
 	"context"
-	"fast-atomic-flow/go/internal/api/auth"
-	"fast-atomic-flow/go/internal/api/semaphore"
-	"fast-atomic-flow/go/internal/api/task"
-	"fast-atomic-flow/go/internal/clock"
-	"fast-atomic-flow/go/internal/logger"
-	"fast-atomic-flow/go/internal/middleware"
-	"fast-atomic-flow/go/internal/protocol"
 	"fmt"
+	"fx/go/internal/api/auth"
+	"fx/go/internal/api/semaphore"
+	"fx/go/internal/api/task"
+	"fx/go/internal/clock"
+	"fx/go/internal/logger"
+	"fx/go/internal/middleware"
+	"fx/go/internal/protocol"
 	"log"
 	"net/http"
 	"os"
@@ -26,7 +26,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	_ "fast-atomic-flow/go/cmd/api/docs"
+	_ "fx/go/cmd/api/docs"
 )
 
 // ========== CONSTANTS ==========
@@ -113,7 +113,7 @@ func registerUpstream(ctx context.Context) {
 }
 
 // ========== MAIN ==========
-// @title           Fast Atomic Flow API
+// @title           FX API
 // @version         1.0
 // @description     Task status receiver and semaphore API
 // @BasePath        /

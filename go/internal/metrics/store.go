@@ -16,7 +16,7 @@ type Store struct {
 	tasksRetried   *prometheus.CounterVec // total retried tasks partitioned by max_concurrent
 }
 
-// NewStore creates and registers Prometheus metrics for Fast AF.
+// NewStore creates and registers Prometheus metrics for FX.
 func NewStore() *Store {
 	s := &Store{
 		tasksCreated: promauto.NewCounterVec(

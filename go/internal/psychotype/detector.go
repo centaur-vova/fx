@@ -5,7 +5,7 @@ package psychotype
 
 import (
 	"bufio"
-	"fast-atomic-flow/go/internal/logger"
+	"fx/go/internal/logger"
 	"hash/fnv"
 	"net"
 	"os"

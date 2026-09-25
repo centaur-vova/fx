@@ -24,7 +24,6 @@ Alpine.start();
 
 // Brand logo
 console.log(`%c${BRAND_LOGO}`, "color: #10b981; font-weight: bold;");
-console.log("%c» FAST.AF — FAST ATOMIC FLOW", "color: #10b981; font-weight: bold;");
 console.log("%c» KERNEL: SWOOLE_6.0_STABLE // MODE: SHARED_ATOMIC", "color: #6b7280;");
 
 const store = Alpine.store('app');

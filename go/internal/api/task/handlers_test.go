@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"fast-atomic-flow/go/internal/protocol"
+	"fx/go/internal/protocol"
 )
 
 // mockPublisher implements Publisher and captures published messages.

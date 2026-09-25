@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
-	"fast-atomic-flow/go/internal/clock"
-	"fast-atomic-flow/go/internal/embed"
+	"fx/go/internal/clock"
+	"fx/go/internal/embed"
 	"net"
 	"net/http"
 	"strings"

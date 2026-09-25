@@ -2,7 +2,7 @@
 package middleware
 
 import (
-	"fast-atomic-flow/go/internal/logger"
+	"fx/go/internal/logger"
 	"net/http"
 )
 

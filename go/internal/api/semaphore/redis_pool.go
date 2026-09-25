@@ -4,10 +4,10 @@ package semaphore
 import (
 	"context"
 	"errors"
-	"fast-atomic-flow/go/internal/clock"
-	"fast-atomic-flow/go/internal/embed"
-	"fast-atomic-flow/go/internal/logger"
 	"fmt"
+	"fx/go/internal/clock"
+	"fx/go/internal/embed"
+	"fx/go/internal/logger"
 	"time"
 
 	"github.com/redis/go-redis/v9"

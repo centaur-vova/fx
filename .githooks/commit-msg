@@ -2,7 +2,7 @@
 <?php
 
 /**
- * Git commit-msg hook to enforce Conventional Commits and KBL signature.
+ * Git commit-msg hook to enforce Conventional Commits.
  * Usage: Place in .githooks/commit-msg and ensure chmod +x is set.
  */
 
@@ -54,7 +54,7 @@ file_put_contents($commitMsgFile, $cleanMessage . "\n");
 $cleanUserMessage = rtrim(implode("\n", $userLines));
 $userLines = explode("\n", $cleanUserMessage);
 
-echo "[Commit-msg] Checking message for Emojinal Commits standard...\n";
+echo "[Commit-msg] Checking message for Conventional Commits standard...\n";
 
 $types = "feat|fix|docs|style|refactor|perf|test|chore|ci";
 $pattern = '/^(' . $types . ')(\(.+\))?!?: .+/';
@@ -63,7 +63,7 @@ $pattern = '/^(' . $types . ')(\(.+\))?!?: .+/';
 if (!preg_match($pattern, $userLines[0])) {
     echo "\n{$boldRed}[Commit-msg Error] Your message does not match the sacred format!{$reset}\n";
     echo "Current first line: {$yellow}\"{$userLines[0]}\"{$reset}\n\n";
-    echo "Standard format: {$cyan}<emoji(s)_no_spaces> <type>(optional scope): <description>{$reset}\n";
+    echo "Standard format: {$cyan}<type>(optional scope): <description>{$reset}\n";
     echo "Examples:\n";
     echo "  feat: add queue limit logic\n";
     echo "  ui(css): update yellow alert color\n";
