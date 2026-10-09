@@ -38,12 +38,6 @@
 
 ---
 
-🌐 **Live:**
-
-- 🚀 [fx.trixter.xyz](https://fx.trixter.xyz) — Demo
-
----
-
 ## What is it
 
 A demo project that visualizes semaphores and queues in a real‑world high‑load architecture.
