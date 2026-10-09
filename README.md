@@ -10,16 +10,16 @@
   <img src="https://img.shields.io/badge/Jaeger-2.17-60D0E4?style=flat&logo=jaeger&logoColor=white" alt="Jaeger 2.17">
   <br>
   <!-- Row 2: Quality & Features -->
-  <img src="https://img.shields.io/badge/phpstan-level%2010-gold?style=flat&logo=php" alt="PHPStan Level 10">
-  <img src="https://img.shields.io/badge/distributed-semaphores-red?style=flat" alt="Distributed Semaphores">
-  <img src="https://img.shields.io/badge/load_balancer-round--robin-9cf?style=flat" alt="Load Balancer">
-  <img src="https://img.shields.io/badge/message%20bus-deez--nutz-8A2BE2?style=flat" alt="Message Bus">
-  <img src="https://img.shields.io/badge/binary--msg-9_bytes-blue?style=flat" alt="Binary Message: 9 bytes">
+  <img src="https://img.shields.io/badge/phpstan-уровень%2010-gold?style=flat&logo=php" alt="PHPStan уровень 10">
+  <img src="https://img.shields.io/badge/распределённые-семафоры-red?style=flat" alt="Распределённые семафоры">
+  <img src="https://img.shields.io/badge/балансировщик-round--robin-9cf?style=flat" alt="Балансировщик">
+  <img src="https://img.shields.io/badge/шина%20данных-deez--nutz-8A2BE2?style=flat" alt="Шина данных">
+  <img src="https://img.shields.io/badge/бинарный--протокол-9_байт-blue?style=flat" alt="Бинарный протокол: 9 байт">
   <br>
   <!-- Row 3: Health & Uptime -->
   <img src="https://img.shields.io/badge/phpstan--ignore-0-brightgreen?style=flat&logo=php" alt="PHPStan Ignore: 0">
-  <img src="https://img.shields.io/badge/memory%20leaks-0-brightgreen?style=flat" alt="Memory Leaks: 0">
-  <img src="https://img.shields.io/badge/uptime-99.9%25-success?style=flat" alt="Uptime">
+  <img src="https://img.shields.io/badge/утечек%20памяти-0-brightgreen?style=flat" alt="Утечек памяти: 0">
+  <img src="https://img.shields.io/badge/аптайм-99.9%25-success?style=flat" alt="Аптайм">
   <img src="https://img.shields.io/badge/IRD-1.91%25-brightgreen?style=flat" alt="If/Row Density">
   <br>
   <!-- Row 4: CI/CD Status -->
@@ -32,140 +32,146 @@
 
 [🇬🇧 English](README.md) | [🇷🇺 Русский](README.ru.md)
 
-<img width="1770" height="1182" alt="Load test" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
+<img width="1770" height="1182" alt="Нагрузочный тест" src="https://github.com/user-attachments/assets/003c388d-e99a-474d-b3d6-c640025ad726" />
 
-> _Load test: 10,000+ concurrent WebSocket connections. The system maintains absolute stability under a peak load of 171,000 msg/s._
-
----
-
-## What is it
-
-A demo project that visualizes semaphores and queues in a real‑world high‑load architecture.
-
-**You will see**:
-
-- How tasks with different concurrency limits compete for resources
-- How semaphores regulate parallel execution
-- How a NATS JetStream queue works
-- All of this — in real time, via WebSocket
+> _Нагрузочный тест: 10 000+ одновременных WebSocket-соединений. Система сохраняет абсолютную стабильность под пиковой нагрузкой в 171 000 msg/s._
 
 ---
 
-## Design Philosophy
+🌐 **Live:**
 
-The project is built so each component minds its own business and doesn't poke into others' stalls.
-
-### Low Coupling
-
-Components communicate via DTOs and NATS messages. Want to change the transport or storage layer? You won't need to rewrite business logic. The component isn't tied to one cart.
-
-### High Cohesion
-
-Each service does one thing, but with surgical precision. The Worker processes tasks. The Proxy holds connections. The Orchestrator conducts. No mess, no confusion.
+- Го findhuman.online
 
 ---
 
-## Architecture
+## Что это
 
-| Component             | Technology         | Purpose                                          |
-| --------------------- | ------------------ | ------------------------------------------------ |
-| **API & Workers**     | PHP 8.4 + Swoole   | Task intake, semaphores, processing              |
-| **API (Distributed)** | Go 1.26 + Redis    | Distributed semaphores, horizontal scaling       |
-| **Balancer**          | Go 1.26 + net/http | Load balancing, health checks, auto-registration |
-| **Message Bus**       | NATS (Deez Nutz)   | Queues, broadcasts, persistence                  |
-| **WebSocket**         | Go 1.26 + Gorilla  | Real‑time updates, metrics                       |
-| **Queue Storage**     | NATS JetStream     | Durable queues with replication                  |
-| **Semaphore Store**   | Redis 8.0 + Lua    | Distributed semaphores, TTL, atomicity           |
-| **Tracing** | OpenTelemetry + Jaeger 2.17 | Distributed trace collection and visualization |
+Демонстрационный проект, показывающий работу семафоров и очередей в многопроцессной среде на реальной архитектуре.
+
+**Вы увидите**:
+
+- Как задачи с разными лимитами параллельности конкурируют за ресурсы
+- Как семафоры регулируют одновременное выполнение
+- Как работает очередь на NATS JetStream
+- Всё это — в реальном времени через WebSocket
 
 ---
 
-## Balancer (Go Balancer)
+## Философия проектирования
 
-A custom HTTP load balancer written in Go with automatic API instance registration.
+Проект построен так, чтобы каждый компонент занимался своим делом и не лез в чужие стойла.
 
-- **Dynamic upstream:** API instances self-register with the balancer via `/register` on startup. No static list, no `nginx -s reload`
-- **Health checks:** The balancer probes every instance every 5 seconds. Dead instances are excluded from rotation, revived ones are re-added automatically
-- **Lock-free balancing:** ~~Atomic pointer swap on immutable lists. Readers (HTTP requests) never block writers (instance registration)~~ _(overengineering / cancelled — simple mutex is enough)_
-- **Round-robin:** Requests are evenly distributed across all alive instances
-- **Graceful degradation:** If all instances are down — returns 503
+### Слабая связанность (Low Coupling)
 
-| Component    | Technology         | Purpose                                          |
-| ------------ | ------------------ | ------------------------------------------------ |
-| **Balancer** | Go 1.26 + net/http | Load balancing, health checks, auto-registration |
+Компоненты общаются через DTO и сообщения в NATS. Захотите сменить транспорт или хранилище — не придётся переписывать бизнес-логику.
+
+### Высокая связность (High Cohesion)
+
+Каждый сервис делает что-то одно, но делает это с хирургической точностью. Воркер — обрабатывает задачи. Прокси — держит соединения. Оркестратор — дирижирует. Никакой каши.
 
 ---
 
-## WebSocket Binary Protocol
+## Архитектура
 
-The WebSocket proxy (Go) communicates with the frontend via a **binary protocol** — compact, fast, no JSON overhead.
-
-- Each message is packed into **9 bytes**:
-  - `magic byte` — message type (1 byte)
-  - `status` — task status (1 byte, 8 predefined states)
-  - `id + sem` — task identifier (31 bits) and semaphore driver flag (1 bit, highest) packed into a single uint32 (4 bytes)
-  - `max_concurrent` — concurrency limit (1 byte, 0–255)
-  - `progress + task_mode` — completion percentage (7 bits, 0–100) + task mode (1 bit, highest bit: 0 = observation, 1 = stress) packed into a single byte
-  - `worker_id` — worker that processed the task (1 byte, 0–255)
-
-The binary format ensures minimal overhead (9 bytes per event vs hundreds in JSON) and strict message ordering via FIFO channels.
-
----
-
-## Hybrid Semaphore Strategy (PHP & Go)
-
-FX features a dual-driver semaphore system, allowing you to switch between ultra-fast local locking and distributed cluster-wide synchronization. The driver is defined per **Flow Theme** via YAML configuration, enabling real-time performance comparison.
-
-### Drivers:
-
-- **[PHP] PHP Atomic (Shared Memory):** High-speed local semaphore using Swoole\Atomic. Best for single-node performance with near-zero latency
-- **[API] Go Distributed API:** A robust network-based semaphore powered by a dedicated Go microservice. It enables cluster-wide concurrency control, ensuring limits are respected across multiple physical servers
-
-### Architectural Features:
-
-- **Auto-Release (TTL):** Every distributed permit has a built-in TTL to prevent "zombie" locks if a worker crashes
-- **Zero-Overhead Protocol:** Internal communication uses a lean binary-ready mapping to distinguish between drivers in monitoring and visualization
-- **Visual Distinction:** The UI differentiates drivers in real-time (rounded squares for Go API, sharp squares for PHP Atomic)
-- **RAND (Random Spam Mode):** The "RAND" button triggers chaotic spam mode, firing hundreds of batches with randomized parameters: `max_concurrent`, `task_mode`, and semaphore driver change per batch. Perfect for stress testing and visual fireworks on the worker heatmap
+| Компонент             | Технология         | Что делает                                   |
+| --------------------- | ------------------ | -------------------------------------------- |
+| **API & Workers**     | PHP 8.4 + Swoole   | Приём задач, семафоры, обработка             |
+| **API (Distributed)** | Go 1.26 + Redis    | Распределённые семафоры, масштабирование     |
+| **Balancer**          | Go 1.26 + net/http | Балансировка, health checks, авторегистрация |
+| **Message Bus**       | NATS (Deez Nutz)   | Очереди, бродкасты, персистентность          |
+| **WebSocket**         | Go 1.26 + Gorilla  | Реалтайм-обновления, метрики                 |
+| **Queue Storage**     | NATS JetStream     | Надёжные очереди с репликацией               |
+| **Semaphore Store**   | Redis 8.0 + Lua    | Распределённые семафоры, TTL, атомарность    |
+| **Трейсинг** | OpenTelemetry + Jaeger 2.17 | Распределённый сбор и визуализация трейсов |
 
 ---
 
-## Distributed Semaphores (Redis + Lua)
+## Балансировщик (Go Balancer)
 
-Since May 2026, the Go API uses **distributed semaphores** backed by Redis 8.0 and Lua scripts.
+Собственный HTTP-балансировщик на Go с авторегистрацией API-инстансов.
 
-- **Atomic acquisition:** Lua scripts execute atomically inside Redis, guaranteeing consistency even with 100+ API instances
-- **Auto-cleanup (TTL):** Each semaphore slot has an individual TTL via `HEXPIRE`. A crashed worker won't hold a slot forever — Redis frees it automatically
-- **Distributed release:** A semaphore can be released from **any** API instance, regardless of where it was acquired. `SlotUID` (a compact string like `"5:3"` — semaphore 5, slot 3) carries all the information needed
-- **Maximum 255 slots:** 1 byte for `max_concurrent`. Enough for any real-world scenario
-- **Event‑driven slot acquisition:** When no slots are available, the API instance subscribes to Redis Pub/Sub and waits for a slot‑release event. This eliminates busy‑waiting and reduces Redis load
+- **Динамический upstream:** API-инстансы сами регистрируются в балансировщике через `/register` при старте. Никакого статического списка, никакого `nginx -s reload`
+- **Health checks:** Балансировщик раз в 5 секунд проверяет здоровье каждого инстанса. Упавший инстанс исключается из ротации, оживший — возвращается
+- **Lock-free балансировка:** ~~Atomic pointer swap на иммутабельных списках. Читатели (HTTP-запросы) не блокируют писателей (регистрация новых инстансов)~~ _(overengineering / отменено — хватило простого мьютекса)_
 
+- **Round-robin:** Запросы распределяются равномерно между всеми живыми инстансами
+- **Graceful degradation:** Если все инстансы упали — возвращается 503 с легендарным сообщением `API Instances gone fishing`
 
-| Component   | Technology | Purpose                             |
-| ----------- | ---------- | ----------------------------------- |
-| **Redis**   | Redis 8.0  | Semaphore store, atomic Lua scripts |
-| **SlotUID** | Go string  | Compact identifier (`"mc:slotIdx"`) |
+| Компонент    | Технология         | Что делает                                   |
+| ------------ | ------------------ | -------------------------------------------- |
+| **Balancer** | Go 1.26 + net/http | Балансировка, health checks, авторегистрация |
 
 ---
 
-## Distributed Tracing (Jaeger)
+## Бинарный протокол WebSocket
 
-FX includes distributed tracing powered by OpenTelemetry + Jaeger.
+WebSocket-прокси (Go) общается с фронтендом через **бинарный протокол** — компактный, быстрый, без JSON-перегрузок.
 
-- **Full pipeline visibility:** traces propagate from the HTTP request through NATS JetStream into Swoole Task Workers and back to WebSocket clients.
-- **Context propagation:** `traceparent` is injected into every task payload and status update, so the trace survives queue boundaries.
-- **Swoole-safe isolation:** each Task Worker resets its OpenTelemetry context before processing a new task, preventing cross-task trace contamination.
-- **Jaeger UI:** belive me or not, it works.
+- Каждое сообщение упаковано в **9 байт**:
+  - `magic byte` — тип сообщения (1 байт)
+  - `status` — статус задачи (1 байт, 8 предопределённых состояний)
+  - `id + sem` — идентификатор задачи (31 бит) и флаг типа семафора (1 бит, старший) упакованы в одно 32-битное целое (4 байта)
+  - `max_concurrent` — лимит конкурентности (1 байт, 0–255)
+  - `progress + task_mode` — процент выполнения (7 бит, 0–100) + режим задачи (1 бит, старший: 0 = observation, 1 = stress) упакованы в один байт
+  - `worker_id` — воркер, обработавший задачу (1 байт, 0–255)
 
-| Component       | Technology                  | Purpose                                        |
-| --------------- | --------------------------- | ---------------------------------------------- |
-| **Tracing**     | OpenTelemetry + Jaeger 2.17 | Distributed trace collection and visualization |
-| **Propagation** | W3C Trace Context           | `traceparent` header across HTTP, NATS, Swoole |
-| **SDK**         | Custom TraceContext service | Span lifecycle, context isolation, force-flush |
+Бинарный формат обеспечивает минимальный оверхед (9 байт на событие вместо сотен в JSON) и строгий порядок сообщений через FIFO-каналы.
 
-### Jaeger UI base path
+---
 
-If you proxy Jaeger behind nginx at a custom location (e.g., `/jaeger/`), set the base path in `jaeger.yaml`:
+## Гибридная стратегия семафоров (PHP и Go)
+
+FX использует систему с двумя драйверами семафоров, позволяя переключаться между ультрабыстрыми локальными блокировками и распределенной синхронизацией в кластере. Драйвер определяется для каждой **Темы (Flow)** в YAML-конфигурации, что позволяет сравнивать производительность в реальном времени.
+
+### Доступные драйверы:
+
+- **[PHP] PHP Atomic (Shared Memory):** Высокоскоростной локальный семафор на базе Swoole\Atomic. Идеален для максимальной производительности на одном узле с околонулевой задержкой.
+- **[API] Go Distributed API:** Надежный сетевой семафор, работающий через отдельный микросервис на Go. Позволяет контролировать конкурентность в рамках всего кластера, соблюдая лимиты между несколькими физическими серверами.
+
+### Особенности архитектуры:
+
+- **Auto-Release (TTL):** Каждый распределенный «пермит» имеет встроенный TTL, что предотвращает появление «зомби-локов» при падении воркера.
+- **Zero-Overhead Protocol:** Внутренний протокол оптимизирован для передачи минимального объема данных, при этом разделяя типы драйверов для мониторинга и визуализации.
+- **Визуальное разделение:** UI в реальном времени подсвечивает тип используемого драйвера (скругленные квадраты для Go API, обычные для PHP Atomic).
+- **RAND (Random Spam Mode):** Кнопка "RAND" запускает хаотичный спам-режим, отправляя сотни батчей со случайными параметрами: `max_concurrent`, `task_mode` и тип семафора меняются для каждого батча. Идеально для стресс-тестирования и визуального шоу на хитмапе воркеров.
+
+---
+
+## Распределённые семафоры (Redis + Lua)
+
+С мая 2026 года Go API использует **распределённые семафоры** на базе Redis 8.0 и Lua-скриптов.
+
+- **Атомарный захват:** Lua-скрипты выполняются атомарно в Redis, гарантируя консистентность даже при 100+ API-инстансах
+- **Авто-очистка (TTL):** Каждый слот семафора имеет персональный TTL через `HEXPIRE`. Упавший воркер не заблокирует слот навсегда — Redis сам его освободит
+- **Распределённый release:** Семафор можно освободить с **любого** API-инстанса, не зная, где он был захвачен. `SlotUID` (строка вида `"5:3"` — семафор на 5, слот 3) содержит всю необходимую информацию
+- **Максимум 255 слотов:** 1 байт на `max_concurrent`. Этого достаточно для любого реального сценария
+- **Событийный захват слота:** При отсутствии свободных слотов API-инстанс подписывается на Redis Pub/Sub и ожидает события освобождения слота. Это исключает активное ожидание (busy‑waiting) и снижает нагрузку на Redis
+
+| Компонент   | Технология | Что делает                                 |
+| ----------- | ---------- | ------------------------------------------ |
+| **Redis**   | Redis 8.0  | Хранилище семафоров, атомарные Lua-скрипты |
+| **SlotUID** | Go string  | Компактный идентификатор (`"mc:slotIdx"`)  |
+
+---
+
+## Распределённый трейсинг (Jaeger)
+
+FX включает распределённый трейсинг на базе OpenTelemetry + Jaeger.
+
+- **Полная видимость пайплайна:** трейсы проходят от HTTP-запроса через NATS JetStream в Swoole Task Workers и обратно к WebSocket-клиентам.
+- **Пропагация контекста:** `traceparent` внедряется в каждую задачу и статус-обновление, поэтому трейс не прерывается на границах очереди.
+- **Изоляция в Swoole:** каждый Task Worker сбрасывает контекст OpenTelemetry перед обработкой новой задачи, исключая склеивание трейсов.
+- **Jaeger UI:** работает.
+
+| Компонент      | Технология                  | Назначение                                           |
+| -------------- | --------------------------- | ---------------------------------------------------- |
+| **Трейсинг**   | OpenTelemetry + Jaeger 2.17 | Распределённый сбор и визуализация трейсов           |
+| **Пропагация** | W3C Trace Context           | Заголовок `traceparent` через HTTP, NATS, Swoole     |
+| **SDK**        | Собственный TraceContext    | Управление спанами, изоляция контекста, сброс буфера |
+
+### Настройка Jaeger UI за nginx
+
+Если вы проксируете Jaeger через nginx (например, на `/jaeger/`), укажите базовый путь в `jaeger.yaml`:
 
 ```yaml
 jaeger_query:
@@ -174,50 +180,55 @@ jaeger_query:
 
 ---
 
-## Benchmarks
+## Бенчмарки
 
-| Metric      | PHP Atomic              | Go Distributed           |
-| ----------- | ----------------------- | ------------------------ |
-| Avg latency | 0.5 µs                  | 380 µs                   |
-| Throughput  | ~2M ops/sec             | ~2.6K ops/sec            |
-| Use case    | Single-node local locks | Cluster-wide consistency |
+Чтобы оценить разницу между локальной и распределённой синхронизацией, я прогнал оба драйвера семафоров в одинаковых условиях.
 
-> Go Distributed is slower but guarantees consistency across nodes.
+| Метрика                     | PHP Atomic (Shared Memory) | Go Distributed (Redis/Lua) |
+| --------------------------- | -------------------------- | -------------------------- |
+| Общее время (1000 операций) | 0.51 мс                    | 382.96 мс                  |
+| Среднее время на операцию   | 0.51 мкс                   | 382.96 мкс                 |
+| Соотношение скорости        | 1x (база)                  | **~757x медленнее**        |
+| Сценарий                    | Один узел, ультра-быстро   | Согласованность в кластере |
+
+> Go Distributed медленнее в 757 раз, но гарантирует синхронизацию между узлами. Выбор зависит от задачи: скорость или консистентность.
+
+Методология бенчмарков описана в [GitHub Wiki](https://github.com/centaur-vova/fx/wiki/Benchmarks).
 
 ---
 
-## How it works
+## Как это работает
 
-1. You create tasks through the interface
-2. `app` (PHP + Swoole) publishes them to NATS
-3. NATS stores tasks in JetStream
-4. Workers pull tasks, check semaphores, execute
-5. Statuses go via NATS to the Go proxy, and from there — to the frontend via WebSocket
+1. Вы создаёте задачи через интерфейс
+2. `app` (PHP + Swoole) публикует их в NATS
+3. NATS хранит задачи в JetStream
+4. Воркеры забирают задачи, проверяют семафоры, выполняют
+5. Статусы летят через NATS в Go-прокси, а оттуда — на фронт через WebSocket
 
-## Two operation modes
+## Два режима работы
 
-- **Observation mode** (`task_mode: observation`, default):
-  Artificial delay via `Co::sleep()` — 11 steps of 50-200 ms each.
+- **Режим наблюдения** (`task_mode: observation`, по умолчанию): 
+  Искусственная задержка через `Co::sleep()` — 11 шагов по 50-200 миллисекунд.
   [`PrecisionProcessor.php`](https://github.com/centaur-vova/fx/blob/main/app/Service/Task/Processor/PrecisionProcessor.php)
 
-- **Stress test mode** (`task_mode: stress`):
-  Stress test buttons are visually distinct — colored background, border, or accent depending on the theme.
-  Instead of `sleep()` — real CPU work: a single `hash('sha256', $data)` call.
+- **Стресс-тест** (`task_mode: stress`):
+  Кнопки стресс-теста визуально отличаются от обычных — цветной фон, рамка или акцент, в зависимости от выбранной темы.
+  Полезная нагрузка — один вызов `hash('sha256', $data)`.
   [`HighLoadProcessor.php`](https://github.com/centaur-vova/fx/blob/main/app/Service/Task/Processor/HighLoadProcessor.php)
 
-The mode is passed in the POST request body when creating tasks (`/api/tasks/create`).
+Режим передаётся в теле POST-запроса при создании задач (`/api/tasks/create`).
 
-**Key feature**: tasks with different `max_concurrent` values use independent semaphores and can run in parallel without interfering with each other.
+**Ключевая фича**: задачи с разными `max_concurrent` используют независимые семафоры и могут выполняться параллельно, не мешая друг другу.
 
-<img width="2559" height="1788" alt="Crystal theme - observation mode" src="https://github.com/user-attachments/assets/a782287c-50f4-4383-b090-cef9dbdbf2e0" />
+<img width="2559" height="1788" alt="Скриншот Crystal темы: в ледяных тонах" src="https://github.com/user-attachments/assets/a782287c-50f4-4383-b090-cef9dbdbf2e0" />
 
-> _In the In Progress zone — no more tasks than the semaphore allows (the number inside the square). The rest wait in Queue or Check Lock._
+ > *Одновременно в зоне In Progress — не больше задач, чем разрешает семафор (цифра внутри квадрата). Остальные ждут в очереди или в Check Lock.*
 
 ---
 
-## Quick start
+## Быстрый старт
 
-### Run from pre-built images (GHCR)
+### Запуск из готовых образов (GHCR)
 
 ```bash
 git clone https://github.com/centaur-vova/fx.git
@@ -226,127 +237,116 @@ cp .env.example .env
 docker compose -f docker-compose.prod.yaml up -d --scale api=3
 ```
 
-This launches 3 Go API instances, the balancer, Redis, NATS, Jaeger, and PHP Swoole
+Это запустит 3 инстанса Go API, балансировщик, Redis, NATS, Jaeger и PHP Swoole
 
-After starting, open [http://localhost:9501](http://localhost:9501)
+После запуска открой [http://localhost:9501](http://localhost:9501)
 
-### Local development
+### Локальная разработка
 
-For those who want to dig into the code, change the workflow, and run everything locally (PHP + Go natively, NATS in Docker) — see [Local Development Workflow](https://github.com/centaur-vova/fx/wiki/Local-Development-Workflow)
+Для тех, кто хочет копаться в коде, менять воркфлоу и запускать всё локально (PHP + Go нативно, NATS в Docker) — см. [Local Development Workflow](https://github.com/centaur-vova/fx/wiki/Local-Development-Workflow)
 
 ---
 
-## Configuration
+## Конфигурация
 
 ### NATS
 
-| Variable            | Default      | Description           |
-| ------------------- | ------------ | --------------------- |
-| `NATS_HOST`         | `deez-nutz`  | NATS server host      |
-| `NATS_PORT`         | `4222`       | NATS port             |
-| `NATS_TOKEN`        | `alfa-omega` | Access token          |
-| `NATS_TIMEOUT_SEC`  | `1`          | Response timeout      |
-| `NATS_STREAM_TASKS` | `tasks`      | Stream name for tasks |
+| Переменная          | По умолчанию | Описание             |
+| ------------------- | ------------ | -------------------- |
+| `NATS_HOST`         | `deez-nutz`  | Хост NATS-сервера    |
+| `NATS_PORT`         | `4222`       | Порт NATS            |
+| `NATS_TOKEN`        | `alfa-omega` | Токен доступа        |
+| `NATS_TIMEOUT_SEC`  | `1`          | Таймаут ответа       |
+| `NATS_STREAM_TASKS` | `tasks`      | Имя стрима для задач |
 
 ### Swoole
 
-| Variable                   | Default | Description             |
-| -------------------------- | ------- | ----------------------- |
-| `SERVER_PORT`              | `9501`  | HTTP API port           |
-| `SERVER_WORKER_NUM`        | `6`     | Number of workers       |
-| `TASK_SEMAPHORE_MAX_LIMIT` | `255`    | Maximum semaphore limit |
+| Переменная                 | По умолчанию | Описание                    |
+| -------------------------- | ------------ | --------------------------- |
+| `SERVER_PORT`              | `9501`       | Порт HTTP API               |
+| `SERVER_WORKER_NUM`        | `6`          | Количество воркеров         |
+| `TASK_SEMAPHORE_MAX_LIMIT` | `255`        | Максимальный лимит семафора (max 255) |
 
-### Go WebSocket Proxy
+### Go WebSocket прокси
 
-| Variable  | Default                  | Description                |
-| --------- | ------------------------ | -------------------------- |
-| `WS_PORT` | `8080`                   | WebSocket port             |
+| Переменная | По умолчанию | Описание       |
+| ---------- | ------------ | -------------- |
+| `WS_PORT`  | `8080`       | Порт WebSocket |
 
-### Semaphore & Retry tuning
+### Настройка семафоров и ретраев
 
-These settings control how tasks behave when the semaphore is busy:
+Эти параметры управляют поведением задач, когда семафор занят:
 
-| Variable                | Default | Description                                                                     |
-| ----------------------- | ------- | ------------------------------------------------------------------------------- |
-| `TASK_LOCK_TIMEOUT_SEC` | 5       | Maximum time a task waits for a semaphore slot before giving up                 |
-| `TASK_RETRY_DELAY_SEC`  | 2       | Delay before re‑queueing a task after a failed lock attempt                     |
-| `TASK_MAX_RETRIES`      | 3       | How many times a failed task is retried before being marked as `retries_failed` |
+| Переменная              | По умолчанию | Описание                                                                       |
+| ----------------------- | ------------ | ------------------------------------------------------------------------------ |
+| `TASK_LOCK_TIMEOUT_SEC` | 5            | Максимальное время ожидания свободного слота семафора                          |
+| `TASK_RETRY_DELAY_SEC`  | 2            | Задержка перед повторной постановкой задачи в очередь после неудачного захвата |
+| `TASK_MAX_RETRIES`      | 3            | Сколько раз задача будет повторена перед статусом `retries_failed`             |
 
-⚠️ **Important:** These settings affect task fairness. Too many retries can overload the queue.
+⚠️ **Важно:** Слишком большое количество ретраев может перегрузить очередь.
 
 ---
 
-## Technical specifications
+## Технические характеристики
 
 - **Runtime:** PHP 8.4, Go 1.26
 - **Engine:** Swoole 6.2+, Gorilla WebSocket
 - **Message Bus:** NATS JetStream 2.12+
-- **Queue Capacity:** 10,000 tasks (configurable)
-- **Concurrency:** 1 to 255 (configurable)
-- **API Instances:** 3 (scales via `--scale api=N`)
+- **Queue Capacity:** 10 000 задач (настраивается)
+- **Concurrency:** от 1 до 255 (настраивается)
+- **API Instances:** 3 (масштабируется через `--scale api=N`)
 - **Semaphore Store:** Redis 8.0 + Lua scripts
-- **Balancer:** Round-robin, auto-registration, health checks every 5 seconds
-- **Tracing:** OpenTelemetry + Jaeger 2.17
+- **Balancer:** Round-robin, auto-registration, health checks каждые 5 секунд
+- **Трейсинг:** OpenTelemetry + Jaeger 2.17
 
 ---
 
-## IRD — If/Row Density
+## Метрика качества кода
 
-A custom metric: number of `if` statements per 100 lines of code.
+**IRD (If/Row Density)** — собственная метрика, показывающая плотность условных операторов в коде.
 
-- **< 2%** — clean
-- **2–5%** — good
-- **5–10%** — needs attention
-- **> 10%** — for ponies
+- **< 2%** — безупречно
+- **2–5%** — хорошо
+- **5–10%** — требует внимания
+- **> 10%** — для пони
 
-Current IRD:
+Текущий IRD:
 
-- **1.91%** with comments — 🟢 clean
-- **2.90%** code only (without comments) — 🟡 good
+- **1.91%** с комментариями — 🟢 безупречно
+- **2.90%** только код (без комментариев) — 🟡 хорошо
 
-Tool: [`centaur-vova/ird-meter`](https://packagist.org/packages/centaur-vova/ird-meter)
-
----
-
-## Themes
-
-FX supports visual themes. Each theme is defined as a separate YAML file and can be switched via URL parameter `?theme=<name>`.
-
-**Easy switching:** Just click the **theme links in the page footer** — `fast` 🚀, `crystal` 💎, or `sin city` 🖤. No need to type URLs.
-
-<img width="2568" height="1793" alt="Sin City theme - noir style with RAND button" src="https://github.com/user-attachments/assets/392398ee-ba1c-4a0e-ad5b-918257d34631" />
-
-_Sin City theme: noir aesthetics, RAND button active — hybrid semaphore stress test._
-
-Built‑in themes:
-
-- `fast` — default neon style
-- `fluttershy` — pastel rainbow, gentle and caring. For ponies
-- `crystal` — icy blues and purples
-- `sin-city` — noir, mostly gray with red accents
-- `matrix` — phosphor green on black, CRT scanlines and digital rain
-- `borderlands` — cel-shaded chaos meets 8-bit nostalgia. Yellow, red, black outlines
-
-**Theme‑aware task buttons:** Each button can specify its own semaphore driver (`shared` for PHP Atomic, `api` for Go Distributed).  
-The **RAND** button in every theme fires random batches on **both** drivers simultaneously — perfect for stress testing the hybrid architecture.
-
-**Custom themes:** You can create your own theme by adding a new folder under `themes/` with `theme.yaml` (colors, zone coordinates, button sets, per‑button semaphore drivers, etc.).  
-See the [Wiki](https://github.com/centaur-vova/fx/wiki/Themes) for details.
+Инструмент: [`centaur-vova/ird-meter`](https://packagist.org/packages/centaur-vova/ird-meter)
 
 ---
 
-## Support the Journey
+## Темы
 
-If this project helps you or you'd like to support further development:
+FX поддерживает визуальные темы. Каждая тема описывается в отдельном YAML-файле и переключается через параметр URL `?theme=<name>`.
 
-- **USDT (TRC20):** `TYEZ68z59jDZTiwyhAnzcBnAxym9qjEr5R`
-- **TON:** `UQAucXLX4BDU5o-DkckiwFdS-bbWq52h6T76hpvR-5D5IL63`
+**Быстрое переключение:** просто кликните по ссылке с названием темы в футере — `fast` 🚀, `crystal` 💎 или `sin city` 🖤. Вбивать URL вручную не нужно.
 
-Every contribution helps keep the code flowing.
+<img width="2568" height="1793" alt="Sin City тема — нуар, активна кнопка RAND" src="https://github.com/user-attachments/assets/392398ee-ba1c-4a0e-ad5b-918257d34631" />
+
+_Тема Sin City: нуарная эстетика, активна кнопка RAND — стресс-тест гибридной архитектуры._
+
+Встроенные темы:
+
+- `fast` — стандартный неоновый стиль
+- `fluttershy` — пастельная радуга, нежная и заботливая. Для пони
+- `crystal` — ледяные голубые и фиолетовые тона
+- `sin-city` — нуар, серый с красными акцентами
+- `matrix` — фосфорно-зелёный на чёрном, CRT-развёртка и цифровой дождь
+- `borderlands` — cel-shading и 8-битная ностальгия. Жёлтый, красный, чёрные обводки
+
+**Кнопки с привязкой к драйверу:** каждая кнопка может указывать свой драйвер семафора (`shared` для PHP Atomic, `api` для Go Distributed).  
+Кнопка **RAND** в любой теме запускает случайные пачки на **обоих** драйверах одновременно — идеально для стресс-теста гибридной архитектуры.
+
+**Свои темы:** вы можете создать собственную тему, добавив папку в `themes/` с файлом `theme.yaml` (цвета, координаты зон, наборы кнопок, драйверы семафоров для каждой кнопки и т.д.).  
+Подробности в [Wiki](https://github.com/centaur-vova/fx/wiki/Themes).
 
 ---
 
-## Author
+## Автор
 
 Dmitry Shmanatov (Centaur-Vova)
 
